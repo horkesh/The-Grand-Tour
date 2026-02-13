@@ -1,0 +1,8 @@
+{
+  "name": "The Grand Tour",
+  "description": "An AI-powered Italian travel companion that enriches your itineraries using Gemini 2.5 Flash and Google Maps grounding.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}
