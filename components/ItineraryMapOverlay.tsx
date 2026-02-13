@@ -1,8 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { SavedPOI, TripSegment, PlannedStop, TravelTime, Location, WeatherInfo } from '../types';
-import { Icons } from '../constants';
-
+import { SavedPOI, TripSegment } from '../types';
 declare var L: any;
 
 interface ItineraryMapOverlayProps {
@@ -12,7 +10,6 @@ interface ItineraryMapOverlayProps {
   onRemovePOI: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
   theme?: 'light' | 'dark';
-  userLocation?: Location;
 }
 
 const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ 
@@ -21,8 +18,7 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
   onClose, 
   onRemovePOI, 
   onUpdateNotes, 
-  theme = 'light',
-  userLocation
+  theme = 'light'
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
@@ -49,8 +45,15 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
         if (leafletMap.current) leafletMap.current.closePopup();
       }
     };
-    return () => { delete (window as any).handleEditNote; };
-  }, [savedPOIs]);
+    (window as any).handleRemovePOI = (poiId: string) => {
+      onRemovePOI(poiId);
+      if (leafletMap.current) leafletMap.current.closePopup();
+    };
+    return () => {
+      delete (window as any).handleEditNote;
+      delete (window as any).handleRemovePOI;
+    };
+  }, [savedPOIs, onRemovePOI]);
 
   useEffect(() => {
     if (!mapRef.current || !L || leafletMap.current) return;
@@ -116,7 +119,10 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
       L.marker([poi.lat || city.center.lat, poi.lng || city.center.lng], { icon }).addTo(layer).bindPopup(`
         <div class="p-2">
           <b class="text-sm block mb-2 font-serif">${poi.title}</b>
-          <button onclick="window.handleEditNote('${poi.id}')" class="text-[10px] text-[#ac3d29] font-bold hover:underline">Aggiungi Nota</button>
+          <div class="flex items-center gap-3">
+            <button onclick="window.handleEditNote('${poi.id}')" class="text-[10px] text-[#ac3d29] font-bold hover:underline">Aggiungi Nota</button>
+            <button onclick="window.handleRemovePOI('${poi.id}')" class="text-[10px] text-slate-500 font-bold hover:underline">Rimuovi</button>
+          </div>
         </div>
       `);
     });

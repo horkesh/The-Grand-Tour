@@ -1,6 +1,6 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
-import { Location, PlannedStop, WeatherInfo } from "../types";
+import { GoogleGenAI } from "@google/genai";
+import { Location, WeatherInfo } from "../types";
 
 // Global state to manage rate limiting across different components
 let isGlobalCooling = false;
@@ -8,8 +8,6 @@ const NON_RETRYABLE_STATUS = [400, 401, 403, 404];
 
 // Simple session-level cache
 const cache = {
-  travelTimes: new Map<string, any>(),
-  poiDetails: new Map<string, any>(),
   weather: new Map<string, WeatherInfo>(),
 };
 

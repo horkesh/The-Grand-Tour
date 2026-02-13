@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from 'react';
 import ChatInterface from './components/ChatInterface';
 import ItineraryMapOverlay from './components/ItineraryMapOverlay';
 import OverviewMap from './components/OverviewMap';
@@ -45,17 +45,17 @@ const MiniCalendarHeader = ({ days }: { days: number }) => (
   </div>
 );
 
+type ViewMode = 'overview' | 'day' | 'chat' | 'list' | 'passaporto';
+
 interface SidebarProps {
-  viewMode: string;
-  setViewMode: (v: any) => void;
-  theme: string;
-  setTheme: (t: any) => void;
+  viewMode: ViewMode;
+  setViewMode: Dispatch<SetStateAction<ViewMode>>;
+  theme: 'light' | 'dark';
+  setTheme: Dispatch<SetStateAction<'light' | 'dark'>>;
   countdown: { days: number, hours: number, mins: number };
-  selectedCity: TripSegment;
-  handleCitySelect: (c: TripSegment) => void;
 }
 
-const SidebarContent = ({ viewMode, setViewMode, theme, setTheme, countdown, selectedCity, handleCitySelect }: SidebarProps) => (
+const SidebarContent = ({ viewMode, setViewMode, theme, setTheme, countdown }: SidebarProps) => (
   <div className="flex flex-col h-full">
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-3">
@@ -118,7 +118,7 @@ const SidebarContent = ({ viewMode, setViewMode, theme, setTheme, countdown, sel
 );
 
 const App: React.FC = () => {
-  const [viewMode, setViewMode] = useState<'overview' | 'day' | 'chat' | 'list' | 'passaporto'>('overview');
+  const [viewMode, setViewMode] = useState<ViewMode>('overview');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('bella_italia_theme') as any) || 'light');
   const [selectedCity, setSelectedCity] = useState<TripSegment>(ITALIAN_CITIES[0]);
   const [userLocation, setUserLocation] = useState<Location | undefined>();
@@ -152,37 +152,36 @@ const App: React.FC = () => {
   // Fetch weather for ALL cities to display in Route view
   useEffect(() => {
     const fetchAllWeather = async () => {
-      // Create a batch of promises for missing weather data
-      const weatherPromises = ITALIAN_CITIES.map(async (city) => {
-        if (!weatherData[city.id]) {
-          try {
-            const dateStr = city.description.split(':')[0];
-            const info = await getWeatherForecast(city.location, dateStr);
-            if (info) return { id: city.id, info };
-          } catch (err) {
-            console.error(`Failed weather for ${city.location}`, err);
-          }
-        }
-        return null;
-      });
+      const missingCities = ITALIAN_CITIES.filter(city => !weatherData[city.id]);
+      if (!missingCities.length) return;
 
-      const results = await Promise.all(weatherPromises);
-      const newWeather: Record<string, WeatherInfo> = { ...weatherData };
-      let changed = false;
-      results.forEach(res => {
-        if (res) {
-          newWeather[res.id] = res.info;
-          changed = true;
+      const results = await Promise.all(missingCities.map(async (city) => {
+        try {
+          const dateStr = city.description.split(':')[0];
+          const info = await getWeatherForecast(city.location, dateStr);
+          return info ? { id: city.id, info } : null;
+        } catch (err) {
+          console.error(`Failed weather for ${city.location}`, err);
+          return null;
         }
+      }));
+
+      const nextEntries = results.filter((res): res is { id: string; info: WeatherInfo } => Boolean(res));
+      if (!nextEntries.length) return;
+
+      setWeatherData(prev => {
+        const next = { ...prev };
+        nextEntries.forEach(({ id, info }) => {
+          next[id] = info;
+        });
+        return next;
       });
-      if (changed) setWeatherData(newWeather);
     };
 
-    // Trigger on mount or when view mode changes to list
     if (viewMode === 'list' || Object.keys(weatherData).length === 0) {
       fetchAllWeather();
     }
-  }, [viewMode]);
+  }, [viewMode, weatherData]);
 
   const handleNarrate = useCallback(async (text: string) => {
     if (isNarrating) return;
@@ -223,8 +222,6 @@ const App: React.FC = () => {
           theme={theme} 
           setTheme={setTheme} 
           countdown={countdown} 
-          selectedCity={selectedCity} 
-          handleCitySelect={handleCitySelect} 
         />
       </aside>
 
@@ -294,11 +291,11 @@ const App: React.FC = () => {
             </div>
           )}
           {viewMode === 'day' && <DayDashboard city={selectedCity} onOpenChat={() => setViewMode('chat')} onOpenMap={() => setIsMapVisible(true)} theme={theme} onNarrate={handleNarrate} isNarrating={isNarrating} postcard={postcards[selectedCity.id]} onPostcardGenerated={(url) => setPostcards(p => ({ ...p, [selectedCity.id]: url }))} onCheckIn={() => setStamps(s => Array.from(new Set([...s, selectedCity.id])))} isCheckedIn={stamps.includes(selectedCity.id)} onBack={() => setViewMode('overview')} note={''} onUpdateNote={() => {}} weather={weatherData[selectedCity.id]} />}
-          {viewMode === 'chat' && <ChatInterface cityId={selectedCity.id} savedPOIs={savedPOIs} onSavePOI={(p) => setSavedPOIs(s => [...s, { ...p, id: Date.now().toString(), cityId: selectedCity.id, timestamp: Date.now() }])} />}
+          {viewMode === 'chat' && <ChatInterface savedPOIs={savedPOIs} onSavePOI={(p) => setSavedPOIs(s => [...s, { ...p, id: Date.now().toString(), cityId: selectedCity.id, timestamp: Date.now() }])} />}
         </div>
       </main>
 
-      {isMapVisible && <ItineraryMapOverlay city={selectedCity} savedPOIs={savedPOIs} onClose={() => setIsMapVisible(false)} theme={theme} onRemovePOI={() => {}} onUpdateNotes={() => {}} />}
+      {isMapVisible && <ItineraryMapOverlay city={selectedCity} savedPOIs={savedPOIs} onClose={() => setIsMapVisible(false)} theme={theme} onRemovePOI={(id) => setSavedPOIs(prev => prev.filter(poi => poi.id !== id))} onUpdateNotes={(id, notes) => setSavedPOIs(prev => prev.map(poi => poi.id === id ? { ...poi, notes } : poi))} />}
       
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
