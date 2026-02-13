@@ -9,7 +9,7 @@ export interface Location {
 export interface WeatherInfo {
   temp: string;
   condition: string;
-  icon: 'sunny' | 'cloudy' | 'rainy' | 'stormy' | 'partly-cloudy';
+  icon: 'sunny' | 'cloudy' | 'rainy' | 'stormy' | 'partlyCloudy';
   description: string;
 }
 
@@ -23,7 +23,7 @@ export interface GroundingChunk {
   maps?: {
     uri?: string;
     title?: string;
-    // Fix: Updated to any to resolve structural mismatch with GroundingChunkMapsPlaceAnswerSourcesReviewSnippet in @google/genai SDK
+    // SDK structure differs by version; keep broad typing for compatibility.
     placeAnswerSources?: any;
   };
   web?: {

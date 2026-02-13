@@ -5,12 +5,11 @@ import { Icons } from '../constants';
 
 interface GroundingResultProps {
   chunks: GroundingChunk[];
-  cityId: string;
   onSavePOI: (poi: { title: string, uri: string, description?: string }) => void;
   isSaved?: (uri: string) => boolean;
 }
 
-const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, cityId, onSavePOI, isSaved }) => {
+const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, isSaved }) => {
   if (!chunks || chunks.length === 0) return null;
 
   return (

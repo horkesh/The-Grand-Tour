@@ -5,15 +5,13 @@ import { enrichTripPlan } from '../services/geminiService';
 import GroundingResult from './GroundingResult';
 
 interface ChatInterfaceProps {
-  cityId: string;
   initialMessage?: string;
   userLocation?: Location;
   onSavePOI: (poi: { title: string, uri: string, description?: string }) => void;
   savedPOIs: SavedPOI[];
-  theme?: 'light' | 'dark';
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ cityId, initialMessage, userLocation, onSavePOI, savedPOIs, theme = 'light' }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ initialMessage, userLocation, onSavePOI, savedPOIs }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +95,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ cityId, initialMessage, u
               {msg.grounding && (
                 <GroundingResult 
                   chunks={msg.grounding} 
-                  cityId={cityId} 
                   onSavePOI={onSavePOI}
                   isSaved={isSaved}
                 />
