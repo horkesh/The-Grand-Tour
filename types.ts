@@ -63,6 +63,7 @@ export interface PlannedStop {
   type: 'sight' | 'restaurant' | 'hotel';
   lat: number;
   lng: number;
+  image?: string;
 }
 
 export interface TravelTime {
@@ -84,3 +85,40 @@ export interface TripSegment {
   zoom: number;
   plannedStops: PlannedStop[];
 }
+
+// Leaflet Interface Definitions
+export interface LeafletMap {
+  setView: (center: [number, number], zoom: number) => LeafletMap;
+  remove: () => void;
+  removeLayer: (layer: any) => LeafletMap;
+  invalidateSize: () => void;
+  closePopup: () => void;
+}
+
+export interface LeafletLayer {
+  addTo: (target: LeafletMap | LeafletLayerGroup) => this;
+  remove: () => this;
+}
+
+export interface LeafletLayerGroup extends LeafletLayer {
+  clearLayers: () => this;
+  addLayer: (layer: LeafletLayer) => this;
+}
+
+export interface LeafletMarker extends LeafletLayer {
+  on: (event: string, handler: () => void) => this;
+  bindPopup: (content: string) => this;
+}
+
+export interface LeafletPolyline extends LeafletLayer {}
+
+export interface LeafletTileLayer extends LeafletLayer {}
+
+export interface LeafletDivIcon {}
+
+export type MapInstance = LeafletMap;
+export type LayerGroup = LeafletLayerGroup;
+export type Marker = LeafletMarker;
+export type Polyline = LeafletPolyline;
+export type TileLayer = LeafletTileLayer;
+export type DivIcon = LeafletDivIcon;

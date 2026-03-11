@@ -1,37 +1,38 @@
-
 import React, { useEffect, useRef, useState } from 'react';
-import { SavedPOI, TripSegment } from '../types';
-declare var L: any;
+import { TripSegment, SavedPOI, MapInstance, LayerGroup, TileLayer } from '../types';
+import { useStore } from '../store';
+import { useLeaflet } from '../hooks/useLeaflet';
 
 interface ItineraryMapOverlayProps {
   city: TripSegment;
-  savedPOIs: SavedPOI[];
   onClose: () => void;
-  onRemovePOI: (id: string) => void;
-  onUpdateNotes: (id: string, notes: string) => void;
-  theme?: 'light' | 'dark';
 }
 
-const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ 
-  city, 
-  savedPOIs, 
-  onClose, 
-  onRemovePOI, 
-  onUpdateNotes, 
-  theme = 'light'
-}) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMap = useRef<any>(null);
-  const markersLayerRef = useRef<any>(null);
-  const routeLayerRef = useRef<any>(null);
-  const tileLayerRef = useRef<any>(null);
+const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose }) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<MapInstance | null>(null);
+  const markersLayerRef = useRef<LayerGroup | null>(null);
+  const routeLayerRef = useRef<LayerGroup | null>(null);
+  const tileLayerRef = useRef<TileLayer | null>(null);
   
+  const { theme, savedPOIs, removeSavedPOI, updateSavedPOINote } = useStore();
   const [editingPOI, setEditingPOI] = useState<SavedPOI | null>(null);
   const [tempNote, setTempNote] = useState('');
 
+  const { 
+    initMap, 
+    removeMap,
+    createLayerGroup, 
+    createTileLayer, 
+    createMarker, 
+    createDivIcon, 
+    createPolyline,
+    addZoomControl
+  } = useLeaflet(mapContainerRef);
+
   const saveEditedNote = () => {
     if (editingPOI) {
-      onUpdateNotes(editingPOI.id, tempNote);
+      updateSavedPOINote(editingPOI.id, tempNote);
       setEditingPOI(null);
     }
   };
@@ -42,81 +43,68 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
       if (poi) {
         setEditingPOI(poi);
         setTempNote(poi.notes || '');
-        if (leafletMap.current) leafletMap.current.closePopup();
+        if (mapInstanceRef.current) mapInstanceRef.current.closePopup();
       }
     };
     (window as any).handleRemovePOI = (poiId: string) => {
-      onRemovePOI(poiId);
-      if (leafletMap.current) leafletMap.current.closePopup();
+      removeSavedPOI(poiId);
+      if (mapInstanceRef.current) mapInstanceRef.current.closePopup();
     };
     return () => {
       delete (window as any).handleEditNote;
       delete (window as any).handleRemovePOI;
     };
-  }, [savedPOIs, onRemovePOI]);
+  }, [savedPOIs, removeSavedPOI]);
 
   useEffect(() => {
-    if (!mapRef.current || !L || leafletMap.current) return;
-
-    const map = L.map(mapRef.current, {
-      zoomControl: false,
-      attributionControl: false,
-      fadeAnimation: true,
-      zoomAnimation: true,
-    }).setView([city.center.lat, city.center.lng], city.zoom);
-
-    leafletMap.current = map;
-    markersLayerRef.current = L.layerGroup().addTo(map);
-    routeLayerRef.current = L.layerGroup().addTo(map);
-
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    setTimeout(() => map.invalidateSize(), 100);
-
-    return () => {
-      if (leafletMap.current) {
-        leafletMap.current.remove();
-        leafletMap.current = null;
-      }
-    };
-  }, [city.id]);
-
-  // Reactive tile layer update
-  useEffect(() => {
-    if (!leafletMap.current) return;
-
-    if (tileLayerRef.current) {
-      leafletMap.current.removeLayer(tileLayerRef.current);
+    const map = initMap([city.center.lat, city.center.lng], city.zoom);
+    if (map) {
+      mapInstanceRef.current = map;
+      markersLayerRef.current = createLayerGroup(map);
+      routeLayerRef.current = createLayerGroup(map);
+      addZoomControl(map);
+      setTimeout(() => map.invalidateSize(), 100);
     }
 
-    tileLayerRef.current = L.tileLayer(theme === 'dark' 
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-    ).addTo(leafletMap.current);
-  }, [theme, city.id]);
+    return () => {
+      removeMap();
+      mapInstanceRef.current = null;
+    };
+  }, [city.id, initMap, createLayerGroup, addZoomControl, removeMap, city.center.lat, city.center.lng, city.zoom]);
 
   useEffect(() => {
-    if (!leafletMap.current || !markersLayerRef.current) return;
+    if (!mapInstanceRef.current) return;
+
+    if (tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    }
+
+    tileLayerRef.current = createTileLayer(theme, mapInstanceRef.current);
+  }, [theme, city.id, createTileLayer]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersLayerRef.current) return;
     const layer = markersLayerRef.current;
     layer.clearLayers();
 
     city.plannedStops.forEach((stop, idx) => {
-      const icon = L.divIcon({
+      const icon = createDivIcon({
         html: `<div class="marker-visual marker-pulse-radar bg-[#194f4c] text-white w-9 h-9 rounded-full border-2 border-white flex items-center justify-center font-serif font-bold text-xs shadow-2xl">${idx + 1}</div>`,
         className: 'custom-div-icon',
         iconSize: [36, 36],
         iconAnchor: [18, 18]
       });
-      L.marker([stop.lat, stop.lng], { icon }).addTo(layer).bindPopup(`<b>${stop.title}</b>`);
+      createMarker(stop.lat, stop.lng, { icon }).addTo(layer).bindPopup(`<b>${stop.title}</b>`);
     });
 
     savedPOIs.filter(poi => poi.cityId === city.id).forEach(poi => {
-      const icon = L.divIcon({
+      const icon = createDivIcon({
         html: `<div class="marker-visual poi-glow-effect bg-[#ac3d29] text-white w-8 h-8 rounded-full border-2 border-white flex items-center justify-center shadow-lg"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>`,
         className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 16]
       });
-      L.marker([poi.lat || city.center.lat, poi.lng || city.center.lng], { icon }).addTo(layer).bindPopup(`
+      createMarker(poi.lat || city.center.lat, poi.lng || city.center.lng, { icon }).addTo(layer).bindPopup(`
         <div class="p-2">
           <b class="text-sm block mb-2 font-serif">${poi.title}</b>
           <div class="flex items-center gap-3">
@@ -126,10 +114,10 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
         </div>
       `);
     });
-  }, [city.id, savedPOIs]);
+  }, [city.id, savedPOIs, createMarker, createDivIcon]);
 
   useEffect(() => {
-    if (!leafletMap.current || !routeLayerRef.current) return;
+    if (!mapInstanceRef.current || !routeLayerRef.current) return;
     const layer = routeLayerRef.current;
     layer.clearLayers();
 
@@ -137,16 +125,18 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
       const coords = [
         [city.plannedStops[i].lat, city.plannedStops[i].lng],
         [city.plannedStops[i+1].lat, city.plannedStops[i+1].lng]
-      ];
-      L.polyline(coords, {
+      ] as [number, number][];
+      
+      const polyline = createPolyline(coords, {
         color: theme === 'dark' ? '#10b981' : '#194f4c',
         weight: 5,
         opacity: 0.9,
         dashArray: '12, 18',
         className: 'marching-ants-path'
-      }).addTo(layer);
+      });
+      polyline.addTo(layer);
     }
-  }, [city.id, theme]);
+  }, [city.id, theme, createPolyline]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-[#194f4c]/90 dark:bg-black/95 backdrop-blur-xl flex flex-col pt-safe-top overflow-hidden">
@@ -158,7 +148,7 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({
           </button>
         </div>
         <div className="flex-1 relative overflow-hidden bg-[#f9f7f4] dark:bg-black">
-          <div ref={mapRef} className="w-full h-full" />
+          <div ref={mapContainerRef} className="w-full h-full" />
           {editingPOI && (
             <div className="absolute inset-0 z-[2000] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
               <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-6 lg:p-8 stagger-in">

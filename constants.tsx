@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TripSegment } from './types';
 
@@ -9,7 +8,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
     location: 'Fiumicino', 
     description: 'May 2, 2026: Arrival at FCO 23:40. Late night check-in.', 
     milestone: 'Touching down in the Eternal City. Our twenty-year journey begins under the soft glow of the Roman stars.',
-    image: 'https://cf.bstatic.com/xdata/images/hotel/max1024x768/520137720.jpg?k=2019ebfed81f5f12fc2b35c3522658550a75f9fb8d22e79d7789a199a432bf21&o=',
+    image: 'https://www.italia.it/content/dam/tdh/en/destinations/lazio/fiumicino/media/google/image1.jpeg', 
     itineraryContext: 'Arriving at FCO late. Staying in Fiumicino village at Fishing Harbour Loft to recover from the long flight before picking up the car.',
     mapUrl: 'https://www.google.com/maps/dir/Fiumicino+Airport,+Rome/Fishing+Harbour+Loft,+Fiumicino',
     center: { lat: 41.77, lng: 12.24 },
@@ -150,7 +149,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
     location: 'Ostia to FCO', 
     description: 'May 9, 2026: Final morning in Ostia. Return Jeep to FCO for 20:05 flight.', 
     milestone: 'A final breath of Mediterranean air. Our loop is complete, our twenty-year celebration has its anchor.',
-    image: 'https://cdn.shortpixel.ai/spai/q_lossy+w_977+h_549+to_auto+ret_img/www.rome.info/wp-content/uploads/f-fiumicino-airport-sign.jpg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Ostia%2C_Forum_Baths_%28IV%29_%284688457236%29.jpg',
     itineraryContext: 'The final leg. Coastal air in Ostia before completing the loop back to Fiumicino for our flight home.',
     mapUrl: 'https://www.google.com/maps/dir/Ostia/Rome+Fiumicino+Airport',
     center: { lat: 41.77, lng: 12.26 },
@@ -188,6 +187,11 @@ export const Icons = {
   Journal: () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Gallery: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
   ),
   External: () => (

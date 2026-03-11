@@ -1,52 +1,138 @@
-
 import React from 'react';
-import { TripSegment } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ITALIAN_CITIES, Icons } from '../constants';
+import { useStore } from '../store';
 
-interface PassaportoProps {
-  cities: TripSegment[];
-  stamps: string[];
-  onCitySelect: (city: TripSegment) => void;
-}
+const Passaporto: React.FC = () => {
+  const navigate = useNavigate();
+  const { stamps } = useStore();
 
-const Passaporto: React.FC<PassaportoProps> = ({ cities, stamps, onCitySelect }) => {
   return (
-    <div className="h-full flex flex-col items-center justify-start overflow-y-auto custom-scrollbar p-6 lg:p-12 stagger-in">
-      <div className="w-full max-w-2xl bg-[#2a3b4c] rounded-[2rem] p-1 shadow-2xl mb-12">
-        <div className="border-2 border-amber-400/30 rounded-[1.8rem] p-10 flex flex-col items-center text-center">
-          <div className="w-24 h-24 mb-6 border-4 border-amber-400 rounded-full flex items-center justify-center">
-            <span className="text-amber-400 font-serif text-5xl font-bold">ITA</span>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.4 }}
+      className="absolute inset-0 w-full h-full flex flex-col items-center justify-start overflow-y-auto custom-scrollbar p-6 pb-32"
+    >
+      {/* Navigation Tabs */}
+      <div className="flex justify-center gap-2 mb-8 p-1.5 bg-slate-200 dark:bg-white/10 rounded-full shrink-0 sticky top-0 z-30 backdrop-blur-md">
+         <button className="px-6 py-2 bg-[#194f4c] text-white rounded-full font-bold shadow-md text-sm">Passaporto</button>
+         <button onClick={() => navigate('/gallery')} className="px-6 py-2 text-slate-500 dark:text-slate-400 rounded-full font-bold text-sm hover:bg-white/50 dark:hover:bg-white/5 transition-colors">Photos</button>
+      </div>
+
+      <div className="w-full max-w-2xl bg-[#2a3b4c] rounded-[2rem] p-1 shadow-2xl mb-12 shrink-0">
+        <div className="border-2 border-amber-400/30 rounded-[1.8rem] p-8 flex flex-col items-center text-center">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 border-2 border-amber-400 rounded-full flex items-center justify-center">
+                <span className="text-amber-400 font-serif text-2xl font-bold">ITA</span>
+            </div>
+            <div className="text-left">
+                <h2 className="text-amber-400 font-serif text-xl font-bold uppercase tracking-[0.2em] leading-none">Repubblica</h2>
+                <h2 className="text-amber-400 font-serif text-xl font-bold uppercase tracking-[0.2em] leading-none">Italiana</h2>
+            </div>
           </div>
-          <h2 className="text-amber-400 font-serif text-3xl font-bold uppercase tracking-[0.3em] mb-2">Repubblica Italiana</h2>
-          <h3 className="text-amber-400/80 font-serif text-xl font-bold uppercase tracking-widest">PASSAPORTO</h3>
-          <div className="w-full h-px bg-amber-400/20 my-8" />
-          <p className="text-amber-400/60 font-serif italic text-sm">Vent'anni di vita insieme, un viaggio eterno.</p>
+          <div className="w-full h-px bg-amber-400/20 mb-4" />
+          <div className="grid grid-cols-3 gap-8 text-amber-400/60 text-[10px] uppercase tracking-widest font-bold w-full">
+            <div className="flex flex-col">
+                <span>Stamps</span>
+                <span className="text-amber-100 text-lg">{stamps.length}</span>
+            </div>
+            <div className="flex flex-col">
+                <span>Holder</span>
+                <span className="text-amber-100 text-lg">Us</span>
+            </div>
+            <div className="flex flex-col">
+                <span>Year</span>
+                <span className="text-amber-100 text-lg">2026</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-4xl">
-        {cities.map((city, idx) => {
-          const isCollected = stamps.includes(city.id);
-          return (
-            <button
-              key={city.id}
-              onClick={() => onCitySelect(city)}
-              className={`relative aspect-square flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-xl transition-all group overflow-hidden ${!isCollected ? 'opacity-40 grayscale scale-95' : 'hover:scale-105 hover:rotate-1'}`}
-            >
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-10" />
-              <div className={`w-full h-full border-2 rounded-full flex flex-col items-center justify-center p-2 text-center ${isCollected ? 'border-amber-600/40 text-amber-900 dark:text-amber-500' : 'border-slate-300 dark:border-slate-700 text-slate-400'}`}>
-                <span className="text-[10px] font-bold uppercase tracking-tighter mb-1">Entry: {idx + 1}</span>
-                <span className="font-serif text-sm font-bold leading-tight uppercase">{city.location}</span>
-                {isCollected && (
-                  <div className="mt-2 text-[8px] font-bold border-t border-current pt-1 uppercase">VISTO - VISITED</div>
-                )}
-              </div>
-              <div className="absolute top-2 right-4 text-[40px] opacity-10 font-serif italic">{idx + 1}</div>
-            </button>
-          );
-        })}
+      <div className="w-full max-w-3xl space-y-12">
+        {ITALIAN_CITIES.map((city, cityIdx) => (
+            <div key={city.id} className="relative">
+                <div className="sticky top-16 z-20 bg-[#f9f7f4]/95 dark:bg-black/95 backdrop-blur-md py-4 mb-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+                    <h3 className="font-serif text-xl font-bold text-[#194f4c] dark:text-white">{city.title}</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-white/10 px-3 py-1 rounded-full">{city.location}</span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {/* Main City Stamp */}
+                    <StampButton 
+                        id={city.id} 
+                        label={city.location} 
+                        subLabel="City Check-in"
+                        isCollected={stamps.includes(city.id)} 
+                        onClick={() => navigate(`/day/${city.id}`)}
+                        type="city"
+                    />
+
+                    {/* Waypoint Stamps */}
+                    {city.plannedStops.map((stop, stopIdx) => {
+                        const stampId = `${city.id}_${stopIdx}`;
+                        return (
+                            <StampButton 
+                                key={stampId}
+                                id={stampId} 
+                                label={stop.title} 
+                                subLabel={stop.type}
+                                isCollected={stamps.includes(stampId)} 
+                                onClick={() => navigate(`/day/${city.id}`)} // Could pass state to pre-select, but simple nav is fine
+                                type={stop.type}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+        ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
+
+const StampButton = ({ id, label, subLabel, isCollected, onClick, type }: any) => {
+    // Rotation randomization for stamped look
+    const rotation = React.useMemo(() => Math.floor(Math.random() * 6) - 3, []);
+    
+    return (
+        <button
+            onClick={onClick}
+            className={`aspect-square flex flex-col items-center justify-center p-4 rounded-2xl transition-all group relative overflow-hidden ${
+                isCollected 
+                ? 'bg-white dark:bg-[#111] shadow-md border border-slate-200 dark:border-white/5' 
+                : 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 opacity-60'
+            }`}
+        >
+            {isCollected && (
+                <div 
+                    className="absolute inset-0 border-4 border-amber-600/30 rounded-2xl pointer-events-none" 
+                    style={{ transform: `rotate(${rotation}deg) scale(0.9)` }}
+                />
+            )}
+            
+            <div className={`w-10 h-10 mb-3 rounded-full flex items-center justify-center ${
+                isCollected ? 'bg-[#194f4c] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-400'
+            }`}>
+                {type === 'hotel' ? <Icons.External /> : <Icons.Gallery />}
+            </div>
+
+            <span className="font-serif text-xs font-bold leading-tight text-center line-clamp-2 dark:text-slate-200">
+                {label}
+            </span>
+            <span className="text-[8px] uppercase tracking-widest text-slate-400 mt-1">{subLabel}</span>
+
+            {isCollected && (
+                <div 
+                    className="absolute top-2 right-2 text-[8px] font-bold text-amber-700/50 uppercase border border-amber-700/30 px-1 transform rotate-12"
+                >
+                    Visto
+                </div>
+            )}
+        </button>
+    )
+}
 
 export default Passaporto;

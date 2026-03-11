@@ -1,97 +1,95 @@
-
 import React, { useEffect, useRef } from 'react';
-import { TripSegment, Location } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { ITALIAN_CITIES } from '../constants';
+import { useStore } from '../store';
+import { useLeaflet } from '../hooks/useLeaflet';
+import { MapInstance, LayerGroup, TileLayer } from '../types';
 
-declare var L: any;
-
-interface OverviewMapProps {
-  cities: TripSegment[];
-  onCitySelect: (city: TripSegment) => void;
-  theme?: 'light' | 'dark';
-  userLocation?: Location;
-}
-
-const OverviewMap: React.FC<OverviewMapProps> = ({ cities, onCitySelect, theme = 'light', userLocation }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMap = useRef<any>(null);
-  const contentLayerRef = useRef<any>(null);
-  const tileLayerRef = useRef<any>(null);
+const OverviewMap: React.FC = () => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<MapInstance | null>(null);
+  const contentLayerRef = useRef<LayerGroup | null>(null);
+  const tileLayerRef = useRef<TileLayer | null>(null);
+  
+  const navigate = useNavigate();
+  const { theme, userLocation } = useStore();
+  
+  const { 
+    initMap, 
+    removeMap, 
+    createLayerGroup, 
+    createTileLayer, 
+    createMarker, 
+    createDivIcon, 
+    createPolyline 
+  } = useLeaflet(mapContainerRef);
 
   useEffect(() => {
-    if (!mapRef.current || !L || leafletMap.current) return;
-
-    const map = L.map(mapRef.current, {
-      zoomControl: false,
-      attributionControl: false,
-      fadeAnimation: true,
-      zoomAnimation: true
-    }).setView([42.8, 12.0], 7);
-
-    leafletMap.current = map;
-    contentLayerRef.current = L.layerGroup().addTo(map);
+    const map = initMap([42.8, 12.0], 7);
+    if (map) {
+      mapInstanceRef.current = map;
+      contentLayerRef.current = createLayerGroup(map);
+    }
 
     return () => {
-      if (leafletMap.current) {
-        leafletMap.current.remove();
-        leafletMap.current = null;
-      }
+      removeMap();
+      mapInstanceRef.current = null;
     };
-  }, []);
+  }, [initMap, removeMap, createLayerGroup]);
 
   // Handle tile layer updates independently to react to theme changes
   useEffect(() => {
-    if (!leafletMap.current) return;
+    if (!mapInstanceRef.current) return;
 
     if (tileLayerRef.current) {
-      leafletMap.current.removeLayer(tileLayerRef.current);
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
     }
 
-    tileLayerRef.current = L.tileLayer(theme === 'dark' 
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-    ).addTo(leafletMap.current);
-  }, [theme]);
+    tileLayerRef.current = createTileLayer(theme, mapInstanceRef.current);
+  }, [theme, createTileLayer]);
 
   useEffect(() => {
-    if (!leafletMap.current || !contentLayerRef.current) return;
+    if (!mapInstanceRef.current || !contentLayerRef.current) return;
     const layer = contentLayerRef.current;
     layer.clearLayers();
 
-    const routeCoords = cities.map(city => [city.center.lat, city.center.lng]);
-    L.polyline(routeCoords, { 
+    const routeCoords = ITALIAN_CITIES.map(city => [city.center.lat, city.center.lng] as [number, number]);
+    
+    const polyline = createPolyline(routeCoords, { 
       color: theme === 'dark' ? '#10b981' : '#ac3d29', 
       weight: 2, 
       dashArray: '5, 10', 
       opacity: 0.4 
-    }).addTo(layer);
+    });
+    polyline.addTo(layer);
 
-    cities.forEach((city, idx) => {
-      const markerIcon = L.divIcon({
+    ITALIAN_CITIES.forEach((city, idx) => {
+      const markerIcon = createDivIcon({
         html: `<div class="marker-visual radar-pulse bg-white dark:bg-slate-900 text-[#194f4c] dark:text-emerald-400 w-8 h-8 rounded-full shadow-2xl border-2 border-[#194f4c] dark:border-emerald-500 flex items-center justify-center font-bold text-xs cursor-pointer transition-transform duration-300 hover:scale-125">${idx + 1}</div>`,
         className: 'custom-div-icon',
         iconSize: [32, 32],
         iconAnchor: [16, 16]
       });
 
-      L.marker([city.center.lat, city.center.lng], { icon: markerIcon })
+      createMarker(city.center.lat, city.center.lng, { icon: markerIcon })
         .addTo(layer)
-        .on('click', () => onCitySelect(city));
+        .on('click', () => navigate(`/day/${city.id}`));
     });
 
     if (userLocation) {
-      const userIcon = L.divIcon({
+      const userIcon = createDivIcon({
         html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-ping"></div>`,
         className: 'custom-div-icon',
         iconSize: [16, 16],
         iconAnchor: [8, 8]
       });
-      L.marker([userLocation.lat, userLocation.lng], { icon: userIcon }).addTo(layer);
+      createMarker(userLocation.lat, userLocation.lng, { icon: userIcon }).addTo(layer);
     }
-  }, [cities, theme, userLocation]);
+  }, [theme, userLocation, navigate, createPolyline, createDivIcon, createMarker]);
 
   return (
     <div className="w-full h-full relative">
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapContainerRef} className="w-full h-full" />
       <style>{`
         .custom-div-icon { background: none !important; border: none !important; }
         @keyframes radar {

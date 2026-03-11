@@ -1,27 +1,15 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage, Location, SavedPOI } from '../types';
+import { ChatMessage, SavedPOI } from '../types';
 import { enrichTripPlan } from '../services/geminiService';
+import { useStore } from '../store';
 import GroundingResult from './GroundingResult';
 
-interface ChatInterfaceProps {
-  initialMessage?: string;
-  userLocation?: Location;
-  onSavePOI: (poi: { title: string, uri: string, description?: string }) => void;
-  savedPOIs: SavedPOI[];
-}
-
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ initialMessage, userLocation, onSavePOI, savedPOIs }) => {
+const ChatInterface: React.FC = () => {
+  const { userLocation, savedPOIs, addSavedPOI } = useStore();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (initialMessage) {
-      handleSend(initialMessage);
-    }
-  }, [initialMessage]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -64,6 +52,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ initialMessage, userLocat
   };
 
   const isSaved = (uri: string) => savedPOIs.some(poi => poi.uri === uri);
+  
+  const handleSavePOI = (poi: { title: string, uri: string, description?: string }) => {
+    const newPoi: SavedPOI = {
+      ...poi,
+      id: Date.now().toString(),
+      cityId: 'planned', // generic id
+      timestamp: Date.now(),
+    };
+    addSavedPOI(newPoi);
+  };
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0d0d0d] border-none rounded-3xl overflow-hidden shadow-inner transition-colors duration-300">
@@ -95,7 +93,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ initialMessage, userLocat
               {msg.grounding && (
                 <GroundingResult 
                   chunks={msg.grounding} 
-                  onSavePOI={onSavePOI}
+                  onSavePOI={handleSavePOI}
                   isSaved={isSaved}
                 />
               )}
