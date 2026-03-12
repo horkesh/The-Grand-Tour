@@ -18,11 +18,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Fishing Harbour Loft', uri: 'https://www.booking.com/Share-BnwOlK0', type: 'hotel', lat: 41.7735, lng: 12.2397 }
     ]
   },
-  { 
-    id: 'day-2', 
-    title: 'Day 2: Lazio to Orvieto', 
-    location: 'Bagnoregio & Bolsena', 
-    description: 'May 3, 2026: Pick up Jeep. Visit the "Dying City" and volcanic lakes.', 
+  {
+    id: 'day-2',
+    title: 'Day 2: Lazio to Orvieto',
+    location: 'Bagnoregio & Bolsena',
+    driveFromPrev: '1h 20m',
+    description: 'May 3, 2026: Pick up Jeep. Visit the "Dying City" and volcanic lakes.',
     milestone: 'From the quiet coast to the heights of the tuff cliffs. Orvieto awaits with its golden cathedral facade.',
     image: 'https://civitavecchia.portmobility.it/sites/default/files/civita_di_bagnoregio.jpg',
     itineraryContext: 'The true start of our driving adventure. Heading into the tuff-town region of Lazio and Umbria, visiting a cliffside village accessible only by footbridge.',
@@ -39,11 +40,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'La Palomba (Dinner)', uri: 'https://maps.app.goo.gl/FrnxPLAoLHjXZnjAA', type: 'restaurant', lat: 42.7182, lng: 12.1102 }
     ]
   },
-  { 
-    id: 'day-3', 
-    title: 'Day 3: To Val d\'Orcia', 
-    location: 'Montalcino & San Gimignano', 
-    description: 'May 4, 2026: Abbey of Sant\'Antimo and the towers of San Gimignano.', 
+  {
+    id: 'day-3',
+    title: 'Day 3: To Val d\'Orcia',
+    location: 'Montalcino & San Gimignano',
+    driveFromPrev: '1h 45m',
+    description: 'May 4, 2026: Abbey of Sant\'Antimo and the towers of San Gimignano.',
     milestone: 'Entering the "Medieval Manhattan". Toasting to twenty years together amidst the soaring towers of San Gimignano.',
     image: 'https://www.italia.it/content/dam/tdh/en/interests/toscana/san-gimignano-la-manhattan-del-medioevo/media/20220222160016-san-gimignano-toscana-shutterstock-1413457445.jpg',
     itineraryContext: 'Crossing into Tuscany. A day of tall towers, spiritual chanting at an abbey, and the first taste of Brunello wine territory.',
@@ -61,11 +63,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Vecchio Forno (Dinner)', uri: 'https://maps.app.goo.gl/3KNSZvGMUbku8Get7', type: 'restaurant', lat: 43.0585, lng: 11.6050 }
     ]
   },
-  { 
-    id: 'day-4', 
-    title: 'Day 4: Val d\'Orcia Slow', 
-    location: 'Pienza & Bagno Vignoni', 
-    description: 'May 5, 2026: Sunrise at Belvedere and the Gladiator homecoming road.', 
+  {
+    id: 'day-4',
+    title: 'Day 4: Val d\'Orcia Slow',
+    location: 'Pienza & Bagno Vignoni',
+    driveFromPrev: '20m',
+    description: 'May 5, 2026: Sunrise at Belvedere and the Gladiator homecoming road.',
     milestone: 'Chasing the golden light. Watching the mist rise over the world\'s most beautiful rolling hills as we celebrate twenty years.',
     image: 'https://www.sommertage.com/wp-content/uploads/2021/11/Fotospots-Val-d-Orcia.jpg',
     itineraryContext: 'Relaxed exploration of the iconic rolling hills. We\'ll visit thermal pools and the cypress-lined roads made famous by film.',
@@ -82,11 +85,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Da Ciacco (Dinner)', uri: 'https://maps.app.goo.gl/4jkkh6aUxacPdt2a7', type: 'restaurant', lat: 43.0570, lng: 11.6010 }
     ]
   },
-  { 
-    id: 'day-5', 
-    title: 'Day 5: Anniversary Day', 
-    location: 'Saturnia & Sorano', 
-    description: 'May 6, 2026: Cascate del Mulino thermal soak and Maremma exploration.', 
+  {
+    id: 'day-5',
+    title: 'Day 5: Anniversary Day',
+    location: 'Saturnia & Sorano',
+    driveFromPrev: '1h 30m',
+    description: 'May 6, 2026: Cascate del Mulino thermal soak and Maremma exploration.',
     milestone: 'Twenty years later, still soaking in the magic of life together at the turquoise thermal springs.',
     image: 'https://static.saltinourhair.com/wp-content/uploads/2019/05/23135632/Hot-Springs-Tuscany-Saturnia.jpg',
     itineraryContext: 'Our special day. An early morning soak in natural hot springs followed by a candlelit dinner in a quiet hilltop borgo.',
@@ -103,11 +107,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Osteria La Porta (Anniversary)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225 }
     ]
   },
-  { 
-    id: 'day-6', 
-    title: 'Day 6: Umbria Bound', 
-    location: 'Montepulciano & Spello', 
-    description: 'May 7, 2026: Across Lake Trasimeno to the flower-lined streets of Spello.', 
+  {
+    id: 'day-6',
+    title: 'Day 6: Umbria Bound',
+    location: 'Montepulciano & Spello',
+    driveFromPrev: '2h 15m',
+    description: 'May 7, 2026: Across Lake Trasimeno to the flower-lined streets of Spello.',
     milestone: 'Discovering the "Green Heart" of Italy. Spello awaits with its cobblestones carpeted in May blooms.',
     image: 'https://media.istockphoto.com/id/531539378/photo/floral-streets-of-spello-in-umbria-italy.jpg?s=612x612&w=0&k=20&c=SPKT4qa4jegKXhH2SmBY9-AAFsvpbIbFaglRkRSi9pw=',
     itineraryContext: 'Moving east into the "Green Heart" of Italy. Spello is known for its incredible floral displays and medieval charm.',
@@ -122,11 +127,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Osteria del Buchetto (Dinner)', uri: 'https://maps.app.goo.gl/seB27Ni77qi57zmR8', type: 'restaurant', lat: 42.9910, lng: 12.6685 }
     ]
   },
-  { 
-    id: 'day-7', 
-    title: 'Day 7: Via Appia Antica', 
-    location: 'Spoleto & Ancient Rome', 
-    description: 'May 8, 2026: Walking the ancient basalt paving stones toward Ostia.', 
+  {
+    id: 'day-7',
+    title: 'Day 7: Via Appia Antica',
+    location: 'Spoleto & Ancient Rome',
+    driveFromPrev: '2h 45m',
+    description: 'May 8, 2026: Walking the ancient basalt paving stones toward Ostia.',
     milestone: 'Walking in the footsteps of emperors. The ancient stones of the Appian Way guide us toward the sea after twenty wonderful years.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Paesaggio_dell%27Appia_antica.jpg',
     itineraryContext: 'A journey through time. From the towering bridge of Spoleto to the first "superhighway" of the Roman Empire.',
@@ -143,11 +149,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Paja & Fieno (Dinner)', uri: 'https://maps.app.goo.gl/rNGwG2QZ3YC39G3g7', type: 'restaurant', lat: 41.7300, lng: 12.2800 }
     ]
   },
-  { 
-    id: 'day-8', 
-    title: 'Day 8: Departure', 
-    location: 'Ostia to FCO', 
-    description: 'May 9, 2026: Final morning in Ostia. Return Jeep to FCO for 20:05 flight.', 
+  {
+    id: 'day-8',
+    title: 'Day 8: Departure',
+    location: 'Ostia to FCO',
+    driveFromPrev: '30m',
+    description: 'May 9, 2026: Final morning in Ostia. Return Jeep to FCO for 20:05 flight.',
     milestone: 'A final breath of Mediterranean air. Our loop is complete, our twenty-year celebration has its anchor.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Ostia%2C_Forum_Baths_%28IV%29_%284688457236%29.jpg',
     itineraryContext: 'The final leg. Coastal air in Ostia before completing the loop back to Fiumicino for our flight home.',

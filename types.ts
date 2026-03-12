@@ -66,12 +66,6 @@ export interface PlannedStop {
   image?: string;
 }
 
-export interface TravelTime {
-  from: string;
-  to: string;
-  duration: string;
-}
-
 export interface TripSegment {
   id: string;
   title: string;
@@ -84,6 +78,7 @@ export interface TripSegment {
   center: { lat: number, lng: number };
   zoom: number;
   plannedStops: PlannedStop[];
+  driveFromPrev?: string; // Driving time from previous day's end point, e.g. "1h 30m"
 }
 
 // Leaflet Interface Definitions

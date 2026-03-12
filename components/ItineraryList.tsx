@@ -17,9 +17,17 @@ const ItineraryList: React.FC = () => {
         const weather = weatherData[city.id];
         const WeatherIcon = weather ? Icons.Weather[weather.icon as keyof typeof Icons.Weather] || Icons.Weather.sunny : null;
         const displayImage = city.image;
-        
+
         return (
-          <button key={city.id} onClick={() => navigate(`/day/${city.id}`)} className="w-full p-4 bg-white dark:bg-[#0a0a0a] rounded-[2rem] border border-slate-100 dark:border-white/5 flex items-center gap-5 shadow-sm transition-all group hover:-translate-y-1 hover:shadow-xl">
+          <React.Fragment key={city.id}>
+          {city.driveFromPrev && (
+            <div className="flex items-center justify-center gap-2 py-1 -my-2">
+              <div className="h-4 border-l border-dashed border-slate-300 dark:border-slate-600" />
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">🚗 {city.driveFromPrev}</span>
+              <div className="h-4 border-l border-dashed border-slate-300 dark:border-slate-600" />
+            </div>
+          )}
+          <button onClick={() => navigate(`/day/${city.id}`)} className="w-full p-4 bg-white dark:bg-[#0a0a0a] rounded-[2rem] border border-slate-100 dark:border-white/5 flex items-center gap-5 shadow-sm transition-all group hover:-translate-y-1 hover:shadow-xl">
             <div className="relative shrink-0">
               <img src={displayImage} className="w-16 h-16 rounded-2xl object-cover shadow-lg" alt={city.title} />
               <div className="absolute -top-1 -left-1 w-6 h-6 bg-[#194f4c] text-white font-bold text-[9px] rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">{i + 1}</div>
@@ -37,6 +45,7 @@ const ItineraryList: React.FC = () => {
               </div>
             )}
           </button>
+          </React.Fragment>
         );
       })}
     </div>

@@ -53,8 +53,8 @@ npx tsc --noEmit  # Type check
 ### State Management
 - Single Zustand store in `store.ts` with persist middleware
 - Components consume via `useStore()` directly
-- Persisted: theme, savedPOIs, stamps, postcards, waypointImages
-- Not persisted: userLocation, weatherData
+- Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData
+- Not persisted: userLocation
 
 ### Components
 - Route views live directly in `components/` (no `views/` subfolder)
@@ -66,7 +66,7 @@ npx tsc --noEmit  # Type check
 - All Gemini calls go through `services/geminiService.ts`
 - Chat uses grounding (googleMaps + googleSearch tools)
 - Image generation: `gemini-2.5-flash-image` model
-- Weather: `gemini-3-flash-preview` model
+- Weather: `gemini-2.5-flash` model
 - Retry with exponential backoff, 30s global cooldown on rate limits
 
 ### Routing

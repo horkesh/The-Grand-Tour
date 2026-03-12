@@ -121,3 +121,40 @@ Second fix phase targeting UX issues from the audit.
 
 ### What's Next
 - Phase 3 features if desired (offline support, travel time estimates, partner sync)
+
+---
+
+## 2026-03-12 — Phase 3: Feature Enhancements + /simplify
+
+### Context
+Feature phase adding offline support and inter-city travel time display.
+
+### Fixes Applied
+
+1. **Travel time display** (`types.ts`, `constants.tsx`, `ItineraryList.tsx`) — added `driveFromPrev?: string` to `TripSegment`. Populated 7 cities with static drive times (20m–2h 45m). ItineraryList renders a dashed-line pill with car emoji between consecutive city cards. Removed unused `TravelTime` interface from types.ts.
+
+2. **Service worker** (`public/sw.js`, `index.html`) — lightweight SW for offline capability. Caches app shell (Tailwind, Leaflet, fonts, grain SVG, icon) on install. Cache-first for CDN assets (esm.sh, unpkg, fonts.googleapis.com), network-first for navigation HTML. Explicitly skips Gemini API calls. Registration on window load with error logging.
+
+### /simplify Findings (3-agent review)
+
+**Fixed:**
+1. **SW registration error swallowed** — `.catch(() => {})` replaced with `console.warn` for debuggability.
+2. **Fragile CDN origin matching** — 5 `startsWith` calls (including partial `fonts.g`) replaced with single regex using full domain names.
+
+**Reviewed but not changed:**
+- DashedDivider extraction — 2 identical divs in same JSX block, premature to extract
+- Cache size quota/TTL — overkill for 8-day trip PWA with ~10 cached CDN resources
+- Network-first timeout — simple travel app, not a critical service
+- Weather icon memoization — O(1) lookup on 8 items
+- React.Fragment wrapper — necessary for conditional sibling rendering from map
+
+### Docs corrections
+- state-of-app: weatherData moved from "Ephemeral" to "Persisted" (was fixed in Phase 1 but doc not updated)
+- state-of-app: weather model corrected to `gemini-2.5-flash`
+- CLAUDE.md: weather model corrected to `gemini-2.5-flash`
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+
+### What's Next
+- Phase 4: Partner Sync (deferred from Phase 3)

@@ -8,14 +8,14 @@
 
 1. **State Management (`store.ts`)**
    - Single Zustand store with persist middleware
-   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages
-   - Ephemeral: userLocation, weatherData
+   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData
+   - Ephemeral: userLocation
    - No splitting needed at current ~80 lines
 
 2. **AI Service (`services/geminiService.ts`)**
    - `enrichTripPlan()` — Chat with grounding (googleMaps + googleSearch tools), model: `gemini-2.5-flash`
    - `generateLocationImage()` — Image gen, model: `gemini-2.5-flash-image`
-   - `getWeatherForecast()` — Weather via AI, model: `gemini-3-flash-preview`
+   - `getWeatherForecast()` — Weather via AI, model: `gemini-2.5-flash`
    - Shared retry logic with exponential backoff (3 retries, 2–5s delays)
    - 30s global cooldown on 429/RESOURCE_EXHAUSTED
 
@@ -47,7 +47,7 @@ User Action → Component → useStore() or geminiService → State Update → R
 
 ### Trip Data
 
-All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 8 days, ~50 planned stops total. Each segment includes coordinates, Google Maps URIs, planned stops with types (sight/restaurant/hotel), and narrative context for AI prompts.
+All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 8 days, ~50 planned stops total. Each segment includes coordinates, Google Maps URIs, planned stops with types (sight/restaurant/hotel), narrative context for AI prompts, and `driveFromPrev` driving times between consecutive cities.
 
 ---
 

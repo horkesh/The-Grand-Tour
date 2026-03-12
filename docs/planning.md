@@ -41,13 +41,16 @@ Working travel companion app with map, AI chat, passport stamps, postcard creati
 ## Phase 3: Feature Enhancements
 
 ### 3.1 Offline Support
-- **Task**: Add service worker for offline map tiles and cached itinerary data. PWA manifest already exists.
-- **Files**: New `sw.js`, `index.html`
+- **Status**: DONE
+- **Task**: Service worker for caching app shell (CDN resources) and navigation pages. Cache-first for CDN, network-first for HTML.
+- **Files**: New `public/sw.js`, `index.html`
 
 ### 3.2 Travel Time Estimates
-- **Task**: Show driving/transit times between cities using Gemini grounding or a directions API.
-- **Files**: `services/geminiService.ts`, `components/ItineraryList.tsx`
+- **Status**: DONE
+- **Task**: Static drive times between consecutive cities, displayed as dashed-line pills between city cards in the itinerary list.
+- **Files**: `types.ts`, `constants.tsx`, `components/ItineraryList.tsx`
 
 ### 3.3 Partner Sync
+- **Status**: Deferred to Phase 4
 - **Task**: Enable real-time sync between two phones (partner location sharing, shared stamps). `PartnerSync` type already defined in types.ts.
 - **Files**: New `services/p2p.ts`, `types.ts`, `store.ts`
