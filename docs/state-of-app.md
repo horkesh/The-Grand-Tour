@@ -1,0 +1,91 @@
+# State of the App
+
+## Architecture Overview
+
+**The Grand Tour** is an 8-day Italian anniversary travel companion PWA (May 2–9, 2026). It combines a Leaflet-powered map, Gemini AI concierge with Maps/Search grounding, a passport stamp collection, and polaroid-style postcard creation.
+
+### Core Components
+
+1. **State Management (`store.ts`)**
+   - Single Zustand store with persist middleware
+   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages
+   - Ephemeral: userLocation, weatherData
+   - No splitting needed at current ~80 lines
+
+2. **AI Service (`services/geminiService.ts`)**
+   - `enrichTripPlan()` — Chat with grounding (googleMaps + googleSearch tools), model: `gemini-2.5-flash`
+   - `generateLocationImage()` — Image gen, model: `gemini-2.5-flash-image`
+   - `getWeatherForecast()` — Weather via AI, model: `gemini-3-flash-preview`
+   - Shared retry logic with exponential backoff (3 retries, 2–5s delays)
+   - 30s global cooldown on 429/RESOURCE_EXHAUSTED
+
+3. **Map Integration**
+   - Leaflet loaded via CDN, accessed through `window.L`
+   - `hooks/useLeaflet.ts` — abstraction for init, markers, polylines, tiles
+   - `OverviewMap.tsx` — master 8-marker view with dashed route
+   - `ItineraryMapOverlay.tsx` — per-city map with planned stops + saved POIs
+
+4. **Routing (React Router)**
+   - HashRouter for broad compatibility
+   - 6 routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`
+   - AnimatePresence with popLayout for transitions
+
+5. **Image Pipeline**
+   - `ImageGenerator.tsx` — background queue, 4s spacing, generates images for all cities/stops
+   - `utils/imageProcessing.ts` — postcard merging (webcam photo + location image → polaroid)
+   - Images cached in Zustand `waypointImages` (persisted)
+
+### Data Flow
+
+```
+User Action → Component → useStore() or geminiService → State Update → Re-render
+                                    ↓
+                           Gemini API (grounding)
+                                    ↓
+                           GroundingResult → Save POI → useStore()
+```
+
+### Trip Data
+
+All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 8 days, ~50 planned stops total. Each segment includes coordinates, Google Maps URIs, planned stops with types (sight/restaurant/hotel), and narrative context for AI prompts.
+
+---
+
+## Known Issues & Technical Debt
+
+### Critical
+
+1. **Weather model version** — `gemini-3-flash-preview` may not be a valid model ID. Weather calls fail silently and return null. Verify against current Gemini model list.
+
+2. **Weather not persisted** — fetched fresh on every mount, wasting API quota. Should be in Zustand persist partialize.
+
+3. **Image generation has no retry** — if a waypoint image fails, it's silently dropped from the queue. No recovery mechanism.
+
+### High
+
+4. **POI city association broken** — chat-saved POIs use hardcoded `cityId: 'planned'`, so they appear on every city's map overlay, not just the relevant one.
+
+5. **3D card flip visual bug** — DayDashboard uses class string `rotate-y-180` which isn't a standard Tailwind class (needs arbitrary value `[rotateY(180deg)]` or inline style). Card doesn't actually flip.
+
+6. **ItineraryMapOverlay window globals** — stores `window.handleEditNote` / `window.handleRemovePOI` for Leaflet popup callbacks. Stale closure risk on re-renders.
+
+### Medium
+
+7. **ImageGenerator progress overshoot** — counts total on mount, ignores images enqueued mid-generation. Can show >100%.
+
+8. **Grounding types too broad** — `placeAnswerSources?: any` in types.ts. Fragile to SDK version changes.
+
+9. **Unused stub components** — `CurrencyConverter.tsx` and `Toast.tsx` export null. Intentional scope reduction, not dead code.
+
+10. **No error notification system** — ChatInterface catches errors generically, DayDashboard uses `alert()`. No unified toast/notification pattern.
+
+---
+
+## Refactoring Log
+
+### Initial State (2026-03-12)
+- App exported from Google AI Studio
+- Basic structure: components, hooks, services, store, utils
+- No CLAUDE.md, no docs, no agent discipline
+- Working features: map, chat with grounding, passport stamps, postcard creation, image generation
+- Known bugs: weather model version, 3D flip, POI association
