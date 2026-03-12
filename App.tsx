@@ -117,7 +117,7 @@ const AnimatedRoutes = () => {
   const location = useLocation();
   return (
     <AnimatePresence mode="popLayout">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location}>
         <Route path="/" element={<OverviewMap />} />
         <Route path="/list" element={<ItineraryList />} />
         <Route path="/passport" element={<Passaporto />} />

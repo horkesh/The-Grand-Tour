@@ -7,24 +7,22 @@ Working travel companion app with map, AI chat, passport stamps, postcard creati
 ## Phase 1: Stability Fixes (Priority)
 
 ### 1.1 Verify Gemini Model Names
-- **Status**: TODO
+- **Status**: DONE
 - **Task**: Confirm `gemini-2.5-flash`, `gemini-2.5-flash-image`, and `gemini-3-flash-preview` are valid. Fix any invalid ones.
 - **Files**: `services/geminiService.ts`
 
 ### 1.2 Weather Persistence
-- **Status**: TODO
+- **Status**: DONE
 - **Task**: Add `weatherData` to Zustand `partialize` so it survives page refresh. Add a TTL check (e.g., 6 hours) so stale weather is re-fetched.
 - **Files**: `store.ts`
 
 ### 1.3 Image Generation Retry
-- **Status**: TODO
+- **Status**: DONE
 - **Task**: Add retry logic to `ImageGenerator.tsx` queue — on failure, re-enqueue with backoff (max 2 retries per image).
 - **Files**: `components/ImageGenerator.tsx`
 
 ### 1.4 3D Card Flip Fix
-- **Status**: TODO
-- **Task**: Fix DayDashboard card flip — `rotate-y-180` is not a Tailwind class. Use inline `transform: 'rotateY(180deg)'` or arbitrary value class.
-- **Files**: `components/DayDashboard.tsx`
+- **Status**: NOT NEEDED — false positive. DayDashboard defines `.rotate-y-180` in inline `<style>` tag. Works correctly.
 
 ## Phase 2: UX Polish
 

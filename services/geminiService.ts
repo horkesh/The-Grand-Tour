@@ -97,7 +97,7 @@ export const getWeatherForecast = async (location: string, date: string): Promis
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `What is the typical weather for ${location}, Italy on ${date}? Return JSON: {"temp": "22°C", "condition": "sunny", "icon": "sunny", "description": "Mild"}.`;
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: prompt
       });
       

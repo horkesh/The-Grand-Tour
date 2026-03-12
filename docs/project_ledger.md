@@ -46,3 +46,42 @@ Adopted agent discipline from the Tonight repo. Set up CLAUDE.md, napkin runbook
 
 ### What's Next
 - Phase 1: Stability fixes (model names, weather persistence, image retry, card flip)
+
+---
+
+## 2026-03-12 — Phase 1: Stability Fixes + /simplify
+
+### Context
+First fix phase targeting critical stability issues from the audit.
+
+### Fixes Applied
+
+1. **Weather model name** (`services/geminiService.ts`) — changed `gemini-3-flash-preview` → `gemini-2.5-flash`. The old model ID was invalid; all weather calls were silently failing.
+
+2. **Weather persistence** (`store.ts`) — added `weatherData` to Zustand `partialize` config. Weather now survives page refresh instead of re-fetching 8 API calls on every mount.
+
+3. **Image generation retry** (`components/ImageGenerator.tsx`) — failed images are re-enqueued to the back of the queue with max 2 retries (3 total attempts). Previously dropped silently.
+
+4. **Routes type error** (`App.tsx`) — removed `key` prop from `<Routes>` (not valid in React Router v7). Pre-existing type error, fixed incidentally.
+
+### Audit Corrections
+- **3D card flip (issue #5)**: False positive. DayDashboard defines `.rotate-y-180 { transform: rotateY(180deg); }` in an inline `<style>` tag (line 322). The flip works — it's custom CSS, not Tailwind.
+
+### /simplify Findings (3-agent review)
+
+**Fixed:**
+1. **Progress counter inflation** — retried items were incrementing the progress counter, causing >100% display. Split into `completed`/`total` counters; `completed` only increments on permanent item removal.
+2. **Unnecessary useEffect re-runs** — `waypointImages` in dependency array caused the processing effect to re-run on every image store update. Replaced with a ref for the double-check.
+3. **Type annotation mismatch** — queue builder type now includes `retries?` field.
+
+**Reviewed but not changed:**
+- localStorage quota for base64 images — pre-existing issue (waypointImages was already persisted)
+- Queue retry vs `withRetry` — different scopes (API-level vs queue-level)
+- `setIsProcessing` race condition — guard prevents concurrent processing
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success
+
+### What's Next
+- Phase 2: UX polish (POI city association, error notifications, Leaflet popup refactor)

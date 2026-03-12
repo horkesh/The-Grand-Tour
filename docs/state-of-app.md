@@ -55,23 +55,23 @@ All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 
 
 ### Critical
 
-1. **Weather model version** — `gemini-3-flash-preview` may not be a valid model ID. Weather calls fail silently and return null. Verify against current Gemini model list.
+1. ~~**Weather model version**~~ — FIXED. Changed to `gemini-2.5-flash`.
 
-2. **Weather not persisted** — fetched fresh on every mount, wasting API quota. Should be in Zustand persist partialize.
+2. ~~**Weather not persisted**~~ — FIXED. Added to Zustand `partialize`.
 
-3. **Image generation has no retry** — if a waypoint image fails, it's silently dropped from the queue. No recovery mechanism.
+3. ~~**Image generation has no retry**~~ — FIXED. Re-enqueue to back with max 2 retries.
 
 ### High
 
 4. **POI city association broken** — chat-saved POIs use hardcoded `cityId: 'planned'`, so they appear on every city's map overlay, not just the relevant one.
 
-5. **3D card flip visual bug** — DayDashboard uses class string `rotate-y-180` which isn't a standard Tailwind class (needs arbitrary value `[rotateY(180deg)]` or inline style). Card doesn't actually flip.
+5. ~~**3D card flip**~~ — NOT A BUG. Custom CSS in inline `<style>` tag defines `.rotate-y-180`. Works correctly.
 
 6. **ItineraryMapOverlay window globals** — stores `window.handleEditNote` / `window.handleRemovePOI` for Leaflet popup callbacks. Stale closure risk on re-renders.
 
 ### Medium
 
-7. **ImageGenerator progress overshoot** — counts total on mount, ignores images enqueued mid-generation. Can show >100%.
+7. ~~**ImageGenerator progress overshoot**~~ — FIXED. Separate completed/total counters with Math.min cap.
 
 8. **Grounding types too broad** — `placeAnswerSources?: any` in types.ts. Fragile to SDK version changes.
 

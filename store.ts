@@ -77,6 +77,7 @@ export const useStore = create<AppState>()(
         stamps: state.stamps,
         postcards: state.postcards,
         waypointImages: state.waypointImages,
+        weatherData: state.weatherData,
       }),
     }
   )

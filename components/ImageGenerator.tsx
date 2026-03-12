@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
 import { generateLocationImage } from '../services/geminiService';
 
+const MAX_RETRIES = 2;
+
 const ImageGenerator: React.FC = () => {
   const { waypointImages, setWaypointImage } = useStore();
-  const [queue, setQueue] = useState<{ key: string; prompt: string }[]>([]);
+  const [queue, setQueue] = useState<{ key: string; prompt: string; retries?: number }[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [completed, setCompleted] = useState(0);
+  const [total, setTotal] = useState(0);
+  const waypointImagesRef = useRef(waypointImages);
+  waypointImagesRef.current = waypointImages;
 
   // 1. Build the Queue on Mount
   useEffect(() => {
-    const newQueue: { key: string; prompt: string }[] = [];
+    const newQueue: { key: string; prompt: string; retries?: number }[] = [];
 
     ITALIAN_CITIES.forEach((city) => {
-      // Main City Image
       if (!waypointImages[city.id]) {
         newQueue.push({
           key: city.id,
@@ -22,7 +26,6 @@ const ImageGenerator: React.FC = () => {
         });
       }
 
-      // Stop Images
       city.plannedStops.forEach((stop, idx) => {
         const key = `${city.id}_${idx}`;
         if (!waypointImages[key]) {
@@ -37,7 +40,7 @@ const ImageGenerator: React.FC = () => {
     if (newQueue.length > 0) {
       console.log(`[ImageGenerator] Queuing ${newQueue.length} images for generation.`);
       setQueue(newQueue);
-      setProgress({ current: 0, total: newQueue.length });
+      setTotal(newQueue.length);
     }
   }, []); // Run once on mount to check gaps
 
@@ -48,22 +51,26 @@ const ImageGenerator: React.FC = () => {
     const processNext = async () => {
       setIsProcessing(true);
       const item = queue[0];
-      
+
       try {
         // Double check in case it was generated elsewhere in the meantime
-        if (!waypointImages[item.key]) {
-        //   console.log(`[ImageGenerator] Generating: ${item.key}`);
+        if (!waypointImagesRef.current[item.key]) {
           const img = await generateLocationImage(item.prompt);
           setWaypointImage(item.key, img);
         }
-      } catch (err) {
-        console.error(`[ImageGenerator] Failed ${item.key}:`, err);
-        // Move to back of queue to retry later? Or just drop?
-        // For now, we drop it to prevent blocking the queue.
-      } finally {
         setQueue((prev) => prev.slice(1));
-        setProgress(p => ({ ...p, current: p.current + 1 }));
-        
+        setCompleted(c => c + 1);
+      } catch (err) {
+        console.error(`[ImageGenerator] Failed ${item.key} (attempt ${(item.retries || 0) + 1}):`, err);
+        const attempts = (item.retries || 0) + 1;
+        if (attempts <= MAX_RETRIES) {
+          // Re-enqueue to back with incremented retry count
+          setQueue((prev) => [...prev.slice(1), { ...item, retries: attempts }]);
+        } else {
+          setQueue((prev) => prev.slice(1));
+          setCompleted(c => c + 1);
+        }
+      } finally {
         // Rate Limit Protection: Wait 4 seconds between generations
         setTimeout(() => {
           setIsProcessing(false);
@@ -72,9 +79,10 @@ const ImageGenerator: React.FC = () => {
     };
 
     processNext();
-  }, [queue, isProcessing, waypointImages, setWaypointImage]);
+  }, [queue, isProcessing, setWaypointImage]);
 
-  if (queue.length === 0) return null;
+  if (queue.length === 0 && completed === 0) return null;
+  if (total === 0) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -85,7 +93,7 @@ const ImageGenerator: React.FC = () => {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-slate-600 dark:text-slate-300">
-                {Math.round((progress.current / progress.total) * 100)}%
+                {Math.min(100, Math.round((completed / total) * 100))}%
             </div>
         </div>
         <div>
