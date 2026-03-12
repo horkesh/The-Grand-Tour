@@ -12,7 +12,7 @@ const DayDashboard: React.FC = () => {
   const navigate = useNavigate();
   const city = ITALIAN_CITIES.find(c => c.id === cityId);
 
-  const { weatherData, stamps, addStamp, postcards, addPostcard } = useStore();
+  const { weatherData, stamps, addStamp, postcards, addPostcard, waypointImages } = useStore();
   const weather = city ? weatherData[city.id] : undefined;
   
   // Selection State
@@ -22,13 +22,13 @@ const DayDashboard: React.FC = () => {
   const currentKey = city ? (selectedStopIdx !== null ? `${city.id}_${selectedStopIdx}` : city.id) : '';
   const currentStop = (city && selectedStopIdx !== null) ? city.plannedStops[selectedStopIdx] : null;
   const currentTitle = currentStop ? currentStop.title : (city?.title.split(': ')[1] || '');
-  const currentLocation = currentStop ? city?.location : (city?.location || '');
+  const currentLocation = currentStop ? `${currentStop.type} · ${city?.location}` : (city?.location || '');
   const currentContext = currentStop ? `Visiting ${currentStop.title}` : (city?.milestone || '');
   const isCurrentItemStamped = stamps.includes(currentKey);
   const currentPostcards = postcards[currentKey] || [];
 
-  // Final Image Source - use the static image from the city data
-  const heroImage = (currentStop?.image) || city?.image || '';
+  // Final Image Source - prefer AI-generated image, fall back to static
+  const heroImage = waypointImages[currentKey] || currentStop?.image || city?.image || '';
 
   // UI State
   const [isFlipped, setIsFlipped] = useState(false);
