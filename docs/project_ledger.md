@@ -85,3 +85,39 @@ First fix phase targeting critical stability issues from the audit.
 
 ### What's Next
 - Phase 2: UX polish (POI city association, error notifications, Leaflet popup refactor)
+
+---
+
+## 2026-03-12 — Phase 2: UX Polish + /simplify
+
+### Context
+Second fix phase targeting UX issues from the audit.
+
+### Fixes Applied
+
+1. **POI city association** (`ChatInterface.tsx`, `GroundingResult.tsx`) — saved POIs now matched to nearest city by coordinate distance (squared Euclidean, 0.25° threshold ≈ 50km). Falls back to `'planned'` if no city nearby or no coordinates available. GroundingResult passes lat/lng from grounding metadata.
+
+2. **Toast notification system** (`Toast.tsx`, `App.tsx`, `DayDashboard.tsx`, `ChatInterface.tsx`) — reactivated stub Toast.tsx with Zustand-based store. Replaced all `alert()` calls. Three variants: info (teal), error (red), success (emerald). Auto-dismiss after 3 seconds with fade animation.
+
+3. **Leaflet popup refactor** (`ItineraryMapOverlay.tsx`) — replaced `window.handleEditNote` / `window.handleRemovePOI` globals with delegated click handler using `data-poi-action` / `data-poi-id` attributes. No more window namespace pollution.
+
+4. **POI map visibility** (`ItineraryMapOverlay.tsx`) — POIs with `cityId: 'planned'` now also shown on all city maps (backwards-compatible with existing saved data).
+
+### /simplify Findings (3-agent review)
+
+**Fixed:**
+1. **Leaflet popup delegation target** — Leaflet renders popups in a separate DOM pane outside the map container. Changed delegation from `mapContainerRef.current` to `document` so popup button clicks are caught.
+2. **Toast timer race condition** — rapid `show()` calls could orphan timers. Added `timerRef` to track and clear previous timers. Added `_seq` counter to distinguish repeated identical messages.
+3. **Toast unnecessary re-renders** — `useToast` hook now returns only the `show` function via selector, so consumer components don't re-render when message state changes.
+4. **Leaflet handler listener churn** — removed `savedPOIs` from useEffect deps (used ref instead) so the delegated listener isn't re-attached on every POI change.
+
+**Reviewed but not changed:**
+- `findNearestCityId` extraction to utils — only one call site, premature
+- `handleSavePOI` memoization — GroundingResult isn't memoized, no benefit
+- 8-city iteration on POI save — negligible (16 arithmetic ops)
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+
+### What's Next
+- Phase 3 features if desired (offline support, travel time estimates, partner sync)

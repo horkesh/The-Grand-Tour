@@ -27,15 +27,15 @@ Working travel companion app with map, AI chat, passport stamps, postcard creati
 ## Phase 2: UX Polish
 
 ### 2.1 POI City Association
-- **Task**: When saving a POI from chat, detect which city it's nearest to (by coordinates) and assign that `cityId`. Fall back to `'planned'` if no match.
+- **Status**: DONE
 - **Files**: `components/ChatInterface.tsx`, `components/GroundingResult.tsx`
 
 ### 2.2 Error Notification System
-- **Task**: Replace `alert()` calls and generic catch blocks with a lightweight toast system. Reactivate `Toast.tsx` stub.
-- **Files**: `components/Toast.tsx`, `components/DayDashboard.tsx`, `components/ChatInterface.tsx`
+- **Status**: DONE
+- **Files**: `components/Toast.tsx`, `components/DayDashboard.tsx`, `components/ChatInterface.tsx`, `App.tsx`
 
 ### 2.3 Leaflet Popup Refactor
-- **Task**: Replace `window.handleEditNote` / `window.handleRemovePOI` globals with a message-passing pattern or React portal approach for Leaflet popups.
+- **Status**: DONE
 - **Files**: `components/ItineraryMapOverlay.tsx`
 
 ## Phase 3: Feature Enhancements

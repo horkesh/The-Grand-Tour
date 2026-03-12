@@ -12,6 +12,7 @@ import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
 import { useCountdown } from './hooks/useCountdown';
+import Toast from './components/Toast';
 
 const Layout = ({ children }: React.PropsWithChildren<{}>) => {
   const { theme, toggleTheme } = useStore();
@@ -47,6 +48,7 @@ const Layout = ({ children }: React.PropsWithChildren<{}>) => {
 
   return (
     <div className="flex h-screen w-full bg-[#f9f7f4] dark:bg-[#000] overflow-hidden pt-safe-top pb-safe-bottom">
+      <Toast />
       <aside className="hidden lg:flex w-80 bg-white dark:bg-[#070707] border-r border-slate-200 dark:border-white/5 p-8 flex-col z-10 shadow-2xl">
         <Sidebar />
       </aside>

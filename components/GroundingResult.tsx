@@ -5,7 +5,7 @@ import { Icons } from '../constants';
 
 interface GroundingResultProps {
   chunks: GroundingChunk[];
-  onSavePOI: (poi: { title: string, uri: string, description?: string }) => void;
+  onSavePOI: (poi: { title: string, uri: string, description?: string, lat?: number, lng?: number }) => void;
   isSaved?: (uri: string) => boolean;
 }
 
@@ -55,11 +55,12 @@ const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, is
                     View Map &rarr;
                   </a>
                   <button
-                    onClick={() => onSavePOI({ 
-                      title: chunk.maps!.title || 'Unknown Place', 
+                    onClick={() => onSavePOI({
+                      title: chunk.maps!.title || 'Unknown Place',
                       uri: chunk.maps!.uri || '',
-                      // Safe access to review snippet text
-                      description: chunk.maps!.placeAnswerSources?.reviewSnippets?.[0]?.text
+                      description: chunk.maps!.placeAnswerSources?.reviewSnippets?.[0]?.text,
+                      lat: chunk.maps!.placeAnswerSources?.latitude,
+                      lng: chunk.maps!.placeAnswerSources?.longitude,
                     })}
                     disabled={alreadySaved}
                     className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${

@@ -2,10 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, SavedPOI } from '../types';
 import { enrichTripPlan } from '../services/geminiService';
 import { useStore } from '../store';
+import { ITALIAN_CITIES } from '../constants';
 import GroundingResult from './GroundingResult';
+import { useToast } from './Toast';
 
 const ChatInterface: React.FC = () => {
   const { userLocation, savedPOIs, addSavedPOI } = useStore();
+  const showToast = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -53,14 +56,32 @@ const ChatInterface: React.FC = () => {
 
   const isSaved = (uri: string) => savedPOIs.some(poi => poi.uri === uri);
   
-  const handleSavePOI = (poi: { title: string, uri: string, description?: string }) => {
+  const findNearestCityId = (lat?: number, lng?: number): string => {
+    if (lat == null || lng == null) return 'planned';
+    let best = 'planned';
+    let bestDist = Infinity;
+    for (const city of ITALIAN_CITIES) {
+      const dlat = city.center.lat - lat;
+      const dlng = city.center.lng - lng;
+      const dist = dlat * dlat + dlng * dlng;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = city.id;
+      }
+    }
+    // Only associate if within ~50km (roughly 0.5 degrees)
+    return bestDist < 0.25 ? best : 'planned';
+  };
+
+  const handleSavePOI = (poi: { title: string, uri: string, description?: string, lat?: number, lng?: number }) => {
     const newPoi: SavedPOI = {
       ...poi,
       id: Date.now().toString(),
-      cityId: 'planned', // generic id
+      cityId: findNearestCityId(poi.lat, poi.lng),
       timestamp: Date.now(),
     };
     addSavedPOI(newPoi);
+    showToast(`Saved: ${poi.title}`, 'success');
   };
 
   return (

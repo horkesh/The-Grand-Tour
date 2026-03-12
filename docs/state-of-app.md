@@ -63,11 +63,11 @@ All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 
 
 ### High
 
-4. **POI city association broken** — chat-saved POIs use hardcoded `cityId: 'planned'`, so they appear on every city's map overlay, not just the relevant one.
+4. ~~**POI city association**~~ — FIXED. Nearest-city matching by coordinates with 0.25° threshold.
 
 5. ~~**3D card flip**~~ — NOT A BUG. Custom CSS in inline `<style>` tag defines `.rotate-y-180`. Works correctly.
 
-6. **ItineraryMapOverlay window globals** — stores `window.handleEditNote` / `window.handleRemovePOI` for Leaflet popup callbacks. Stale closure risk on re-renders.
+6. ~~**Leaflet popup globals**~~ — FIXED. Delegated click handler with data attributes on document.
 
 ### Medium
 
@@ -75,9 +75,9 @@ All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 
 
 8. **Grounding types too broad** — `placeAnswerSources?: any` in types.ts. Fragile to SDK version changes.
 
-9. **Unused stub components** — `CurrencyConverter.tsx` and `Toast.tsx` export null. Intentional scope reduction, not dead code.
+9. **Unused stub component** — `CurrencyConverter.tsx` exports null. Intentional scope reduction.
 
-10. **No error notification system** — ChatInterface catches errors generically, DayDashboard uses `alert()`. No unified toast/notification pattern.
+10. ~~**No error notification system**~~ — FIXED. Toast system with Zustand store, 3 variants (info/error/success).
 
 ---
 

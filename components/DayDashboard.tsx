@@ -5,6 +5,7 @@ import { ITALIAN_CITIES, Icons } from '../constants';
 import { useStore } from '../store';
 import { mergePostcardImage } from '../utils/imageProcessing';
 import ItineraryMapOverlay from './ItineraryMapOverlay';
+import { useToast } from './Toast';
 
 const DayDashboard: React.FC = () => {
   const { cityId } = useParams();
@@ -38,6 +39,7 @@ const DayDashboard: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
+  const showToast = useToast();
   const WeatherIcon = weather ? Icons.Weather[weather.icon as keyof typeof Icons.Weather] || Icons.Weather.sunny : Icons.Weather.sunny;
 
   // Camera cleanup
@@ -63,7 +65,7 @@ const DayDashboard: React.FC = () => {
     } catch (err) {
       console.error("Camera error:", err);
       setIsCameraActive(false);
-      alert("Please allow camera access to take a postcard photo.");
+      showToast("Please allow camera access to take a postcard photo.", 'error');
     }
   };
 
@@ -93,7 +95,7 @@ const DayDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error("Postcard generation failed:", err);
-      alert("Failed to develop postcard. Please try again.");
+      showToast("Failed to develop postcard. Please try again.", 'error');
     } finally {
       setIsProcessingPostcard(false);
     }
