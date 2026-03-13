@@ -12,10 +12,11 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<MapInstance | null>(null);
   const markersLayerRef = useRef<LayerGroup | null>(null);
+  const userLayerRef = useRef<LayerGroup | null>(null);
   const routeLayerRef = useRef<LayerGroup | null>(null);
   const tileLayerRef = useRef<TileLayer | null>(null);
   
-  const { theme, savedPOIs, removeSavedPOI, updateSavedPOINote } = useStore();
+  const { theme, savedPOIs, removeSavedPOI, updateSavedPOINote, userLocation } = useStore();
   const [editingPOI, setEditingPOI] = useState<SavedPOI | null>(null);
   const [tempNote, setTempNote] = useState('');
 
@@ -71,6 +72,7 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
     if (map) {
       mapInstanceRef.current = map;
       markersLayerRef.current = createLayerGroup(map);
+      userLayerRef.current = createLayerGroup(map);
       routeLayerRef.current = createLayerGroup(map);
       addZoomControl(map);
       setTimeout(() => map.invalidateSize(), 100);
@@ -126,6 +128,21 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
     });
   }, [city.id, savedPOIs, createMarker, createDivIcon]);
 
+  // User location marker — separate effect to avoid rebuilding all markers on every position update
+  useEffect(() => {
+    if (!userLayerRef.current) return;
+    userLayerRef.current.clearLayers();
+    if (userLocation) {
+      const userIcon = createDivIcon({
+        html: `<div class="user-location-marker"><div class="user-dot"></div><div class="user-pulse"></div></div>`,
+        className: 'custom-div-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+      createMarker(userLocation.lat, userLocation.lng, { icon: userIcon }).addTo(userLayerRef.current);
+    }
+  }, [userLocation, createMarker, createDivIcon]);
+
   useEffect(() => {
     if (!mapInstanceRef.current || !routeLayerRef.current) return;
     const layer = routeLayerRef.current;
@@ -153,7 +170,7 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
       <div className="bg-white dark:bg-[#0a0a0a] w-full h-full flex flex-col lg:rounded-[3rem] lg:max-w-6xl lg:max-h-[90vh] lg:mx-auto lg:my-auto shadow-2xl relative">
         <div className="px-6 py-4 lg:p-8 border-b border-slate-100 dark:border-white/10 flex items-center justify-between gap-4 shrink-0 bg-white dark:bg-[#0a0a0a] z-10">
           <h3 className="font-serif text-lg lg:text-3xl font-bold text-[#194f4c] dark:text-white truncate">{city.title}</h3>
-          <button onClick={onClose} className="p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all text-slate-400">
+          <button onClick={onClose} aria-label="Close map" className="p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all text-slate-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>

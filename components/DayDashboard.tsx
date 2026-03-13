@@ -1,22 +1,52 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ITALIAN_CITIES, Icons } from '../constants';
+import { ITALIAN_CITIES, ANNIVERSARY_DAY_ID, Icons } from '../constants';
 import { useStore } from '../store';
 import { mergePostcardImage } from '../utils/imageProcessing';
+import { resizeImage } from '../utils/imageResize';
 import ItineraryMapOverlay from './ItineraryMapOverlay';
 import { useToast } from './Toast';
 
 const DayDashboard: React.FC = () => {
   const { cityId } = useParams();
   const navigate = useNavigate();
-  const city = ITALIAN_CITIES.find(c => c.id === cityId);
+  const cityIndex = ITALIAN_CITIES.findIndex(c => c.id === cityId);
+  const city = cityIndex >= 0 ? ITALIAN_CITIES[cityIndex] : undefined;
+  const prevCity = cityIndex > 0 ? ITALIAN_CITIES[cityIndex - 1] : null;
+  const nextCity = cityIndex < ITALIAN_CITIES.length - 1 ? ITALIAN_CITIES[cityIndex + 1] : null;
 
-  const { weatherData, stamps, addStamp, postcards, addPostcard, waypointImages } = useStore();
+  const { weatherData, stamps, addStamp, postcards, addPostcard, waypointImages, setWaypointImage, removeWaypointImage, hasFlippedCard, setHasFlippedCard, setLastViewedDay } = useStore();
   const weather = city ? weatherData[city.id] : undefined;
-  
+  const isAnniversary = cityId === ANNIVERSARY_DAY_ID;
+
+  // Track last viewed day
+  useEffect(() => {
+    if (cityId) setLastViewedDay(cityId);
+  }, [cityId, setLastViewedDay]);
+
   // Selection State
   const [selectedStopIdx, setSelectedStopIdx] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  // Auto-dismiss confetti with cleanup
+  useEffect(() => {
+    if (!showConfetti) return;
+    const timer = setTimeout(() => setShowConfetti(false), 2000);
+    return () => clearTimeout(timer);
+  }, [showConfetti]);
+
+  // Pre-generate confetti particle positions (stable per burst)
+  const confettiParticles = useMemo(() => {
+    if (!showConfetti) return [];
+    return Array.from({ length: 30 }, () => ({
+      initialRotate: Math.random() * 360,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      rotate: Math.random() * 720,
+      duration: 1 + Math.random(),
+    }));
+  }, [showConfetti]);
 
   // Derived Properties
   const currentKey = city ? (selectedStopIdx !== null ? `${city.id}_${selectedStopIdx}` : city.id) : '';
@@ -38,6 +68,7 @@ const DayDashboard: React.FC = () => {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = useToast();
   const WeatherIcon = weather ? Icons.Weather[weather.icon as keyof typeof Icons.Weather] || Icons.Weather.sunny : Icons.Weather.sunny;
@@ -107,6 +138,34 @@ const DayDashboard: React.FC = () => {
     startCamera();
   };
 
+  const handleStamp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isCurrentItemStamped) return;
+    addStamp(currentKey);
+    setShowConfetti(true);
+    if (navigator.vibrate) navigator.vibrate(100);
+  };
+
+  const handleFlip = () => {
+    if (isCameraActive) return;
+    setIsFlipped(!isFlipped);
+    if (!hasFlippedCard) setHasFlippedCard();
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file);
+      setWaypointImage(currentKey, dataUrl);
+      showToast('Photo uploaded!', 'success');
+    } catch {
+      showToast('Failed to process photo.', 'error');
+    }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
   const handleSelectStop = (idx: number) => {
     setSelectedStopIdx(idx);
     setIsFlipped(false);
@@ -124,7 +183,7 @@ const DayDashboard: React.FC = () => {
       className="absolute inset-0 w-full h-full flex flex-col gap-8 overflow-y-auto custom-scrollbar p-4 lg:p-12 pb-32"
     >
       <div ref={topRef} className="perspective-1000 shrink-0 h-[45vh] lg:h-[60vh] relative group">
-        <div className={`relative h-full w-full transition-transform duration-700 preserve-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`} onClick={() => !isCameraActive && setIsFlipped(!isFlipped)}>
+        <div className={`relative h-full w-full transition-transform duration-700 preserve-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`} onClick={handleFlip}>
           
           {/* Front Face */}
           <div className="absolute inset-0 backface-hidden rounded-[3rem] overflow-hidden shadow-2xl bg-slate-900">
@@ -141,8 +200,9 @@ const DayDashboard: React.FC = () => {
                     Smile at {currentStop ? currentStop.title : city.location}!
                   </p>
                   <div className="flex gap-4">
-                    <button 
+                    <button
                       onClick={(e) => { e.stopPropagation(); handleCapture(); }}
+                      aria-label="Take photo"
                       className="w-16 h-16 bg-white rounded-full border-4 border-slate-300 flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
                     >
                       <div className="w-12 h-12 bg-emerald-500 rounded-full" />
@@ -206,6 +266,17 @@ const DayDashboard: React.FC = () => {
                          {isProcessingPostcard ? 'Processing...' : 'Create Postcard'}
                      </button>
 
+                     <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-white/20 backdrop-blur-xl border border-white/30 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-white/40 transition-all flex items-center gap-1.5">
+                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                         Upload Photo
+                     </button>
+                     {waypointImages[currentKey] && (
+                       <button onClick={(e) => { e.stopPropagation(); removeWaypointImage(currentKey); showToast('Photo removed', 'info'); }} className="px-3 py-2 bg-red-500/30 backdrop-blur-xl border border-red-400/30 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-red-500/50 transition-all">
+                         ✕
+                       </button>
+                     )}
+                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+
                      {weather && selectedStopIdx === null && (
                        <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-xl border border-white/30 rounded-xl text-white">
                          <WeatherIcon />
@@ -215,7 +286,40 @@ const DayDashboard: React.FC = () => {
                    </div>
                 </div>
 
+                {/* Flip hint */}
+                {!hasFlippedCard && !isFlipped && selectedStopIdx === null && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none"
+                  >
+                    <div className="bg-black/50 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-widest px-6 py-3 rounded-full">
+                      Tap to flip
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Day navigation arrows */}
+                {selectedStopIdx === null && (
+                  <div className="absolute bottom-10 right-10 flex gap-2 z-10">
+                    {prevCity && (
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/day/${prevCity.id}`); }} aria-label="Previous day" className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-full flex items-center justify-center hover:bg-white/40 transition-all">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                    )}
+                    {nextCity && (
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/day/${nextCity.id}`); }} aria-label="Next day" className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/30 text-white rounded-full flex items-center justify-center hover:bg-white/40 transition-all">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <div className="absolute bottom-10 left-10 text-white z-10">
+                  {isAnniversary && selectedStopIdx === null && (
+                    <span className="inline-block mb-3 px-4 py-1.5 bg-[#ac3d29] text-white text-[10px] font-bold uppercase tracking-widest rounded-full">❤️ Anniversary Day</span>
+                  )}
                   <h2 className="font-serif text-3xl lg:text-7xl font-bold tracking-tighter leading-tight max-w-2xl">{currentTitle}</h2>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-[10px] uppercase font-bold tracking-widest text-white/60">
                     <span>{currentLocation}</span>
@@ -232,16 +336,51 @@ const DayDashboard: React.FC = () => {
           </div>
 
           {/* Back Face (Flip) */}
-          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#f4f1ea] dark:bg-[#1a1a1a] rounded-[3rem] p-12 shadow-2xl flex flex-col items-center justify-center text-center">
+          <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-[3rem] p-12 shadow-2xl flex flex-col items-center justify-center text-center ${isAnniversary ? 'bg-gradient-to-br from-[#f4e8e4] to-[#f4f1ea] dark:from-[#2a1515] dark:to-[#1a1a1a]' : 'bg-[#f4f1ea] dark:bg-[#1a1a1a]'}`}>
+            {isAnniversary && selectedStopIdx === null && (
+              <p className="text-[#ac3d29] text-xs font-bold uppercase tracking-[0.3em] mb-4">May 6, 2006 — May 6, 2026</p>
+            )}
             <p className="font-serif text-xl lg:text-3xl italic text-slate-800 dark:text-slate-200">"{currentContext}"</p>
-            
-            <button 
-                onClick={(e) => { e.stopPropagation(); addStamp(currentKey); }} 
-                disabled={isCurrentItemStamped} 
-                className={`mt-10 px-8 py-3 rounded-full font-bold text-sm transition-all ${isCurrentItemStamped ? 'bg-emerald-100 text-emerald-700' : 'bg-[#194f4c] text-white hover:scale-105 shadow-xl'}`}
+
+            {/* Confetti burst */}
+            <AnimatePresence>
+              {showConfetti && (
+                <motion.div
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ duration: 2 }}
+                  className="absolute inset-0 pointer-events-none overflow-hidden rounded-[3rem]"
+                >
+                  {confettiParticles.map((p, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{
+                        x: '50%', y: '50%', scale: 0,
+                        rotate: p.initialRotate
+                      }}
+                      animate={{
+                        x: `${p.x}%`,
+                        y: `${p.y}%`,
+                        scale: [0, 1.5, 1],
+                        rotate: p.rotate
+                      }}
+                      transition={{ duration: p.duration, ease: 'easeOut' }}
+                      className="absolute w-3 h-3 rounded-full"
+                      style={{ backgroundColor: ['#194f4c', '#ac3d29', '#f59e0b', '#10b981', '#6366f1'][i % 5] }}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <motion.button
+                onClick={handleStamp}
+                disabled={isCurrentItemStamped}
+                whileTap={!isCurrentItemStamped ? { scale: 0.9, rotate: -5 } : undefined}
+                className={`mt-10 px-8 py-3 rounded-full font-bold text-sm transition-all ${isCurrentItemStamped ? 'bg-emerald-100 text-emerald-700' : isAnniversary ? 'bg-[#ac3d29] text-white hover:scale-105 shadow-xl' : 'bg-[#194f4c] text-white hover:scale-105 shadow-xl'}`}
             >
                 {isCurrentItemStamped ? `Stamped: ${currentTitle}` : `Stamp "${currentTitle}"`}
-            </button>
+            </motion.button>
             
             {selectedStopIdx !== null && (
                 <div className="mt-8 flex gap-4">
@@ -274,6 +413,20 @@ const DayDashboard: React.FC = () => {
                  </div>
                )}
              </div>
+
+             {/* Parking / ZTL Warning */}
+             {city.parking && (
+               <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600 rounded-r-2xl">
+                 <div className="flex items-start gap-3">
+                   <span className="text-amber-500 text-lg shrink-0">⚠️</span>
+                   <div>
+                     <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Parking & ZTL</p>
+                     <p className="text-sm text-amber-900 dark:text-amber-200">{city.parking}</p>
+                   </div>
+                 </div>
+               </div>
+             )}
+
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {city.plannedStops.map((stop, i) => (
                  <div 
@@ -284,8 +437,16 @@ const DayDashboard: React.FC = () => {
                    <div className="flex items-center gap-4 min-w-0">
                        <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-serif font-bold transition-colors ${selectedStopIdx === i ? 'bg-white text-[#194f4c]' : 'bg-slate-100 dark:bg-white/5 text-[#194f4c] dark:text-white'}`}>{i + 1}</div>
                        <div className="min-w-0">
-                           <h4 className={`font-serif text-base font-bold truncate ${selectedStopIdx === i ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{stop.title}</h4>
-                           <p className={`text-[9px] uppercase tracking-widest ${selectedStopIdx === i ? 'text-white/60' : 'text-slate-400'}`}>{stop.type}</p>
+                           <div className="flex items-center gap-2">
+                             <h4 className={`font-serif text-base font-bold truncate ${selectedStopIdx === i ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{stop.title}</h4>
+                             {stop.badge && (
+                               <span className={`shrink-0 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${selectedStopIdx === i ? 'bg-white/20 text-white' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>{stop.badge}</span>
+                             )}
+                           </div>
+                           <div className={`flex items-center gap-2 text-[9px] uppercase tracking-widest ${selectedStopIdx === i ? 'text-white/60' : 'text-slate-400'}`}>
+                             <span>{stop.type}</span>
+                             {stop.duration && <><span>·</span><span>{stop.duration}</span></>}
+                           </div>
                        </div>
                    </div>
 

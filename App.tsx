@@ -8,23 +8,25 @@ import Passaporto from './components/Passaporto';
 import DayDashboard from './components/DayDashboard';
 import ItineraryList from './components/ItineraryList';
 import Gallery from './components/Gallery';
+import StoryMode from './components/StoryMode';
 import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
 import { useCountdown } from './hooks/useCountdown';
 import Toast from './components/Toast';
 import ImageGenerator from './components/ImageGenerator';
+import Welcome from './components/Welcome';
+import TripComplete from './components/TripComplete';
+import { useGeolocation } from './hooks/useGeolocation';
 
 const Layout = ({ children }: React.PropsWithChildren<{}>) => {
-  const { theme, toggleTheme } = useStore();
+  const { theme, toggleTheme, weatherData, updateCityWeather } = useStore();
+  useGeolocation();
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('bella_italia_theme', theme);
   }, [theme]);
-
-  // Weather pre-fetching strategy: Load on mount, not continuously
-  const { weatherData, updateCityWeather } = useStore();
   useEffect(() => {
     const fetchAllWeather = async () => {
       // Prioritize first city if missing
@@ -49,6 +51,8 @@ const Layout = ({ children }: React.PropsWithChildren<{}>) => {
 
   return (
     <div className="flex h-screen w-full bg-[#f9f7f4] dark:bg-[#000] overflow-hidden pt-safe-top pb-safe-bottom">
+      <Welcome />
+      <TripComplete />
       <Toast />
       <ImageGenerator />
       <aside className="hidden lg:flex w-80 bg-white dark:bg-[#070707] border-r border-slate-200 dark:border-white/5 p-8 flex-col z-10 shadow-2xl">
@@ -60,7 +64,7 @@ const Layout = ({ children }: React.PropsWithChildren<{}>) => {
         <header className="lg:hidden shrink-0 flex flex-col z-20 px-4 pt-4 pb-2 bg-transparent relative">
           <div className="flex items-center justify-between mb-4 px-2">
             <MiniCalendarHeader />
-            <button onClick={toggleTheme} className="w-9 h-9 rounded-full bg-white dark:bg-white/10 shadow-lg flex items-center justify-center text-slate-600 dark:text-white border border-slate-100 dark:border-white/5">
+            <button onClick={toggleTheme} aria-label="Toggle dark mode" className="w-9 h-9 rounded-full bg-white dark:bg-white/10 shadow-lg flex items-center justify-center text-slate-600 dark:text-white border border-slate-100 dark:border-white/5">
               {theme === 'light' ? '☾' : '☼'}
             </button>
           </div>
@@ -78,14 +82,16 @@ const Layout = ({ children }: React.PropsWithChildren<{}>) => {
 const MobileNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lastViewedDay } = useStore();
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="p-1 bg-white/40 dark:bg-white/5 backdrop-blur-2xl rounded-[2rem] border border-white/50 dark:border-white/10 shadow-2xl flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
+    <div className="p-1 bg-white/60 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] border border-white/50 dark:border-white/10 shadow-2xl flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
       <NavButton active={isActive('/')} onClick={() => navigate('/')} icon={<Icons.Map />} label="Map" />
       <NavButton active={isActive('/list')} onClick={() => navigate('/list')} icon={<Icons.Route />} label="Route" />
       <NavButton active={isActive('/passport') || isActive('/gallery')} onClick={() => navigate('/passport')} icon={<div className="h-4 w-4 border-2 border-current rounded-sm" />} label="Passport" />
-      <NavButton active={location.pathname.startsWith('/day')} onClick={() => navigate(`/day/${ITALIAN_CITIES[0].id}`)} icon={<Icons.Journal />} label="Journal" />
+      <NavButton active={location.pathname.startsWith('/day')} onClick={() => navigate(`/day/${lastViewedDay}`)} icon={<Icons.Journal />} label="Journal" />
+      <NavButton active={isActive('/story')} onClick={() => navigate('/story')} icon={<Icons.Story />} label="Story" />
       <NavButton active={isActive('/chat')} onClick={() => navigate('/chat')} icon={<Icons.Chat />} label="AI" />
     </div>
   );
@@ -127,6 +133,7 @@ const AnimatedRoutes = () => {
         <Route path="/passport" element={<Passaporto />} />
         <Route path="/chat" element={<ChatInterface />} />
         <Route path="/gallery" element={<Gallery />} />
+        <Route path="/story" element={<StoryMode />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

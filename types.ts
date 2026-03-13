@@ -64,6 +64,8 @@ export interface PlannedStop {
   lat: number;
   lng: number;
   image?: string;
+  duration?: string;
+  badge?: string;
 }
 
 export interface TripSegment {
@@ -79,6 +81,7 @@ export interface TripSegment {
   zoom: number;
   plannedStops: PlannedStop[];
   driveFromPrev?: string; // Driving time from previous day's end point, e.g. "1h 30m"
+  parking?: string; // Parking/ZTL warning for this day
 }
 
 // Leaflet Interface Definitions

@@ -1,6 +1,8 @@
 import React from 'react';
 import { TripSegment } from './types';
 
+export const ANNIVERSARY_DAY_ID = 'day-5';
+
 export const ITALIAN_CITIES: TripSegment[] = [
   { 
     id: 'day-1', 
@@ -30,12 +32,13 @@ export const ITALIAN_CITIES: TripSegment[] = [
     mapUrl: 'https://www.google.com/maps/dir/Fiumicino/Montefiascone/Civita+di+Bagnoregio/Lake+Bolsena+Viewpoint/Orvieto',
     center: { lat: 42.55, lng: 12.10 },
     zoom: 10,
+    parking: 'Orvieto: park at Campo della Fiera (funicular up). Do NOT drive into centro storico — active ZTL.',
     plannedStops: [
-      { title: 'Montefiascone', uri: 'https://www.google.com/maps/search/?api=1&query=Montefiascone+Viterbo', type: 'sight', lat: 42.5376, lng: 12.0308 },
-      { title: 'Civita di Bagnoregio', uri: 'https://www.google.com/maps/search/?api=1&query=Civita+di+Bagnoregio', type: 'sight', lat: 42.6277, lng: 12.1135 },
+      { title: 'Montefiascone', uri: 'https://www.google.com/maps/search/?api=1&query=Montefiascone+Viterbo', type: 'sight', lat: 42.5376, lng: 12.0308, duration: '30–40 min' },
+      { title: 'Civita di Bagnoregio', uri: 'https://www.google.com/maps/search/?api=1&query=Civita+di+Bagnoregio', type: 'sight', lat: 42.6277, lng: 12.1135, duration: '60–90 min' },
       { title: 'Alma Civita (Lunch)', uri: 'https://maps.app.goo.gl/FPhnH54aJaWsrztTA', type: 'restaurant', lat: 42.6275, lng: 12.1130 },
-      { title: 'Lake Bolsena Viewpoint', uri: 'https://www.google.com/maps/search/?api=1&query=Lake+Bolsena+Panoramic+Viewpoint', type: 'sight', lat: 42.6486, lng: 11.9891 },
-      { title: 'Pozzo di San Patrizio', uri: 'https://maps.app.goo.gl/BP766FvRMafP9Wpb9', type: 'sight', lat: 42.7166, lng: 12.1150 },
+      { title: 'Lake Bolsena Viewpoint', uri: 'https://www.google.com/maps/search/?api=1&query=Lake+Bolsena+Panoramic+Viewpoint', type: 'sight', lat: 42.6486, lng: 11.9891, duration: '15 min' },
+      { title: 'Pozzo di San Patrizio', uri: 'https://maps.app.goo.gl/BP766FvRMafP9Wpb9', type: 'sight', lat: 42.7166, lng: 12.1150, duration: '30–40 min' },
       { title: 'Terrazza Clementini', uri: 'https://www.booking.com/Share-Pa0G10', type: 'hotel', lat: 42.7165, lng: 12.1051 },
       { title: 'La Palomba (Dinner)', uri: 'https://maps.app.goo.gl/FrnxPLAoLHjXZnjAA', type: 'restaurant', lat: 42.7182, lng: 12.1102 }
     ]
@@ -53,12 +56,12 @@ export const ITALIAN_CITIES: TripSegment[] = [
     center: { lat: 43.20, lng: 11.45 },
     zoom: 9,
     plannedStops: [
-      { title: 'Abbazia di Sant\'Antimo', uri: 'https://www.google.com/maps/search/?api=1&query=Abbazia+di+Sant\'Antimo', type: 'sight', lat: 42.9997, lng: 11.5155 },
-      { title: 'Montalcino Viewpoint', uri: 'https://www.google.com/maps/search/?api=1&query=Fortezza+di+Montalcino', type: 'sight', lat: 43.0581, lng: 11.4891 },
+      { title: 'Abbazia di Sant\'Antimo', uri: 'https://www.google.com/maps/search/?api=1&query=Abbazia+di+Sant\'Antimo', type: 'sight', lat: 42.9997, lng: 11.5155, duration: '15 min' },
+      { title: 'Montalcino Viewpoint', uri: 'https://www.google.com/maps/search/?api=1&query=Fortezza+di+Montalcino', type: 'sight', lat: 43.0581, lng: 11.4891, duration: '15 min' },
       { title: 'Fattoria Poggio Alloro (Lunch)', uri: 'https://maps.app.goo.gl/KQHuWWJsLZTFDTYv7', type: 'restaurant', lat: 43.4872, lng: 11.0644 },
       { title: 'San Gimignano Towers', uri: 'https://www.google.com/maps/search/?api=1&query=San+Gimignano+Towers', type: 'sight', lat: 43.4677, lng: 11.0428 },
-      { title: 'Colle Val d\'Elsa', uri: 'https://www.google.com/maps/search/?api=1&query=Colle+di+Val+d\'Elsa+Centro+Storico', type: 'sight', lat: 43.4247, lng: 11.1244 },
-      { title: 'Monteriggioni Fortress', uri: 'https://www.google.com/maps/search/?api=1&query=Monteriggioni+Castle', type: 'sight', lat: 43.3899, lng: 11.2235 },
+      { title: 'Colle Val d\'Elsa', uri: 'https://www.google.com/maps/search/?api=1&query=Colle+di+Val+d\'Elsa+Centro+Storico', type: 'sight', lat: 43.4247, lng: 11.1244, duration: '45–60 min' },
+      { title: 'Monteriggioni Fortress', uri: 'https://www.google.com/maps/search/?api=1&query=Monteriggioni+Castle', type: 'sight', lat: 43.3899, lng: 11.2235, duration: '20 min' },
       { title: 'La Torre House', uri: 'https://www.booking.com/Share-IwdTmvX', type: 'hotel', lat: 43.0575, lng: 11.6015 },
       { title: 'Vecchio Forno (Dinner)', uri: 'https://maps.app.goo.gl/3KNSZvGMUbku8Get7', type: 'restaurant', lat: 43.0585, lng: 11.6050 }
     ]
@@ -75,13 +78,14 @@ export const ITALIAN_CITIES: TripSegment[] = [
     mapUrl: 'https://www.google.com/maps/dir/San+Quirico+d\'Orcia/Podere+Belvedere/Bagno+Vignoni/Pienza/Madonna+di+Vitaleta/San+Quirico+d\'Orcia',
     center: { lat: 43.06, lng: 11.65 },
     zoom: 12,
+    parking: 'Pienza & Monticchiello: use signed paid lots outside the walls. Do not enter ZTL.',
     plannedStops: [
-      { title: 'Podere Belvedere (Sunrise)', uri: 'https://maps.app.goo.gl/bYe1d4JcBzsbr2MD9', type: 'sight', lat: 43.0645, lng: 11.6115 },
-      { title: 'Bagno Vignoni', uri: 'https://www.google.com/maps/search/?api=1&query=Bagno+Vignoni+Thermal+Pools', type: 'sight', lat: 43.0289, lng: 11.6195 },
+      { title: 'Podere Belvedere (Sunrise)', uri: 'https://maps.app.goo.gl/bYe1d4JcBzsbr2MD9', type: 'sight', lat: 43.0645, lng: 11.6115, duration: 'Best light 05:40–06:15' },
+      { title: 'Bagno Vignoni', uri: 'https://www.google.com/maps/search/?api=1&query=Bagno+Vignoni+Thermal+Pools', type: 'sight', lat: 43.0289, lng: 11.6195, duration: '20 min' },
       { title: 'Podere Il Casale (Lunch)', uri: 'https://maps.app.goo.gl/7kDp63DPVpJj1EBd7', type: 'restaurant', lat: 43.0808, lng: 11.7116 },
-      { title: 'Pienza Duomo', uri: 'https://www.google.com/maps/search/?api=1&query=Pienza+Duomo', type: 'sight', lat: 43.0761, lng: 11.6789 },
+      { title: 'Pienza Duomo', uri: 'https://www.google.com/maps/search/?api=1&query=Pienza+Duomo', type: 'sight', lat: 43.0761, lng: 11.6789, duration: '45–75 min' },
       { title: 'Gladiator Road (SP146)', uri: 'https://maps.app.goo.gl/YtEYn34tb392r9N2A', type: 'sight', lat: 43.0625, lng: 11.6645 },
-      { title: 'Madonna di Vitaleta', uri: 'https://www.google.com/maps/search/?api=1&query=Cappella+Madonna+di+Vitaleta', type: 'sight', lat: 43.0708, lng: 11.6343 },
+      { title: 'Madonna di Vitaleta', uri: 'https://www.google.com/maps/search/?api=1&query=Cappella+Madonna+di+Vitaleta', type: 'sight', lat: 43.0708, lng: 11.6343, duration: '10–15 min' },
       { title: 'Da Ciacco (Dinner)', uri: 'https://maps.app.goo.gl/4jkkh6aUxacPdt2a7', type: 'restaurant', lat: 43.0570, lng: 11.6010 }
     ]
   },
@@ -98,13 +102,16 @@ export const ITALIAN_CITIES: TripSegment[] = [
     center: { lat: 42.75, lng: 11.65 },
     zoom: 10,
     plannedStops: [
-      { title: 'Radicofani Fortress', uri: 'https://www.google.com/maps/search/?api=1&query=Radicofani+Fortress', type: 'sight', lat: 42.8967, lng: 11.7672 },
-      { title: 'Pitigliano Panoramico', uri: 'https://www.google.com/maps/search/?api=1&query=Pitigliano+Panoramic+Point', type: 'sight', lat: 42.6333, lng: 11.6667 },
+      { title: 'Radicofani Fortress', uri: 'https://www.google.com/maps/search/?api=1&query=Radicofani+Fortress', type: 'sight', lat: 42.8967, lng: 11.7672, duration: '15 min' },
+      { title: 'Pitigliano Panoramico', uri: 'https://www.google.com/maps/search/?api=1&query=Pitigliano+Panoramic+Point', type: 'sight', lat: 42.6333, lng: 11.6667, duration: '30 min' },
       { title: 'Cascate del Mulino', uri: 'https://maps.app.goo.gl/xLD5mWMEKsgkDSVL7', type: 'sight', lat: 42.6483, lng: 11.5125 },
       { title: 'Hosteria del Borgo (Lunch)', uri: 'https://maps.app.goo.gl/nUR4tkzT5LMeZ95x8', type: 'restaurant', lat: 42.6820, lng: 11.7140 },
       { title: 'Sorano Masso Leopoldino', uri: 'https://www.google.com/maps/search/?api=1&query=Sorano+Masso+Leopoldino', type: 'sight', lat: 42.6817, lng: 11.7139 },
-      { title: 'Sovana Medievale', uri: 'https://www.google.com/maps/search/?api=1&query=Sovana+Centro+Storico', type: 'sight', lat: 42.6577, lng: 11.6434 },
-      { title: 'Osteria La Porta (Anniversary)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225 }
+      { title: 'Sovana Medievale', uri: 'https://www.google.com/maps/search/?api=1&query=Sovana+Centro+Storico', type: 'sight', lat: 42.6577, lng: 11.6434, duration: '20 min' },
+      { title: 'Osteria La Porta (Anniversary)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225 },
+      { title: 'La Terrazza della Val d\'Orcia', uri: 'https://www.google.com/maps/search/?api=1&query=La+Terrazza+della+Val+d%27Orcia+Pienza', type: 'restaurant', lat: 43.0765, lng: 11.6795, badge: 'Backup' },
+      { title: 'La Terrazza del Chiostro', uri: 'https://www.google.com/maps/search/?api=1&query=La+Terrazza+del+Chiostro+Pienza', type: 'restaurant', lat: 43.0760, lng: 11.6780, badge: 'Backup' },
+      { title: 'Bacco E Cerere 2.0', uri: 'https://www.google.com/maps/search/?api=1&query=Bacco+E+Cerere+2.0+Saturnia', type: 'restaurant', lat: 42.6500, lng: 11.5100, badge: 'Backup' }
     ]
   },
   {
@@ -119,9 +126,10 @@ export const ITALIAN_CITIES: TripSegment[] = [
     mapUrl: 'https://www.google.com/maps/dir/San+Quirico+d\'Orcia/Montepulciano/Castiglione+del+Lago/Perugia/Spello',
     center: { lat: 43.08, lng: 12.20 },
     zoom: 9,
+    parking: 'Spello: small ZTL areas. Use public lots near Porta Consolare or Le Grazie and walk in.',
     plannedStops: [
-      { title: 'Montepulciano Piazza Grande', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+Grande+Montepulciano', type: 'sight', lat: 43.0925, lng: 11.7811 },
-      { title: 'Castiglione del Lago', uri: 'https://www.google.com/maps/search/?api=1&query=Castiglione+del+Lago+Castle', type: 'sight', lat: 43.1278, lng: 12.0515 },
+      { title: 'Montepulciano Piazza Grande', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+Grande+Montepulciano', type: 'sight', lat: 43.0925, lng: 11.7811, duration: '45 min' },
+      { title: 'Castiglione del Lago', uri: 'https://www.google.com/maps/search/?api=1&query=Castiglione+del+Lago+Castle', type: 'sight', lat: 43.1278, lng: 12.0515, duration: '15 min' },
       { title: 'Ristorante del Sole (Lunch)', uri: 'https://maps.app.goo.gl/t3QbuEpBNyybH1Qc7', type: 'restaurant', lat: 43.1107, lng: 12.3908 },
       { title: 'Spello (Un Balcone su Spello)', uri: 'https://www.booking.com/Share-hHubeQE', type: 'hotel', lat: 42.9922, lng: 12.6675 },
       { title: 'Osteria del Buchetto (Dinner)', uri: 'https://maps.app.goo.gl/seB27Ni77qi57zmR8', type: 'restaurant', lat: 42.9910, lng: 12.6685 }
@@ -139,13 +147,15 @@ export const ITALIAN_CITIES: TripSegment[] = [
     mapUrl: 'https://www.google.com/maps/dir/Spello/Foligno/Spoleto/Lago+di+Corbara/Via+Appia+Antica/Ostia',
     center: { lat: 42.20, lng: 12.50 },
     zoom: 8,
+    parking: 'Via Appia Antica: park only in official lots. Some stretches are traffic-restricted, especially on weekends.',
     plannedStops: [
       { title: 'Foligno Market', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035 },
-      { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425 },
-      { title: 'Lago di Corbara', uri: 'https://www.google.com/maps/search/?api=1&query=Lago+di+Corbara+Viewpoint', type: 'sight', lat: 42.7150, lng: 12.2350 },
-      { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149 },
+      { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425, duration: '30–45 min' },
+      { title: 'Lago di Corbara', uri: 'https://www.google.com/maps/search/?api=1&query=Lago+di+Corbara+Viewpoint', type: 'sight', lat: 42.7150, lng: 12.2350, duration: '15 min' },
+      { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149, duration: '45–60 min' },
       { title: 'Tomb of Cecilia Metella', uri: 'https://www.google.com/maps/search/?api=1&query=Tomb+of+Cecilia+Metella', type: 'sight', lat: 41.8520, lng: 12.5205 },
       { title: 'Ostia Antica Ruins', uri: 'https://www.google.com/maps/search/?api=1&query=Ostia+Antica+Archaeological+Park', type: 'sight', lat: 41.7615, lng: 12.2855 },
+      { title: 'Romolo al Centro (Lunch)', uri: 'https://www.google.com/maps/search/?api=1&query=Romolo+al+Centro+Ostia+Antica', type: 'restaurant', lat: 41.7560, lng: 12.2910 },
       { title: 'Paja & Fieno (Dinner)', uri: 'https://maps.app.goo.gl/rNGwG2QZ3YC39G3g7', type: 'restaurant', lat: 41.7300, lng: 12.2800 }
     ]
   },
@@ -161,6 +171,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
     mapUrl: 'https://www.google.com/maps/dir/Ostia/Rome+Fiumicino+Airport',
     center: { lat: 41.77, lng: 12.26 },
     zoom: 12,
+    parking: 'FCO car return: allow buffer for return inspection. Refuel near the airport per rental policy — keep receipts.',
     plannedStops: [
       { title: 'Lido di Ostia', uri: 'https://www.google.com/maps/search/?api=1&query=Lido+di+Ostia+Beach', type: 'sight', lat: 41.7315, lng: 12.2745 },
       { title: 'FCO Car Return', uri: 'https://www.google.com/maps/search/?api=1&query=Fiumicino+Airport+Car+Rental+Return', type: 'sight', lat: 41.7950, lng: 12.2515 }
@@ -199,6 +210,11 @@ export const Icons = {
   Gallery: () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+  Story: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     </svg>
   ),
   External: () => (

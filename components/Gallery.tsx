@@ -4,6 +4,33 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
 
+const dataUrlToBlob = (dataUrl: string): Blob => {
+  const [header, data] = dataUrl.split(',');
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: header.split(':')[1]?.split(';')[0] || 'image/png' });
+};
+
+const downloadPostcard = (url: string, name: string) => {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+  a.click();
+};
+
+const sharePostcard = async (url: string, name: string) => {
+  try {
+    const blob = dataUrlToBlob(url);
+    const file = new File([blob], `${name}.png`, { type: 'image/png' });
+    await navigator.share({ files: [file], title: name, text: 'A memory from our Grand Tour' });
+  } catch {
+    downloadPostcard(url, name);
+  }
+};
+
 const Gallery: React.FC = () => {
   const navigate = useNavigate();
   const { postcards } = useStore();
@@ -85,6 +112,17 @@ const Gallery: React.FC = () => {
                   <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">
                     {item.subTitle ? `${item.subTitle} • ` : ''}Photo #{item.idx + 1}
                   </p>
+                </div>
+                {/* Action buttons */}
+                <div className="absolute top-5 right-5 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {typeof navigator.share === 'function' && (
+                    <button onClick={() => sharePostcard(item.url, item.cityName)} className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors" title="Share">
+                      <svg className="w-3.5 h-3.5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                    </button>
+                  )}
+                  <button onClick={() => downloadPostcard(item.url, item.cityName)} className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors" title="Download">
+                    <svg className="w-3.5 h-3.5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  </button>
                 </div>
                 {/* Tape effect */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-white/30 backdrop-blur-[1px] border-l border-r border-white/40 shadow-sm rotate-[-2deg]" />

@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SavedPOI, Location, WeatherInfo } from './types';
+import { SavedPOI, Location, WeatherInfo, ChatMessage } from './types';
 
 interface AppState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
+
+  hasSeenWelcome: boolean;
+  setHasSeenWelcome: () => void;
+  hasFlippedCard: boolean;
+  setHasFlippedCard: () => void;
+  lastViewedDay: string;
+  setLastViewedDay: (cityId: string) => void;
 
   userLocation?: Location;
   setUserLocation: (loc: Location) => void;
@@ -24,10 +31,18 @@ interface AppState {
   // Cache for AI generated images of locations
   waypointImages: Record<string, string>;
   setWaypointImage: (key: string, url: string) => void;
+  removeWaypointImage: (key: string) => void;
 
   weatherData: Record<string, WeatherInfo>;
   setWeatherData: (data: Record<string, WeatherInfo>) => void;
   updateCityWeather: (cityId: string, info: WeatherInfo) => void;
+
+  hasSeenTripComplete: boolean;
+  setHasSeenTripComplete: () => void;
+
+  chatMessages: ChatMessage[];
+  addChatMessage: (msg: ChatMessage) => void;
+  clearChatMessages: () => void;
 }
 
 export const useStore = create<AppState>()(
@@ -36,6 +51,13 @@ export const useStore = create<AppState>()(
       theme: 'light',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setTheme: (theme) => set({ theme }),
+
+      hasSeenWelcome: false,
+      setHasSeenWelcome: () => set({ hasSeenWelcome: true }),
+      hasFlippedCard: false,
+      setHasFlippedCard: () => set({ hasFlippedCard: true }),
+      lastViewedDay: 'day-1',
+      setLastViewedDay: (cityId) => set((state) => state.lastViewedDay === cityId ? state : { lastViewedDay: cityId }),
 
       userLocation: undefined,
       setUserLocation: (loc) => set({ userLocation: loc }),
@@ -60,24 +82,43 @@ export const useStore = create<AppState>()(
       })),
 
       waypointImages: {},
-      setWaypointImage: (key, url) => set((state) => ({ 
-        waypointImages: { ...state.waypointImages, [key]: url } 
+      setWaypointImage: (key, url) => set((state) => ({
+        waypointImages: { ...state.waypointImages, [key]: url }
       })),
+      removeWaypointImage: (key) => set((state) => {
+        const { [key]: _, ...rest } = state.waypointImages;
+        return { waypointImages: rest };
+      }),
 
       weatherData: {},
       setWeatherData: (data) => set({ weatherData: data }),
       updateCityWeather: (cityId, info) =>
         set((state) => ({ weatherData: { ...state.weatherData, [cityId]: info } })),
+
+      hasSeenTripComplete: false,
+      setHasSeenTripComplete: () => set({ hasSeenTripComplete: true }),
+
+      chatMessages: [],
+      addChatMessage: (msg) => set((state) => {
+        const updated = [...state.chatMessages, msg];
+        return { chatMessages: updated.length > 50 ? updated.slice(-50) : updated };
+      }),
+      clearChatMessages: () => set({ chatMessages: [] }),
     }),
     {
       name: 'grand-tour-storage',
       partialize: (state) => ({
         theme: state.theme,
+        hasSeenWelcome: state.hasSeenWelcome,
+        hasFlippedCard: state.hasFlippedCard,
+        lastViewedDay: state.lastViewedDay,
         savedPOIs: state.savedPOIs,
         stamps: state.stamps,
         postcards: state.postcards,
         waypointImages: state.waypointImages,
         weatherData: state.weatherData,
+        hasSeenTripComplete: state.hasSeenTripComplete,
+        chatMessages: state.chatMessages.map(({ grounding, ...rest }) => rest),
       }),
     }
   )

@@ -8,9 +8,9 @@
 
 1. **State Management (`store.ts`)**
    - Single Zustand store with persist middleware
-   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData
+   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData, hasSeenWelcome, hasFlippedCard, lastViewedDay, hasSeenTripComplete, chatMessages (stripped of grounding)
    - Ephemeral: userLocation
-   - No splitting needed at current ~80 lines
+   - No splitting needed at current ~120 lines
 
 2. **AI Service (`services/geminiService.ts`)**
    - `enrichTripPlan()` — Chat with grounding (googleMaps + googleSearch tools), model: `gemini-2.5-flash`
@@ -27,7 +27,7 @@
 
 4. **Routing (React Router)**
    - HashRouter for broad compatibility
-   - 6 routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`
+   - 7 routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`, `/story`
    - AnimatePresence with popLayout for transitions
 
 5. **Image Pipeline**
@@ -47,7 +47,7 @@ User Action → Component → useStore() or geminiService → State Update → R
 
 ### Trip Data
 
-All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 8 days, ~50 planned stops total. Each segment includes coordinates, Google Maps URIs, planned stops with types (sight/restaurant/hotel), narrative context for AI prompts, and `driveFromPrev` driving times between consecutive cities.
+All itinerary data lives in `constants.tsx` as `ITALIAN_CITIES: TripSegment[]`. 8 days, ~50 planned stops total. Each segment includes coordinates, Google Maps URIs, planned stops with types (sight/restaurant/hotel), narrative context for AI prompts, `driveFromPrev` driving times, `parking` ZTL warnings, and stop `duration`/`badge` fields.
 
 ---
 

@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icons, ITALIAN_CITIES } from '../constants';
+import { Icons } from '../constants';
 import { useStore } from '../store';
 import { useCountdown } from '../hooks/useCountdown';
+import PartnerSync from './PartnerSync';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme } = useStore();
+  const { theme, toggleTheme, lastViewedDay } = useStore();
   const countdown = useCountdown();
+  const [showSync, setShowSync] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -34,7 +36,7 @@ const Sidebar: React.FC = () => {
             <p className="text-[9px] text-[#ac3d29] dark:text-emerald-400 font-bold uppercase tracking-widest mt-1">Italia '26</p>
           </div>
         </div>
-        <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+        <button onClick={toggleTheme} aria-label="Toggle dark mode" className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
           {theme === 'light' ? '☾' : '☼'}
         </button>
       </div>
@@ -77,15 +79,31 @@ const Sidebar: React.FC = () => {
           </button>
         </div>
 
-        <button onClick={() => navigate(`/day/${ITALIAN_CITIES[0].id}`)} className={btnClass('/day')}>
+        <button onClick={() => navigate(`/day/${lastViewedDay}`)} className={btnClass('/day')}>
           <Icons.Journal />
           <span className="text-sm font-bold">Day Journal</span>
+        </button>
+        <button onClick={() => navigate('/story')} className={btnClass('/story')}>
+          <Icons.Story />
+          <span className="text-sm font-bold">Our Story</span>
         </button>
         <button onClick={() => navigate('/chat')} className={btnClass('/chat')}>
           <Icons.Chat />
           <span className="text-sm font-bold">AI Concierge</span>
         </button>
       </nav>
+
+      <button
+        onClick={() => setShowSync(true)}
+        className="w-full flex items-center gap-4 p-4 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+        <span className="text-sm font-bold">Partner Sync</span>
+      </button>
+
+      {showSync && <PartnerSync onClose={() => setShowSync(false)} />}
     </div>
   );
 };

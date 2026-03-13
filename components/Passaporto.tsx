@@ -22,7 +22,7 @@ const Passaporto: React.FC = () => {
          <button onClick={() => navigate('/gallery')} className="px-6 py-2 text-slate-500 dark:text-slate-400 rounded-full font-bold text-sm hover:bg-white/50 dark:hover:bg-white/5 transition-colors">Photos</button>
       </div>
 
-      <div className="w-full max-w-2xl bg-[#2a3b4c] rounded-[2rem] p-1 shadow-2xl mb-12 shrink-0">
+      <div className="w-full max-w-2xl bg-[#2a3b4c] dark:bg-[#1a2530] rounded-[2rem] p-1 shadow-2xl mb-12 shrink-0">
         <div className="border-2 border-amber-400/30 rounded-[1.8rem] p-8 flex flex-col items-center text-center">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 border-2 border-amber-400 rounded-full flex items-center justify-center">
@@ -50,6 +50,14 @@ const Passaporto: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {stamps.length === 0 && (
+        <div className="text-center mb-8 px-4">
+          <p className="text-sm text-slate-400 dark:text-slate-500 font-serif italic">
+            Visit a city and flip the card to start collecting stamps.
+          </p>
+        </div>
+      )}
 
       <div className="w-full max-w-3xl space-y-12">
         {ITALIAN_CITIES.map((city, cityIdx) => (

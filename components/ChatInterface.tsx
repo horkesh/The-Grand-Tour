@@ -7,9 +7,8 @@ import GroundingResult from './GroundingResult';
 import { useToast } from './Toast';
 
 const ChatInterface: React.FC = () => {
-  const { userLocation, savedPOIs, addSavedPOI } = useStore();
+  const { userLocation, savedPOIs, addSavedPOI, chatMessages, addChatMessage, clearChatMessages } = useStore();
   const showToast = useToast();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -18,7 +17,7 @@ const ChatInterface: React.FC = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, [chatMessages, isLoading]);
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
@@ -29,7 +28,7 @@ const ChatInterface: React.FC = () => {
       content: text,
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    addChatMessage(userMsg);
     setInput('');
     setIsLoading(true);
 
@@ -41,14 +40,14 @@ const ChatInterface: React.FC = () => {
         content: result.text,
         grounding: result.grounding,
       };
-      setMessages(prev => [...prev, assistantMsg]);
+      addChatMessage(assistantMsg);
     } catch (err) {
       const errMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: "Sorry, I encountered an error while exploring the map for you. Please try again.",
       };
-      setMessages(prev => [...prev, errMsg]);
+      addChatMessage(errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -86,8 +85,14 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0d0d0d] border-none rounded-3xl overflow-hidden shadow-inner transition-colors duration-300">
+      {chatMessages.length > 0 && (
+        <div className="shrink-0 flex items-center justify-between px-4 pt-3 pb-1">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">{chatMessages.length} messages</span>
+          <button onClick={clearChatMessages} className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest hover:text-red-500 dark:hover:text-red-400 transition-colors">Clear</button>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar" ref={scrollRef}>
-        {messages.length === 0 && !isLoading && (
+        {chatMessages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 space-y-4">
             <div className="bg-slate-200 dark:bg-white/5 p-6 rounded-full">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,7 +106,7 @@ const ChatInterface: React.FC = () => {
           </div>
         )}
 
-        {messages.map((msg) => (
+        {chatMessages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[90%] md:max-w-[85%] rounded-2xl p-4 shadow-sm ${
               msg.role === 'user' 

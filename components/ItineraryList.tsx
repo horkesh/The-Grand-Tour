@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ITALIAN_CITIES, Icons } from '../constants';
+import { ITALIAN_CITIES, ANNIVERSARY_DAY_ID, Icons } from '../constants';
 import { useStore } from '../store';
 
 const ItineraryList: React.FC = () => {
@@ -30,7 +30,7 @@ const ItineraryList: React.FC = () => {
           <button onClick={() => navigate(`/day/${city.id}`)} className="w-full p-4 bg-white dark:bg-[#0a0a0a] rounded-[2rem] border border-slate-100 dark:border-white/5 flex items-center gap-5 shadow-sm transition-all group hover:-translate-y-1 hover:shadow-xl">
             <div className="relative shrink-0">
               <img src={displayImage} className="w-16 h-16 rounded-2xl object-cover shadow-lg" alt={city.title} />
-              <div className="absolute -top-1 -left-1 w-6 h-6 bg-[#194f4c] text-white font-bold text-[9px] rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">{i + 1}</div>
+              <div className={`absolute -top-1 -left-1 w-6 h-6 ${city.id === ANNIVERSARY_DAY_ID ? 'bg-[#ac3d29]' : 'bg-[#194f4c]'} text-white font-bold text-[9px] rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900`}>{city.id === ANNIVERSARY_DAY_ID ? '❤️' : i + 1}</div>
             </div>
             <div className="text-left flex-1 min-w-0">
               <p className="font-bold text-sm dark:text-white truncate text-slate-900">{city.title.split(': ')[1]}</p>

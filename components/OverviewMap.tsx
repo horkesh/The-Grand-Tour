@@ -9,6 +9,7 @@ const OverviewMap: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<MapInstance | null>(null);
   const contentLayerRef = useRef<LayerGroup | null>(null);
+  const userLayerRef = useRef<LayerGroup | null>(null);
   const tileLayerRef = useRef<TileLayer | null>(null);
   
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const OverviewMap: React.FC = () => {
     if (map) {
       mapInstanceRef.current = map;
       contentLayerRef.current = createLayerGroup(map);
+      userLayerRef.current = createLayerGroup(map);
     }
 
     return () => {
@@ -76,16 +78,22 @@ const OverviewMap: React.FC = () => {
         .on('click', () => navigate(`/day/${city.id}`));
     });
 
+  }, [theme, navigate, createPolyline, createDivIcon, createMarker]);
+
+  // User location marker — separate effect to avoid rebuilding all city markers on every position update
+  useEffect(() => {
+    if (!userLayerRef.current) return;
+    userLayerRef.current.clearLayers();
     if (userLocation) {
       const userIcon = createDivIcon({
-        html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-ping"></div>`,
+        html: `<div class="user-location-marker"><div class="user-dot"></div><div class="user-pulse"></div></div>`,
         className: 'custom-div-icon',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
-      createMarker(userLocation.lat, userLocation.lng, { icon: userIcon }).addTo(layer);
+      createMarker(userLocation.lat, userLocation.lng, { icon: userIcon }).addTo(userLayerRef.current);
     }
-  }, [theme, userLocation, navigate, createPolyline, createDivIcon, createMarker]);
+  }, [userLocation, createDivIcon, createMarker]);
 
   return (
     <div className="w-full h-full relative">

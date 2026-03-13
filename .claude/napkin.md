@@ -37,10 +37,12 @@
    Do instead: toggle via `document.documentElement.classList.toggle('dark')` — already handled in Layout. Use `dark:` prefix for dark mode styles.
 6. **[2026-03-12] Zustand store is persisted — be careful what you add**
    Do instead: only persist data that should survive page refresh. Ephemeral UI state (loading, modals) stays in component state.
-7. **[2026-03-12] POIs saved from chat are not city-associated**
-   Do instead: saved POIs from ChatInterface use `cityId: 'planned'`. They appear on all city maps. This is a known limitation — see planning.md.
-8. **[2026-03-12] Stub components exist — don't delete them**
-   Do instead: `CurrencyConverter.tsx` and `Toast.tsx` are intentionally stripped to null exports. They were removed as part of scope reduction.
+7. **[2026-03-12] POIs saved from chat are city-associated by nearest coordinates**
+   Do instead: `findNearestCityId()` in ChatInterface matches by squared Euclidean distance (0.25° threshold). Falls back to `'planned'` if no city nearby.
+8. **[2026-03-13] Vercel deployments need --build-env for API key**
+   Do instead: `npx vercel --prod --build-env GEMINI_API_KEY="$(grep GEMINI_API_KEY .env.local | cut -d= -f2)"`. The `loadEnv()` in vite.config reads `.env` files; Vercel injects via `process.env`. Both paths are now handled.
+9. **[2026-03-13] Phase 4 runs as 4A→simplify→4B→simplify→4C→simplify**
+   Do instead: commit and /simplify after each sub-phase. Update ledger after each. Deploy after each sub-phase lands.
 
 ## Shell & Environment
 1. **[2026-03-12] This is a Windows machine with bash shell**
