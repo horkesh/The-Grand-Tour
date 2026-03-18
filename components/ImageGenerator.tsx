@@ -1,38 +1,29 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
-import { fetchPlacePhoto } from '../services/placesService';
+import { generateLocationImage } from '../services/geminiService';
 
 const MAX_RETRIES = 2;
 
-interface QueueItem {
-  key: string;
-  name: string;
-  lat: number;
-  lng: number;
-  retries?: number;
-}
-
 const ImageGenerator: React.FC = () => {
   const { waypointImages, setWaypointImage } = useStore();
-  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [queue, setQueue] = useState<{ key: string; prompt: string; retries?: number }[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(0);
   const [total, setTotal] = useState(0);
+  const [done, setDone] = useState(false);
   const waypointImagesRef = useRef(waypointImages);
   waypointImagesRef.current = waypointImages;
 
   // 1. Build the Queue on Mount
   useEffect(() => {
-    const newQueue: QueueItem[] = [];
+    const newQueue: { key: string; prompt: string; retries?: number }[] = [];
 
     ITALIAN_CITIES.forEach((city) => {
       if (!waypointImages[city.id]) {
         newQueue.push({
           key: city.id,
-          name: city.location + ', Italy',
-          lat: city.center.lat,
-          lng: city.center.lng,
+          prompt: `A cinematic, wide-angle travel photography shot of ${city.location}, Italy. Golden hour, warm lighting, highly detailed, 8k resolution, photorealistic style.`
         });
       }
 
@@ -41,16 +32,14 @@ const ImageGenerator: React.FC = () => {
         if (!waypointImages[key]) {
           newQueue.push({
             key,
-            name: stop.title,
-            lat: stop.lat,
-            lng: stop.lng,
+            prompt: `A cinematic travel photography close-up of ${stop.title} in ${city.location}, Italy. Photorealistic, soft sunlight, highly detailed, postcard aesthetic.`
           });
         }
       });
     });
 
     if (newQueue.length > 0) {
-      console.log(`[ImageGenerator] Queuing ${newQueue.length} place photos to fetch.`);
+      console.log(`[ImageGenerator] Queuing ${newQueue.length} images for generation.`);
       setQueue(newQueue);
       setTotal(newQueue.length);
     }
@@ -65,15 +54,15 @@ const ImageGenerator: React.FC = () => {
       const item = queue[0];
 
       try {
-        // Double check in case it was fetched elsewhere in the meantime
+        // Double check in case it was generated elsewhere in the meantime
         if (!waypointImagesRef.current[item.key]) {
-          const photoUrl = await fetchPlacePhoto(item.name, item.lat, item.lng);
-          setWaypointImage(item.key, photoUrl);
+          const img = await generateLocationImage(item.prompt);
+          setWaypointImage(item.key, img);
         }
         setQueue((prev) => prev.slice(1));
         setCompleted(c => c + 1);
       } catch (err) {
-        console.error(`[ImageGenerator] Failed ${item.key} "${item.name}" (attempt ${(item.retries || 0) + 1}):`, err);
+        console.error(`[ImageGenerator] Failed ${item.key} (attempt ${(item.retries || 0) + 1}):`, err);
         const attempts = (item.retries || 0) + 1;
         if (attempts <= MAX_RETRIES) {
           // Re-enqueue to back with incremented retry count
@@ -83,18 +72,26 @@ const ImageGenerator: React.FC = () => {
           setCompleted(c => c + 1);
         }
       } finally {
-        // Shorter delay than AI generation — Places API has higher rate limits
+        // Rate Limit Protection: Wait 4 seconds between generations
         setTimeout(() => {
           setIsProcessing(false);
-        }, 500);
+        }, 4000);
       }
     };
 
     processNext();
   }, [queue, isProcessing, setWaypointImage]);
 
+  // 3. Hide indicator after all items processed
+  useEffect(() => {
+    if (total > 0 && queue.length === 0 && !isProcessing && completed >= total) {
+      const timer = setTimeout(() => setDone(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [queue, isProcessing, completed, total]);
+
+  if (done || total === 0) return null;
   if (queue.length === 0 && completed === 0) return null;
-  if (total === 0) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -109,8 +106,8 @@ const ImageGenerator: React.FC = () => {
             </div>
         </div>
         <div>
-            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Loading Photos</p>
-            <p className="text-xs font-serif font-bold text-slate-800 dark:text-white">Fetching place photos...</p>
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Curating Gallery</p>
+            <p className="text-xs font-serif font-bold text-slate-800 dark:text-white">Developing photos...</p>
         </div>
       </div>
     </div>
