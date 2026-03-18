@@ -1,13 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
-import { generateLocationImage } from '../services/geminiService';
+import { fetchPlacePhoto } from '../services/placesService';
 
 const MAX_RETRIES = 2;
 
+interface QueueItem {
+  key: string;
+  name: string;
+  lat: number;
+  lng: number;
+  retries?: number;
+}
+
 const ImageGenerator: React.FC = () => {
   const { waypointImages, setWaypointImage } = useStore();
-  const [queue, setQueue] = useState<{ key: string; prompt: string; retries?: number }[]>([]);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(0);
   const [total, setTotal] = useState(0);
@@ -17,13 +25,15 @@ const ImageGenerator: React.FC = () => {
 
   // 1. Build the Queue on Mount
   useEffect(() => {
-    const newQueue: { key: string; prompt: string; retries?: number }[] = [];
+    const newQueue: QueueItem[] = [];
 
     ITALIAN_CITIES.forEach((city) => {
       if (!waypointImages[city.id]) {
         newQueue.push({
           key: city.id,
-          prompt: `A cinematic, wide-angle travel photography shot of ${city.location}, Italy. Golden hour, warm lighting, highly detailed, 8k resolution, photorealistic style.`
+          name: city.location + ', Italy',
+          lat: city.center.lat,
+          lng: city.center.lng,
         });
       }
 
@@ -32,18 +42,20 @@ const ImageGenerator: React.FC = () => {
         if (!waypointImages[key]) {
           newQueue.push({
             key,
-            prompt: `A cinematic travel photography close-up of ${stop.title} in ${city.location}, Italy. Photorealistic, soft sunlight, highly detailed, postcard aesthetic.`
+            name: stop.title,
+            lat: stop.lat,
+            lng: stop.lng,
           });
         }
       });
     });
 
     if (newQueue.length > 0) {
-      console.log(`[ImageGenerator] Queuing ${newQueue.length} images for generation.`);
+      console.log(`[ImageGenerator] Queuing ${newQueue.length} place photos to fetch.`);
       setQueue(newQueue);
       setTotal(newQueue.length);
     }
-  }, []); // Run once on mount to check gaps
+  }, []);
 
   // 2. Process Queue
   useEffect(() => {
@@ -54,28 +66,26 @@ const ImageGenerator: React.FC = () => {
       const item = queue[0];
 
       try {
-        // Double check in case it was generated elsewhere in the meantime
         if (!waypointImagesRef.current[item.key]) {
-          const img = await generateLocationImage(item.prompt);
-          setWaypointImage(item.key, img);
+          const photoUrl = await fetchPlacePhoto(item.name, item.lat, item.lng);
+          setWaypointImage(item.key, photoUrl);
         }
         setQueue((prev) => prev.slice(1));
         setCompleted(c => c + 1);
       } catch (err) {
-        console.error(`[ImageGenerator] Failed ${item.key} (attempt ${(item.retries || 0) + 1}):`, err);
+        console.error(`[ImageGenerator] Failed ${item.key} "${item.name}" (attempt ${(item.retries || 0) + 1}):`, err);
         const attempts = (item.retries || 0) + 1;
         if (attempts <= MAX_RETRIES) {
-          // Re-enqueue to back with incremented retry count
           setQueue((prev) => [...prev.slice(1), { ...item, retries: attempts }]);
         } else {
           setQueue((prev) => prev.slice(1));
           setCompleted(c => c + 1);
         }
       } finally {
-        // Rate Limit Protection: Wait 4 seconds between generations
+        // Places API has generous rate limits — short delay is fine
         setTimeout(() => {
           setIsProcessing(false);
-        }, 4000);
+        }, 300);
       }
     };
 
@@ -106,8 +116,8 @@ const ImageGenerator: React.FC = () => {
             </div>
         </div>
         <div>
-            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Curating Gallery</p>
-            <p className="text-xs font-serif font-bold text-slate-800 dark:text-white">Developing photos...</p>
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Loading Photos</p>
+            <p className="text-xs font-serif font-bold text-slate-800 dark:text-white">Fetching place photos...</p>
         </div>
       </div>
     </div>
