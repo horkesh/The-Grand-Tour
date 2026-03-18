@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SavedPOI, Location, WeatherInfo, ChatMessage } from './types';
+import { setImage as idbSetImage, getAllImages } from './services/imageDB';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -28,10 +29,10 @@ interface AppState {
   postcards: Record<string, string[]>;
   addPostcard: (cityId: string, url: string) => void;
 
-  // Cache for AI generated images of locations
+  // Cache for AI generated images of locations (stored in IndexedDB, not localStorage)
   waypointImages: Record<string, string>;
-  setWaypointImage: (key: string, url: string) => void;
-  removeWaypointImage: (key: string) => void;
+  setWaypointImage: (key: string, data: string) => void;
+  hydrateImages: () => Promise<void>;
 
   weatherData: Record<string, WeatherInfo>;
   setWeatherData: (data: Record<string, WeatherInfo>) => void;
@@ -82,13 +83,20 @@ export const useStore = create<AppState>()(
       })),
 
       waypointImages: {},
-      setWaypointImage: (key, url) => set((state) => ({
-        waypointImages: { ...state.waypointImages, [key]: url }
-      })),
-      removeWaypointImage: (key) => set((state) => {
-        const { [key]: _, ...rest } = state.waypointImages;
-        return { waypointImages: rest };
-      }),
+      setWaypointImage: (key, data) => {
+        idbSetImage(key, data).catch((e) => console.error('[imageDB] write failed:', e));
+        set((state) => ({
+          waypointImages: { ...state.waypointImages, [key]: data }
+        }));
+      },
+      hydrateImages: async () => {
+        try {
+          const images = await getAllImages();
+          set({ waypointImages: images });
+        } catch (e) {
+          console.error('[imageDB] hydrate failed:', e);
+        }
+      },
 
       weatherData: {},
       setWeatherData: (data) => set({ weatherData: data }),
@@ -115,7 +123,6 @@ export const useStore = create<AppState>()(
         savedPOIs: state.savedPOIs,
         stamps: state.stamps,
         postcards: state.postcards,
-        waypointImages: state.waypointImages,
         weatherData: state.weatherData,
         hasSeenTripComplete: state.hasSeenTripComplete,
         chatMessages: state.chatMessages.map(({ grounding, ...rest }) => rest),

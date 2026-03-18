@@ -20,9 +20,10 @@ import TripComplete from './components/TripComplete';
 import { useGeolocation } from './hooks/useGeolocation';
 
 const Layout = ({ children }: React.PropsWithChildren<{}>) => {
-  const { theme, toggleTheme, weatherData, updateCityWeather } = useStore();
+  const { theme, toggleTheme, weatherData, updateCityWeather, hydrateImages } = useStore();
   useGeolocation();
 
+  useEffect(() => { hydrateImages(); }, []);
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('bella_italia_theme', theme);
