@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { generateLocationImage } from '../services/geminiService';
+import { fetchPlacePhoto } from '../services/placesService';
 
-export const useItineraryImage = (key: string, promptLocation: string, enabled: boolean = true) => {
+export const useItineraryImage = (key: string, placeName: string, lat: number, lng: number, enabled: boolean = true) => {
   const { waypointImages, setWaypointImage } = useStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If we already have an image, or disabled, or currently loading, skip.
     if (!enabled || waypointImages[key] || isLoading) return;
 
     let mounted = true;
@@ -17,15 +16,14 @@ export const useItineraryImage = (key: string, promptLocation: string, enabled: 
       setIsLoading(true);
       setError(null);
       try {
-        // console.log(`Generative Image Request for: ${key}`);
-        const img = await generateLocationImage(promptLocation);
-        if (mounted && img) {
-          setWaypointImage(key, img);
+        const photoUrl = await fetchPlacePhoto(placeName, lat, lng);
+        if (mounted && photoUrl) {
+          setWaypointImage(key, photoUrl);
         }
       } catch (err: any) {
         if (mounted) {
-          console.error(`Failed to generate image for ${key}:`, err);
-          setError(err.message || 'Failed to generate image');
+          console.error(`Failed to fetch place photo for ${key}:`, err);
+          setError(err.message || 'Failed to fetch photo');
         }
       } finally {
         if (mounted) setIsLoading(false);
@@ -38,11 +36,11 @@ export const useItineraryImage = (key: string, promptLocation: string, enabled: 
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, promptLocation, enabled, waypointImages, setWaypointImage]); // Removed isLoading from deps to prevent loops
+  }, [key, placeName, lat, lng, enabled, waypointImages, setWaypointImage]);
 
-  return { 
-    image: waypointImages[key], 
-    isLoading, 
-    error 
+  return {
+    image: waypointImages[key],
+    isLoading,
+    error
   };
 };

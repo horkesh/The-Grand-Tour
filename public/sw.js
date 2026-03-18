@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grand-tour-v1';
+const CACHE_NAME = 'grand-tour-v2';
 
 // App shell: CDN resources that rarely change
 const APP_SHELL = [
@@ -32,6 +32,7 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET and Gemini API calls
   if (request.method !== 'GET') return;
   if (request.url.includes('generativelanguage.googleapis.com')) return;
+  if (request.url.includes('places.googleapis.com')) return;
 
   // Network-first for navigation (HTML), cache-first for assets
   if (request.mode === 'navigate') {
