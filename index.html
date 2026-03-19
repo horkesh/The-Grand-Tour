@@ -135,6 +135,52 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Print-Ready Passport Styles */
+        @media print {
+            body { background: white !important; overflow: visible !important; }
+            .grain-overlay { display: none !important; }
+            #root > div { height: auto !important; overflow: visible !important; }
+            #root > div > main { overflow: visible !important; }
+            #root > div > main > div { overflow: visible !important; position: relative !important; }
+            /* Hide nav, header, non-passport elements */
+            nav, header, aside, .lg\\:flex.w-80,
+            [role="complementary"],
+            button:not(.print-visible) { display: none !important; }
+            /* Passport page styling */
+            .passport-print-area {
+                display: block !important;
+                width: 100% !important;
+                padding: 20px !important;
+                break-inside: avoid;
+            }
+            .passport-print-area .stamp-grid {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 12px !important;
+            }
+            .passport-print-area h3 {
+                color: #194f4c !important;
+                border-bottom: 2px solid #194f4c !important;
+                padding-bottom: 8px !important;
+                margin-bottom: 16px !important;
+                break-after: avoid;
+            }
+            .passport-stamp {
+                border: 2px solid #194f4c !important;
+                border-radius: 8px !important;
+                padding: 8px !important;
+                text-align: center !important;
+                break-inside: avoid;
+            }
+            .passport-stamp.collected {
+                background: #f0fdf4 !important;
+                border-color: #059669 !important;
+            }
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+        }
+
         /* Respect reduced motion preference */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {

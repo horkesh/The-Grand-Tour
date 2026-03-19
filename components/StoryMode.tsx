@@ -4,11 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES, ANNIVERSARY_DAY_ID } from '../constants';
 import { useStore } from '../store';
 import ExportHub from './ExportHub';
+import JourneyReplay from './JourneyReplay';
+import { downloadStoryHtml } from '../utils/storyExport';
 
 const StoryMode: React.FC = () => {
   const navigate = useNavigate();
   const { stamps, postcards, waypointImages, weatherData } = useStore();
   const [exportOpen, setExportOpen] = useState(false);
+  const [replayOpen, setReplayOpen] = useState(false);
 
   const totalStamps = stamps.length;
   const totalPostcards = Object.values(postcards).flat().length;
@@ -43,12 +46,26 @@ const StoryMode: React.FC = () => {
             <span>·</span>
             <span>8 days</span>
           </div>
-          <button
-            onClick={() => setExportOpen(true)}
-            className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md border border-white/20 transition-all hover:scale-105"
-          >
-            Export &amp; Share
-          </button>
+          <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
+            <button
+              onClick={() => setReplayOpen(true)}
+              className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md border border-white/20 transition-all hover:scale-105"
+            >
+              Replay Journey
+            </button>
+            <button
+              onClick={() => setExportOpen(true)}
+              className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md border border-white/20 transition-all hover:scale-105"
+            >
+              Export &amp; Share
+            </button>
+            <button
+              onClick={() => downloadStoryHtml({ stamps, postcards, weatherData, waypointImages })}
+              className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md border border-white/20 transition-all hover:scale-105"
+            >
+              Save as HTML
+            </button>
+          </div>
         </motion.div>
       </div>
 
@@ -222,6 +239,7 @@ const StoryMode: React.FC = () => {
       </div>
 
       <ExportHub open={exportOpen} onClose={() => setExportOpen(false)} />
+      <JourneyReplay open={replayOpen} onClose={() => setReplayOpen(false)} />
     </motion.div>
   );
 };

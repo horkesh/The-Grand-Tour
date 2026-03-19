@@ -62,11 +62,15 @@ const Sidebar: React.FC = () => {
           <Icons.Map />
           <span className="text-sm font-bold">Master Map</span>
         </button>
+        <button onClick={() => navigate('/countdown')} className={btnClass('/countdown')}>
+          <Icons.Journal />
+          <span className="text-sm font-bold">Countdown</span>
+        </button>
         <button onClick={() => navigate('/list')} className={btnClass('/list')}>
           <Icons.Route />
           <span className="text-sm font-bold">Full Itinerary</span>
         </button>
-        
+
         {/* Passport Section with Gallery Submenu */}
         <div className="flex flex-col gap-1">
           <button onClick={() => navigate('/passport')} className={btnClass('/passport')}>
@@ -91,6 +95,31 @@ const Sidebar: React.FC = () => {
           <Icons.Chat />
           <span className="text-sm font-bold">AI Concierge</span>
         </button>
+
+        {/* Pre-Trip Section */}
+        <div className="pt-4 border-t border-slate-200 dark:border-white/10">
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest px-4 mb-2">Pre-Trip</p>
+          <button onClick={() => navigate('/reveals')} className={btnClass('/reveals')}>
+            <span className="text-sm">📅</span>
+            <span className="text-sm font-bold">Daily Reveals</span>
+          </button>
+          <button onClick={() => navigate('/phrases')} className={btnClass('/phrases')}>
+            <span className="text-sm">🗣️</span>
+            <span className="text-sm font-bold">Learn Italian</span>
+          </button>
+          <button onClick={() => navigate('/packing')} className={btnClass('/packing')}>
+            <span className="text-sm">🎒</span>
+            <span className="text-sm font-bold">Packing List</span>
+          </button>
+          <button onClick={() => navigate('/wishlist')} className={btnClass('/wishlist')}>
+            <span className="text-sm">📌</span>
+            <span className="text-sm font-bold">Wishlist</span>
+          </button>
+          <button onClick={() => navigate('/flyover')} className={btnClass('/flyover')}>
+            <span className="text-sm">✈️</span>
+            <span className="text-sm font-bold">Route Flyover</span>
+          </button>
+        </div>
       </nav>
 
       <button

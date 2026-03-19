@@ -9,6 +9,12 @@ import DayDashboard from './components/DayDashboard';
 import ItineraryList from './components/ItineraryList';
 import Gallery from './components/Gallery';
 import StoryMode from './components/StoryMode';
+import CountdownDashboard from './components/CountdownDashboard';
+import DailyReveal from './components/DailyReveal';
+import PackingChecklist from './components/PackingChecklist';
+import LearnPhrase from './components/LearnPhrase';
+import RouteFlyover from './components/RouteFlyover';
+import Wishlist from './components/Wishlist';
 import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
@@ -153,6 +159,12 @@ const AnimatedRoutes = () => {
         <Route path="/chat" element={<ChatInterface />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/story" element={<StoryMode />} />
+        <Route path="/countdown" element={<CountdownDashboard />} />
+        <Route path="/reveals" element={<DailyReveal />} />
+        <Route path="/packing" element={<PackingChecklist />} />
+        <Route path="/phrases" element={<LearnPhrase />} />
+        <Route path="/flyover" element={<RouteFlyover />} />
+        <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -7,6 +7,7 @@ import { mergePostcardImage } from '../utils/imageProcessing';
 import { resizeImage } from '../utils/imageResize';
 import ItineraryMapOverlay from './ItineraryMapOverlay';
 import { useToast } from './Toast';
+import AudioRecorder from './AudioRecorder';
 
 const DayDashboard: React.FC = () => {
   const { cityId } = useParams();
@@ -468,6 +469,12 @@ const DayDashboard: React.FC = () => {
         <div className="lg:col-span-4 flex flex-col gap-4">
            <button onClick={() => navigate('/chat')} className="p-8 bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] shadow-xl flex flex-col items-center gap-4 border border-slate-100 dark:border-white/5"><div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white"><Icons.Chat /></div><span className="font-serif font-bold">AI Concierge</span></button>
            <button onClick={() => setIsMapVisible(true)} className="p-8 bg-[#194f4c] rounded-[2.5rem] shadow-xl flex flex-col items-center gap-4 text-white"><div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><Icons.Map /></div><span className="font-serif font-bold">Live Map</span></button>
+
+           {/* Audio Postcards */}
+           <div className="bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] shadow-xl p-6 border border-slate-100 dark:border-white/5">
+             <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Audio Memories</h4>
+             <AudioRecorder cityId={currentKey} locationName={currentStop ? currentStop.title : city.location} />
+           </div>
         </div>
       </motion.div>
 

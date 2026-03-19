@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SavedPOI, Location, WeatherInfo, ChatMessage } from './types';
+import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard } from './types';
 import { setImage as idbSetImage, getAllImages } from './services/imageDB';
 
 interface AppState {
@@ -45,6 +45,19 @@ interface AppState {
   chatMessages: ChatMessage[];
   addChatMessage: (msg: ChatMessage) => void;
   clearChatMessages: () => void;
+
+  checklist: ChecklistItem[];
+  setChecklist: (items: ChecklistItem[]) => void;
+  toggleChecklistItem: (id: string) => void;
+  addChecklistItem: (item: ChecklistItem) => void;
+  removeChecklistItem: (id: string) => void;
+
+  audioPostcards: AudioPostcard[];
+  addAudioPostcard: (ap: AudioPostcard) => void;
+  removeAudioPostcard: (id: string) => void;
+
+  wishlistNotes: Record<string, string>; // poiId → note
+  setWishlistNote: (poiId: string, note: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -117,6 +130,27 @@ export const useStore = create<AppState>()(
         return { chatMessages: updated.length > 50 ? updated.slice(-50) : updated };
       }),
       clearChatMessages: () => set({ chatMessages: [] }),
+
+      checklist: [],
+      setChecklist: (items) => set({ checklist: items }),
+      toggleChecklistItem: (id) =>
+        set((state) => ({
+          checklist: state.checklist.map((item) =>
+            item.id === id ? { ...item, checked: !item.checked } : item,
+          ),
+        })),
+      addChecklistItem: (item) => set((state) => ({ checklist: [...state.checklist, item] })),
+      removeChecklistItem: (id) =>
+        set((state) => ({ checklist: state.checklist.filter((i) => i.id !== id) })),
+
+      audioPostcards: [],
+      addAudioPostcard: (ap) => set((state) => ({ audioPostcards: [...state.audioPostcards, ap] })),
+      removeAudioPostcard: (id) =>
+        set((state) => ({ audioPostcards: state.audioPostcards.filter((a) => a.id !== id) })),
+
+      wishlistNotes: {},
+      setWishlistNote: (poiId, note) =>
+        set((state) => ({ wishlistNotes: { ...state.wishlistNotes, [poiId]: note } })),
     }),
     {
       name: 'grand-tour-storage',
@@ -131,6 +165,9 @@ export const useStore = create<AppState>()(
         weatherData: state.weatherData,
         hasSeenTripComplete: state.hasSeenTripComplete,
         chatMessages: state.chatMessages.map(({ grounding, ...rest }) => rest),
+        checklist: state.checklist,
+        audioPostcards: state.audioPostcards,
+        wishlistNotes: state.wishlistNotes,
       }),
     }
   )
