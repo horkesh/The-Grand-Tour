@@ -52,22 +52,30 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const unsub = onAuthChange(async (fbUser) => {
       if (fbUser) {
         setUser(fbUser);
-        await handleRedirectResult();
-        const existing = await getUserTrip(fbUser.uid);
-        if (existing) {
-          await resolveTrip(fbUser, existing);
-          setStep('ready');
-        } else if (isKnownPartner(fbUser.email)) {
-          // Auto-join: known partner (Maja) finds Haris's trip automatically
-          const partnerTrip = await findTripByPartnerEmail(fbUser.email || '');
-          if (partnerTrip) {
-            const joined = await joinTrip(fbUser, partnerTrip.joinCode);
-            await resolveTrip(fbUser, joined);
+        console.log('[auth] user signed in:', fbUser.email, fbUser.uid);
+        try {
+          await handleRedirectResult();
+          const existing = await getUserTrip(fbUser.uid);
+          console.log('[auth] existing trip:', existing?.id || 'none');
+          if (existing) {
+            await resolveTrip(fbUser, existing);
             setStep('ready');
+          } else if (isKnownPartner(fbUser.email)) {
+            const partnerTrip = await findTripByPartnerEmail(fbUser.email || '');
+            console.log('[auth] partner trip found:', partnerTrip?.id || 'none');
+            if (partnerTrip) {
+              const joined = await joinTrip(fbUser, partnerTrip.joinCode);
+              await resolveTrip(fbUser, joined);
+              setStep('ready');
+            } else {
+              setStep('joinOrCreate');
+            }
           } else {
             setStep('joinOrCreate');
           }
-        } else {
+        } catch (err) {
+          console.error('[auth] error during trip resolution:', err);
+          setError(err instanceof Error ? err.message : 'Authentication error');
           setStep('joinOrCreate');
         }
       } else {

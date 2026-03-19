@@ -1,4 +1,5 @@
 import {
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   onAuthStateChanged,
@@ -49,9 +50,20 @@ export function isKnownPartner(email: string | null): boolean {
 }
 
 export async function signInWithGoogle(): Promise<User | null> {
-  // Always use redirect — popup is blocked by COOP headers on many hosts (Vercel, etc.)
-  await signInWithRedirect(auth, googleProvider);
-  return null; // page will reload, onAuthStateChanged handles the rest
+  // Try popup first (works on most browsers), fall back to redirect
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (e: unknown) {
+    const code = (e as any)?.code;
+    console.warn('[auth] popup failed, trying redirect:', code);
+    // Popup blocked or COOP issue — fall back to redirect
+    if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+    throw e;
+  }
 }
 
 export async function handleRedirectResult(): Promise<User | null> {
