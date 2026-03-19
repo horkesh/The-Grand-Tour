@@ -55,6 +55,7 @@ export interface SavedPOI {
   reviews?: string[];
   isEnriching?: boolean;
   notes?: string;
+  photoUrl?: string;
 }
 
 export interface PlannedStop {

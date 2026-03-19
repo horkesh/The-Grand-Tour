@@ -117,11 +117,14 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
         iconAnchor: [16, 16]
       });
       createMarker(poi.lat || city.center.lat, poi.lng || city.center.lng, { icon }).addTo(layer).bindPopup(`
-        <div class="p-2">
-          <b class="text-sm block mb-2 font-serif">${poi.title}</b>
-          <div class="flex items-center gap-3">
-            <button data-poi-action="edit" data-poi-id="${poi.id}" class="text-[10px] text-[#ac3d29] font-bold hover:underline cursor-pointer">Aggiungi Nota</button>
-            <button data-poi-action="remove" data-poi-id="${poi.id}" class="text-[10px] text-slate-500 font-bold hover:underline cursor-pointer">Rimuovi</button>
+        <div class="overflow-hidden rounded-lg" style="min-width:180px">
+          ${poi.photoUrl ? `<img src="${poi.photoUrl}" alt="${poi.title}" style="width:100%;height:80px;object-fit:cover;display:block" />` : ''}
+          <div class="p-2">
+            <b class="text-sm block mb-2 font-serif">${poi.title}</b>
+            <div class="flex items-center gap-3">
+              <button data-poi-action="edit" data-poi-id="${poi.id}" class="text-[10px] text-[#ac3d29] font-bold hover:underline cursor-pointer">Aggiungi Nota</button>
+              <button data-poi-action="remove" data-poi-id="${poi.id}" class="text-[10px] text-slate-500 font-bold hover:underline cursor-pointer">Rimuovi</button>
+            </div>
           </div>
         </div>
       `);

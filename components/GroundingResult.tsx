@@ -7,9 +7,10 @@ interface GroundingResultProps {
   chunks: GroundingChunk[];
   onSavePOI: (poi: { title: string, uri: string, description?: string, lat?: number, lng?: number }) => void;
   isSaved?: (uri: string) => boolean;
+  getPhotoUrl?: (uri: string) => string | undefined;
 }
 
-const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, isSaved }) => {
+const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, isSaved, getPhotoUrl }) => {
   if (!chunks || chunks.length === 0) return null;
 
   return (
@@ -23,11 +24,18 @@ const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, is
           if (chunk.maps) {
             // Use fallback empty string for uri check
             const alreadySaved = isSaved?.(chunk.maps.uri || '');
+            const photoUrl = getPhotoUrl?.(chunk.maps.uri || '');
             return (
               <div
                 key={index}
-                className="block p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:shadow-md transition-all group relative"
+                className="block bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:shadow-md transition-all group relative overflow-hidden"
               >
+                {photoUrl && (
+                  <div className="w-full h-28 overflow-hidden">
+                    <img src={photoUrl} alt={chunk.maps.title || ''} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="p-3">
                 <div className="flex justify-between items-start mb-1 pr-8">
                   <a 
                     href={chunk.maps.uri || '#'} 
@@ -71,6 +79,7 @@ const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, is
                   >
                     {alreadySaved ? '✓ Saved' : '+ Add to Trip'}
                   </button>
+                </div>
                 </div>
               </div>
             );
