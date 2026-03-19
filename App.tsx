@@ -20,6 +20,8 @@ import ConversationStarters from './components/ConversationStarters';
 import SurprisePlanner from './components/SurprisePlanner';
 import PhotoChallenges from './components/PhotoChallenges';
 import TriviaChallenge from './components/TriviaChallenge';
+import TripHub from './components/TripHub';
+import TogetherHub from './components/TogetherHub';
 import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
@@ -113,18 +115,22 @@ const Layout = ({ children }: React.PropsWithChildren<{}>) => {
 const MobileNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { lastViewedDay } = useStore();
-  const isActive = (path: string) => location.pathname === path;
+  const p = location.pathname;
+
+  const tripPaths = ['/list', '/countdown', '/reveals', '/phrases', '/flyover', '/chat', '/story'];
+  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist'];
+
+  const isMap = p === '/';
+  const isTrip = p === '/trip' || p.startsWith('/day') || tripPaths.some(tp => p === tp);
+  const isPassport = p === '/passport' || p === '/gallery';
+  const isTogether = p === '/together' || togetherPaths.some(tp => p === tp);
 
   return (
-    <nav aria-label="Main navigation" className="p-1 bg-white/60 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] border border-white/50 dark:border-white/10 shadow-2xl flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
-      <NavButton active={isActive('/')} onClick={() => navigate('/')} icon={<Icons.Map />} label="Map" />
-      <NavButton active={isActive('/list')} onClick={() => navigate('/list')} icon={<Icons.Route />} label="Route" />
-      <NavButton active={isActive('/passport') || isActive('/gallery')} onClick={() => navigate('/passport')} icon={<div className="h-4 w-4 border-2 border-current rounded-sm" aria-hidden="true" />} label="Passport" />
-      <NavButton active={location.pathname.startsWith('/day')} onClick={() => navigate(`/day/${lastViewedDay}`)} icon={<Icons.Journal />} label="Journal" />
-      <NavButton active={isActive('/story')} onClick={() => navigate('/story')} icon={<Icons.Story />} label="Story" />
-      <NavButton active={isActive('/chat')} onClick={() => navigate('/chat')} icon={<Icons.Chat />} label="AI" />
-      <NavButton active={['/preferences','/prompts','/trivia','/challenges','/surprises'].some(p => isActive(p))} onClick={() => navigate('/preferences')} icon={<Icons.Hearts />} label="Us" />
+    <nav aria-label="Main navigation" className="p-1.5 bg-white/70 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] border border-white/50 dark:border-white/10 shadow-2xl flex items-center justify-around">
+      <NavButton active={isMap} onClick={() => navigate('/')} icon={<Icons.Map />} label="Map" />
+      <NavButton active={isTrip} onClick={() => navigate('/trip')} icon={<Icons.Compass />} label="Trip" />
+      <NavButton active={isPassport} onClick={() => navigate('/passport')} icon={<div className="h-4 w-4 border-2 border-current rounded-sm" aria-hidden="true" />} label="Passport" />
+      <NavButton active={isTogether} onClick={() => navigate('/together')} icon={<Icons.Hearts />} label="Us" />
     </nav>
   );
 }
@@ -177,6 +183,8 @@ const AnimatedRoutes = () => {
         <Route path="/surprises" element={<SurprisePlanner />} />
         <Route path="/challenges" element={<PhotoChallenges />} />
         <Route path="/trivia" element={<TriviaChallenge />} />
+        <Route path="/trip" element={<TripHub />} />
+        <Route path="/together" element={<TogetherHub />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
