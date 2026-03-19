@@ -1,81 +1,55 @@
-const WIKI_API = 'https://en.wikipedia.org/w/api.php';
-const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
+const PLACES_API_BASE = 'https://places.googleapis.com/v1';
 
-/**
- * Fetch a place photo from Wikimedia Commons (free, no API key required).
- * Strategy: search Wikipedia for the place, grab the page thumbnail,
- * then fall back to a Wikimedia Commons search if needed.
- */
 export async function fetchPlacePhoto(
   placeName: string,
   lat: number,
   lng: number,
   maxWidthPx = 800
 ): Promise<string> {
-  // Strategy 1: Wikipedia geosearch → page thumbnail
-  const geoUrl = `${WIKI_API}?action=query&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000&ggslimit=5&prop=pageimages&piprop=thumbnail&pithumbsize=${maxWidthPx}&format=json&origin=*`;
-  try {
-    const geoRes = await fetch(geoUrl);
-    if (geoRes.ok) {
-      const geoData = await geoRes.json();
-      const pages = geoData.query?.pages;
-      if (pages) {
-        // Try to find a page matching the place name, otherwise take the first with a thumbnail
-        const pageList = Object.values(pages) as any[];
-        const nameMatch = pageList.find(
-          (p: any) => p.thumbnail?.source && p.title?.toLowerCase().includes(placeName.split('(')[0].trim().toLowerCase().split(' ')[0])
-        );
-        const anyThumb = pageList.find((p: any) => p.thumbnail?.source);
-        const pick = nameMatch || anyThumb;
-        if (pick?.thumbnail?.source) {
-          return pick.thumbnail.source;
-        }
-      }
-    }
-  } catch { /* fall through */ }
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error('No API key configured');
 
-  // Strategy 2: Wikipedia title search → page thumbnail
-  const searchQuery = `${placeName} Italy`;
-  const searchUrl = `${WIKI_API}?action=query&titles=${encodeURIComponent(searchQuery)}&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=${maxWidthPx}&format=json&origin=*`;
-  try {
-    const searchRes = await fetch(searchUrl);
-    if (searchRes.ok) {
-      const data = await searchRes.json();
-      const pages = data.query?.pages;
-      if (pages) {
-        const page = Object.values(pages).find((p: any) => p.thumbnail?.source) as any;
-        if (page?.thumbnail?.source) return page.thumbnail.source;
-      }
-    }
-  } catch { /* fall through */ }
+  // Step 1: Text Search to find the place and get its photos
+  const searchRes = await fetch(`${PLACES_API_BASE}/places:searchText`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': 'places.photos',
+    },
+    body: JSON.stringify({
+      textQuery: placeName,
+      locationBias: {
+        circle: {
+          center: { latitude: lat, longitude: lng },
+          radius: 5000.0,
+        },
+      },
+      maxResultCount: 1,
+    }),
+  });
 
-  // Strategy 3: Wikipedia text search → page thumbnail
-  const textSearchUrl = `${WIKI_API}?action=query&generator=search&gsrsearch=${encodeURIComponent(searchQuery)}&gsrlimit=3&prop=pageimages&piprop=thumbnail&pithumbsize=${maxWidthPx}&format=json&origin=*`;
-  try {
-    const textRes = await fetch(textSearchUrl);
-    if (textRes.ok) {
-      const data = await textRes.json();
-      const pages = data.query?.pages;
-      if (pages) {
-        const page = Object.values(pages).find((p: any) => p.thumbnail?.source) as any;
-        if (page?.thumbnail?.source) return page.thumbnail.source;
-      }
-    }
-  } catch { /* fall through */ }
+  if (!searchRes.ok) {
+    const text = await searchRes.text();
+    throw new Error(`Places search failed (${searchRes.status}): ${text}`);
+  }
 
-  // Strategy 4: Wikimedia Commons direct file search
-  const commonsUrl = `${COMMONS_API}?action=query&generator=search&gsrsearch=${encodeURIComponent(placeName + ' Italy')}&gsrnamespace=6&gsrlimit=3&prop=imageinfo&iiprop=url&iiurlwidth=${maxWidthPx}&format=json&origin=*`;
-  try {
-    const commonsRes = await fetch(commonsUrl);
-    if (commonsRes.ok) {
-      const data = await commonsRes.json();
-      const pages = data.query?.pages;
-      if (pages) {
-        const page = Object.values(pages).find((p: any) => p.imageinfo?.[0]?.thumburl) as any;
-        if (page?.imageinfo?.[0]?.thumburl) return page.imageinfo[0].thumburl;
-      }
-    }
-  } catch { /* fall through */ }
+  const data = await searchRes.json();
+  const photoName = data.places?.[0]?.photos?.[0]?.name;
+  if (!photoName) throw new Error(`No photos found for "${placeName}"`);
 
-  throw new Error(`No photos found for "${placeName}"`);
+  // Step 2: Get the CDN URL via skipHttpRedirect
+  const mediaRes = await fetch(
+    `${PLACES_API_BASE}/${photoName}/media?maxWidthPx=${maxWidthPx}&skipHttpRedirect=true`,
+    { headers: { 'X-Goog-Api-Key': apiKey } }
+  );
+
+  if (!mediaRes.ok) {
+    throw new Error(`Photo media request failed (${mediaRes.status})`);
+  }
+
+  const mediaData = await mediaRes.json();
+  if (!mediaData.photoUri) throw new Error('No photoUri in response');
+
+  return mediaData.photoUri;
 }
