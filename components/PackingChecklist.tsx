@@ -226,7 +226,7 @@ const PackingChecklist: React.FC = () => {
                 </span>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 stagger-in">
                 {items.map((item) => {
                   const claimedByMe = item.claimedBy === myUid;
                   const claimedByPartner = item.claimedBy === partnerUid;

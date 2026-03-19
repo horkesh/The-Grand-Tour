@@ -184,7 +184,7 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
           <div ref={mapContainerRef} className="w-full h-full" />
           {editingPOI && (
             <div className="absolute inset-0 z-[2000] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-6 lg:p-8 stagger-in">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-6 lg:p-8 stagger-enter">
                 <h4 className="font-serif text-xl font-bold text-[#194f4c] dark:text-white mb-4">Nota Personale</h4>
                 <textarea autoFocus value={tempNote} onChange={(e) => setTempNote(e.target.value)} className="w-full h-32 p-4 bg-slate-50 dark:bg-black rounded-2xl border-none outline-none text-sm mb-6 font-serif italic" />
                 <div className="flex flex-col gap-2">

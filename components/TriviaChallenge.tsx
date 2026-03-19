@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { writeDoc, listenDoc } from '../services/firestoreSync';
 import UserAvatar from './UserAvatar';
 import { getDayOfYear } from '../utils/dateUtils';
+import FlipCard from './FlipCard';
 
 const TRIVIA = [
   { q: "Which Italian city is built on 118 small islands?", options: ["Venice", "Naples", "Genoa", "Bari"], answer: 0 },
@@ -142,28 +143,33 @@ const TriviaChallenge: React.FC = () => {
           })}
         </div>
 
-        {(revealed || alreadyAnswered) && (
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <UserAvatar user={currentUser} size="sm" />
-                <span className={`text-xs font-bold ${todayScore?.[myUid] ? 'text-emerald-500' : 'text-red-400'}`}>
-                  {todayScore?.[myUid] ? 'Correct!' : 'Wrong'}
-                </span>
-              </div>
-              {partnerAnswered ? (
+        <FlipCard
+          flipped={revealed || alreadyAnswered}
+          className="mt-6 h-16"
+          front={<div />}
+          back={
+            <div className="h-full pt-4 border-t border-slate-100 dark:border-white/5 flex items-center">
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
-                  <UserAvatar user={partnerUser} size="sm" />
-                  <span className={`text-xs font-bold ${todayScore?.[partnerUid] ? 'text-emerald-500' : 'text-red-400'}`}>
-                    {todayScore?.[partnerUid] ? 'Correct!' : 'Wrong'}
+                  <UserAvatar user={currentUser} size="sm" />
+                  <span className={`text-xs font-bold ${todayScore?.[myUid] ? 'text-emerald-500' : 'text-red-400'}`}>
+                    {todayScore?.[myUid] ? 'Correct!' : 'Wrong'}
                   </span>
                 </div>
-              ) : (
-                <span className="text-xs text-slate-400 italic">Partner hasn't answered yet</span>
-              )}
+                {partnerAnswered ? (
+                  <div className="flex items-center gap-1.5">
+                    <UserAvatar user={partnerUser} size="sm" />
+                    <span className={`text-xs font-bold ${todayScore?.[partnerUid] ? 'text-emerald-500' : 'text-red-400'}`}>
+                      {todayScore?.[partnerUid] ? 'Correct!' : 'Wrong'}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-400 italic">Partner hasn't answered yet</span>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          }
+        />
       </div>
     </motion.div>
   );

@@ -124,7 +124,7 @@ const MobileNav = () => {
       <NavButton active={location.pathname.startsWith('/day')} onClick={() => navigate(`/day/${lastViewedDay}`)} icon={<Icons.Journal />} label="Journal" />
       <NavButton active={isActive('/story')} onClick={() => navigate('/story')} icon={<Icons.Story />} label="Story" />
       <NavButton active={isActive('/chat')} onClick={() => navigate('/chat')} icon={<Icons.Chat />} label="AI" />
-      <NavButton active={['/preferences','/prompts','/trivia','/challenges','/surprises'].some(p => isActive(p))} onClick={() => navigate('/preferences')} icon={<span className="text-xs">💕</span>} label="Us" />
+      <NavButton active={['/preferences','/prompts','/trivia','/challenges','/surprises'].some(p => isActive(p))} onClick={() => navigate('/preferences')} icon={<Icons.Hearts />} label="Us" />
     </nav>
   );
 }

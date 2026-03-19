@@ -56,7 +56,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2 mb-6">
+      <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2 mb-6 stagger-in">
         <button onClick={() => navigate('/')} className={btnClass('/')}>
           <Icons.Map />
           <span className="text-sm font-bold">Master Map</span>
@@ -99,23 +99,23 @@ const Sidebar: React.FC = () => {
         <div className="pt-4 border-t border-slate-200 dark:border-white/10">
           <p className="text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest px-4 mb-2">Pre-Trip</p>
           <button onClick={() => navigate('/reveals')} className={btnClass('/reveals')}>
-            <span className="text-sm">📅</span>
+            <Icons.Calendar />
             <span className="text-sm font-bold">Daily Reveals</span>
           </button>
           <button onClick={() => navigate('/phrases')} className={btnClass('/phrases')}>
-            <span className="text-sm">🗣️</span>
+            <Icons.Language />
             <span className="text-sm font-bold">Learn Italian</span>
           </button>
           <button onClick={() => navigate('/packing')} className={btnClass('/packing')}>
-            <span className="text-sm">🎒</span>
+            <Icons.Backpack />
             <span className="text-sm font-bold">Packing List</span>
           </button>
           <button onClick={() => navigate('/wishlist')} className={btnClass('/wishlist')}>
-            <span className="text-sm">📌</span>
+            <Icons.Pin />
             <span className="text-sm font-bold">Wishlist</span>
           </button>
           <button onClick={() => navigate('/flyover')} className={btnClass('/flyover')}>
-            <span className="text-sm">✈️</span>
+            <Icons.Plane />
             <span className="text-sm font-bold">Route Flyover</span>
           </button>
         </div>
@@ -124,23 +124,23 @@ const Sidebar: React.FC = () => {
         <div className="pt-4 border-t border-slate-200 dark:border-white/10">
           <p className="text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest px-4 mb-2">Together</p>
           <button onClick={() => navigate('/preferences')} className={btnClass('/preferences')}>
-            <span className="text-sm">💕</span>
+            <Icons.Hearts />
             <span className="text-sm font-bold">Our Preferences</span>
           </button>
           <button onClick={() => navigate('/prompts')} className={btnClass('/prompts')}>
-            <span className="text-sm">💬</span>
+            <Icons.Conversation />
             <span className="text-sm font-bold">Daily Prompts</span>
           </button>
           <button onClick={() => navigate('/trivia')} className={btnClass('/trivia')}>
-            <span className="text-sm">🧠</span>
+            <Icons.Lightbulb />
             <span className="text-sm font-bold">Trivia</span>
           </button>
           <button onClick={() => navigate('/challenges')} className={btnClass('/challenges')}>
-            <span className="text-sm">📸</span>
+            <Icons.Camera />
             <span className="text-sm font-bold">Photo Challenges</span>
           </button>
           <button onClick={() => navigate('/surprises')} className={btnClass('/surprises')}>
-            <span className="text-sm">🎁</span>
+            <Icons.Gift />
             <span className="text-sm font-bold">Surprises</span>
           </button>
         </div>

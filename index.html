@@ -125,13 +125,57 @@
         .user-pulse { position: absolute; top: 0; left: 0; width: 24px; height: 24px; background: rgba(59,130,246,0.25); border-radius: 50%; animation: user-ping 2s ease-out infinite; }
         @keyframes user-ping { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
-        /* Card Stagger Entrance */
-        .stagger-in {
+        /* Card Stagger Entrance (single element) */
+        .stagger-enter {
             animation: staggerIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
             transform: translateY(20px);
         }
         @keyframes staggerIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Micro-interaction: active button press feedback */
+        button:active:not(:disabled) {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
+        }
+
+        /* Micro-interaction: smooth hover transitions on interactive elements */
+        button, a, [role="button"] {
+            transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.2s ease;
+        }
+
+        /* Glassmorphism utility classes */
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Stagger animation utility for lists */
+        .stagger-in > * {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: staggerFadeIn 0.4s ease forwards;
+        }
+        .stagger-in > *:nth-child(1) { animation-delay: 0.05s; }
+        .stagger-in > *:nth-child(2) { animation-delay: 0.1s; }
+        .stagger-in > *:nth-child(3) { animation-delay: 0.15s; }
+        .stagger-in > *:nth-child(4) { animation-delay: 0.2s; }
+        .stagger-in > *:nth-child(5) { animation-delay: 0.25s; }
+        .stagger-in > *:nth-child(6) { animation-delay: 0.3s; }
+        .stagger-in > *:nth-child(7) { animation-delay: 0.35s; }
+        .stagger-in > *:nth-child(8) { animation-delay: 0.4s; }
+        .stagger-in > *:nth-child(9) { animation-delay: 0.45s; }
+        .stagger-in > *:nth-child(10) { animation-delay: 0.5s; }
+
+        @keyframes staggerFadeIn {
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -189,6 +233,8 @@
                 transition-duration: 0.01ms !important;
             }
             .grain-overlay { display: none; }
+            button:active:not(:disabled) { transform: none; }
+            .stagger-in > * { animation: none; opacity: 1; transform: none; }
         }
     </style>
 <script type="importmap">

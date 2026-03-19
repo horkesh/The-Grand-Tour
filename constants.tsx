@@ -249,5 +249,59 @@ export const Icons = {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     )
-  }
+  },
+  Calendar: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17l-1.5-1.5L12 14l1.5 1.5L12 17z" />
+    </svg>
+  ),
+  Language: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17l3-7 3 7M10.5 14h5M4 5h6m2 0h4M7 5v2a5 5 0 005 5" />
+    </svg>
+  ),
+  Backpack: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5a3 3 0 016 0v1H9V5zM6 8h12a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2v-9a2 2 0 012-2zm4 5h4" />
+    </svg>
+  ),
+  Pin: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 4v4a2 2 0 01-.586 1.414L6 11.828V13h5v7l1 1 1-1v-7h5v-1.172l-2.414-2.414A2 2 0 0114 8V4M8 4h8" />
+    </svg>
+  ),
+  Plane: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l-7-7 1.414-1.414L12 16.172l8.586-8.586L22 9l-10 10zM2 5l7 3 3-3 7 3v2l-7-3-3 3-7-3V5z" />
+    </svg>
+  ),
+  Hearts: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.5 8.5c1.5-1.5 4-1.5 5 0s1 3.5-.5 5L15 19l-5-5.5c-1.5-1.5-1.5-4 0-5s3.5-.5 5 .5" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.5 6.5c1.5-1.5 4-1.5 5 0M4 11c-1.5-1.5-1.5-4 0-5s3.5-.5 5 .5" />
+    </svg>
+  ),
+  Conversation: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-1v3l-3-3h-3a2 2 0 01-2-2v-1" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H8l-3 3v-3H5a2 2 0 01-2-2V6z" />
+    </svg>
+  ),
+  Lightbulb: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3a6 6 0 00-3.75 10.693A2 2 0 007 15.25V16a1 1 0 001 1h8a1 1 0 001-1v-.75a2 2 0 00-1.25-1.557A6 6 0 0012 3z" />
+    </svg>
+  ),
+  Camera: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h1.5l1.5-2h8l1.5 2H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  Gift: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8V3m0 0C10.343 3 9 4.343 9 6h3zm0 0c1.657 0 3 1.343 3 3h-3zM20 12v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8m16 0H4m16 0h-6m-4 0H4m8 0v10M4 8h16v4H4V8z" />
+    </svg>
+  ),
 };

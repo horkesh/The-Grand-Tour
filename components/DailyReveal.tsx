@@ -4,6 +4,7 @@ import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
 import UserAvatar from './UserAvatar';
 import { listenDoc, writeDoc } from '../services/firestoreSync';
+import FlipCard from './FlipCard';
 
 // 30 tiles of pre-trip reveals (unlocking daily from April 3 to May 2)
 const REVEAL_TILES = [
@@ -154,36 +155,40 @@ const DailyReveal: React.FC = () => {
           {REVEAL_TILES.map((tile, i) => {
             const isUnlocked = i < unlockedCount;
             return (
-              <motion.button
+              <motion.div
                 key={i}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.02 }}
-                onClick={() => isUnlocked && setSelectedTile(i)}
-                className={`aspect-square rounded-2xl relative overflow-hidden transition-all ${
-                  isUnlocked
-                    ? 'cursor-pointer hover:scale-105 shadow-lg'
-                    : 'cursor-not-allowed opacity-40'
-                }`}
+                className="aspect-square"
               >
-                {isUnlocked ? (
-                  <div
-                    className={`w-full h-full bg-gradient-to-br ${TYPE_COLORS[tile.type]} flex flex-col items-center justify-center gap-1 p-2`}
-                  >
-                    <span className="text-2xl">{TYPE_ICONS[tile.type]}</span>
-                    <span className="text-white text-[7px] font-bold uppercase tracking-wider truncate w-full text-center">
-                      {tile.city}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="w-full h-full bg-slate-200 dark:bg-white/10 flex items-center justify-center">
-                    <span className="text-slate-300 dark:text-white/20 text-2xl">?</span>
-                  </div>
-                )}
-                <div className="absolute top-1 left-1 text-[8px] font-bold text-white/60 bg-black/20 rounded px-1">
-                  {i + 1}
-                </div>
-              </motion.button>
+                <FlipCard
+                  flipped={isUnlocked}
+                  className="w-full h-full"
+                  onClick={() => isUnlocked && setSelectedTile(i)}
+                  front={
+                    <div className="w-full h-full rounded-2xl bg-slate-200 dark:bg-white/10 flex items-center justify-center cursor-not-allowed opacity-40 relative">
+                      <span className="text-slate-300 dark:text-white/20 text-2xl">?</span>
+                      <div className="absolute top-1 left-1 text-[8px] font-bold text-white/60 bg-black/20 rounded px-1">
+                        {i + 1}
+                      </div>
+                    </div>
+                  }
+                  back={
+                    <div
+                      className={`w-full h-full rounded-2xl bg-gradient-to-br ${TYPE_COLORS[tile.type]} flex flex-col items-center justify-center gap-1 p-2 cursor-pointer hover:scale-105 shadow-lg transition-all relative overflow-hidden`}
+                    >
+                      <span className="text-2xl">{TYPE_ICONS[tile.type]}</span>
+                      <span className="text-white text-[7px] font-bold uppercase tracking-wider truncate w-full text-center">
+                        {tile.city}
+                      </span>
+                      <div className="absolute top-1 left-1 text-[8px] font-bold text-white/60 bg-black/20 rounded px-1">
+                        {i + 1}
+                      </div>
+                    </div>
+                  }
+                />
+              </motion.div>
             );
           })}
         </div>

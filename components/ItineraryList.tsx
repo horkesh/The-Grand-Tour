@@ -8,7 +8,7 @@ const ItineraryList: React.FC = () => {
   const { weatherData } = useStore();
 
   return (
-    <div className="h-full overflow-y-auto space-y-4 pb-12 custom-scrollbar pr-2 stagger-in">
+    <div className="h-full overflow-y-auto space-y-4 pb-12 custom-scrollbar pr-2 stagger-enter">
       <div className="flex items-center justify-between mb-8">
         <h2 className="font-serif text-3xl lg:text-5xl font-bold dark:text-white">Our Journey</h2>
         <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">8 Segments • Tuscany & Umbria</div>

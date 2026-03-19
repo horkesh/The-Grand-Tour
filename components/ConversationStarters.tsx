@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { writeDoc, listenDoc } from '../services/firestoreSync';
 import UserAvatar from './UserAvatar';
+import FlipCard from './FlipCard';
 
 const PROMPTS = [
   { id: 'p1', text: "What's the one thing you're most excited about?", day: -30 },
@@ -122,25 +123,26 @@ const ConversationStarters: React.FC = () => {
               </div>
 
               {responses[todayPrompt.id]?.[partnerUid] ? (
-                revealed.has(todayPrompt.id) ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-3"
-                  >
-                    <UserAvatar user={partnerUser} size="md" />
-                    <div className="flex-1 p-3 bg-[#ac3d29]/10 rounded-2xl">
-                      <p className="text-sm">{responses[todayPrompt.id][partnerUid]}</p>
+                <FlipCard
+                  flipped={revealed.has(todayPrompt.id)}
+                  className="w-full h-16"
+                  onClick={() => !revealed.has(todayPrompt.id) && handleReveal(todayPrompt.id)}
+                  front={
+                    <button
+                      className="w-full h-full py-3 bg-[#ac3d29] text-white rounded-xl font-bold text-sm"
+                    >
+                      Reveal Partner's Answer
+                    </button>
+                  }
+                  back={
+                    <div className="flex items-start gap-3 h-full">
+                      <UserAvatar user={partnerUser} size="md" />
+                      <div className="flex-1 p-3 bg-[#ac3d29]/10 rounded-2xl">
+                        <p className="text-sm">{responses[todayPrompt.id][partnerUid]}</p>
+                      </div>
                     </div>
-                  </motion.div>
-                ) : (
-                  <button
-                    onClick={() => handleReveal(todayPrompt.id)}
-                    className="w-full py-3 bg-[#ac3d29] text-white rounded-xl font-bold text-sm"
-                  >
-                    Reveal Partner's Answer
-                  </button>
-                )
+                  }
+                />
               ) : (
                 <p className="text-xs text-slate-400 text-center italic">Waiting for your partner to answer...</p>
               )}
