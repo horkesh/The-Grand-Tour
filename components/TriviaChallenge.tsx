@@ -66,11 +66,15 @@ const TriviaChallenge: React.FC = () => {
   const handleAnswer = async (idx: number) => {
     if (alreadyAnswered || !tripMeta || !currentUser) return;
     setSelectedAnswer(idx);
-    const correct = idx === today.answer ? 1 : 0;
-    await writeDoc(`trips/${tripMeta.id}/trivia/scores`, {
-      [dayKey]: { ...todayScore, [currentUser.uid]: correct },
-    });
     setRevealed(true);
+    const correct = idx === today.answer ? 1 : 0;
+    try {
+      await writeDoc(`trips/${tripMeta.id}/trivia/scores`, {
+        [dayKey]: { ...todayScore, [currentUser.uid]: correct },
+      });
+    } catch (e) {
+      console.warn('[trivia] answer failed:', e);
+    }
   };
 
   // All-time scores

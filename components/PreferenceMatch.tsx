@@ -23,7 +23,6 @@ const PreferenceMatch: React.FC = () => {
   const [myRatings, setMyRatings] = useState<Record<string, number>>({});
   const [partnerRatings, setPartnerRatings] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
-  const [showResults, setShowResults] = useState(false);
 
   const category = CATEGORIES[currentIdx];
 
@@ -45,12 +44,8 @@ const PreferenceMatch: React.FC = () => {
     return unsub;
   }, [tripMeta, currentUser]);
 
-  // Show results once both have submitted
-  useEffect(() => {
-    if (submitted && Object.keys(partnerRatings).length === CATEGORIES.length) {
-      setShowResults(true);
-    }
-  }, [submitted, partnerRatings]);
+  // Derived: show results when both have submitted
+  const showResults = submitted && Object.keys(partnerRatings).length === CATEGORIES.length;
 
   const handleRate = (rating: number) => {
     const updated = { ...myRatings, [category.id]: rating };
@@ -64,7 +59,7 @@ const PreferenceMatch: React.FC = () => {
         writeDoc(`trips/${tripMeta.id}/preferences/${currentUser.uid}`, {
           categories: updated,
           submittedAt: Date.now(),
-        });
+        }).catch(e => console.warn('[preferences] submit failed:', e));
       }
       setSubmitted(true);
     }

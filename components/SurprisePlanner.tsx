@@ -33,18 +33,22 @@ const SurprisePlanner: React.FC = () => {
   const handleSave = async () => {
     if (!title.trim() || !currentUser || !tripMeta) return;
     const id = crypto.randomUUID();
-    await writeDoc(`trips/${tripMeta.id}/surprises/${id}`, {
-      id,
-      createdBy: currentUser.uid,
-      forDay,
-      title: title.trim(),
-      note: note.trim(),
-      revealOnDay: true,
-      revealed: false,
-    });
-    setTitle('');
-    setNote('');
-    setShowForm(false);
+    try {
+      await writeDoc(`trips/${tripMeta.id}/surprises/${id}`, {
+        id,
+        createdBy: currentUser.uid,
+        forDay,
+        title: title.trim(),
+        note: note.trim(),
+        revealOnDay: true,
+        revealed: false,
+      });
+      setTitle('');
+      setNote('');
+      setShowForm(false);
+    } catch (e) {
+      console.warn('[surprises] save failed:', e);
+    }
   };
 
   const mySurprises = surprises.filter(s => s.createdBy === currentUser?.uid);
@@ -164,7 +168,7 @@ const SurprisePlanner: React.FC = () => {
               <p className="text-[10px] text-slate-400 mt-1">{city?.location} · Day {ITALIAN_CITIES.indexOf(city!) + 1}</p>
               {!s.revealed && (
                 <button
-                  onClick={() => writeDoc(`trips/${tripMeta!.id}/surprises/${s.id}`, { revealed: true })}
+                  onClick={() => tripMeta && writeDoc(`trips/${tripMeta.id}/surprises/${s.id}`, { revealed: true }).catch(() => {})}
                   className="mt-3 text-xs font-bold text-[#ac3d29]"
                 >
                   Reveal Now

@@ -23,13 +23,22 @@ const CHALLENGES = [
   { id: 'ch16', title: 'Anniversary Selfie', desc: 'The official anniversary day portrait', emoji: '\u2764\uFE0F', day: 'day-5' as string | null },
 ];
 
-/** Convert a File to a base64 data URL string */
-function fileToDataUrl(file: File): Promise<string> {
+/** Resize image file to fit within maxSize px and return as JPEG data URL (keeps under Firestore 1MB limit) */
+function resizeImageToDataUrl(file: File, maxSize = 800, quality = 0.7): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas not supported'));
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
   });
 }
 
@@ -53,7 +62,7 @@ const PhotoChallenges: React.FC = () => {
     if (!currentUser || !tripMeta) return;
     setUploadingId(challengeId);
     try {
-      const dataUrl = await fileToDataUrl(file);
+      const dataUrl = await resizeImageToDataUrl(file);
       await writeDoc(`trips/${tripMeta.id}/challenges/${challengeId}`, {
         completions: { ...completions[challengeId], [currentUser.uid]: dataUrl },
       });

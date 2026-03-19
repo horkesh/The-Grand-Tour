@@ -63,10 +63,14 @@ const ConversationStarters: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!myAnswer.trim() || !currentUser || !tripMeta || !todayPrompt) return;
-    await writeDoc(`trips/${tripMeta.id}/prompts/responses`, {
-      [`${todayPrompt.id}.${currentUser.uid}`]: myAnswer.trim(),
-    });
-    setMyAnswer('');
+    try {
+      await writeDoc(`trips/${tripMeta.id}/prompts/responses`, {
+        [`${todayPrompt.id}.${currentUser.uid}`]: myAnswer.trim(),
+      });
+      setMyAnswer('');
+    } catch (e) {
+      console.warn('[prompts] submit failed:', e);
+    }
   };
 
   const handleReveal = (promptId: string) => {
