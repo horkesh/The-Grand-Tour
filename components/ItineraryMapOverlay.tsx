@@ -3,6 +3,9 @@ import { TripSegment, SavedPOI, MapInstance, LayerGroup, TileLayer } from '../ty
 import { useStore } from '../store';
 import { useLeaflet } from '../hooks/useLeaflet';
 
+const escapeHtml = (str: string): string =>
+  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 interface ItineraryMapOverlayProps {
   city: TripSegment;
   onClose: () => void;
@@ -106,7 +109,7 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
         iconSize: [36, 36],
         iconAnchor: [18, 18]
       });
-      createMarker(stop.lat, stop.lng, { icon }).addTo(layer).bindPopup(`<b>${stop.title}</b>`);
+      createMarker(stop.lat, stop.lng, { icon }).addTo(layer).bindPopup(`<b>${escapeHtml(stop.title)}</b>`);
     });
 
     savedPOIs.filter(poi => poi.cityId === city.id || poi.cityId === 'planned').forEach(poi => {
@@ -118,12 +121,12 @@ const ItineraryMapOverlay: React.FC<ItineraryMapOverlayProps> = ({ city, onClose
       });
       createMarker(poi.lat || city.center.lat, poi.lng || city.center.lng, { icon }).addTo(layer).bindPopup(`
         <div class="overflow-hidden rounded-lg" style="min-width:180px">
-          ${poi.photoUrl ? `<img src="${poi.photoUrl}" alt="${poi.title}" style="width:100%;height:80px;object-fit:cover;display:block" />` : ''}
+          ${poi.photoUrl ? `<img src="${escapeHtml(poi.photoUrl)}" alt="${escapeHtml(poi.title)}" style="width:100%;height:80px;object-fit:cover;display:block" />` : ''}
           <div class="p-2">
-            <b class="text-sm block mb-2 font-serif">${poi.title}</b>
+            <b class="text-sm block mb-2 font-serif">${escapeHtml(poi.title)}</b>
             <div class="flex items-center gap-3">
-              <button data-poi-action="edit" data-poi-id="${poi.id}" class="text-[10px] text-[#ac3d29] font-bold hover:underline cursor-pointer">Aggiungi Nota</button>
-              <button data-poi-action="remove" data-poi-id="${poi.id}" class="text-[10px] text-slate-500 font-bold hover:underline cursor-pointer">Rimuovi</button>
+              <button data-poi-action="edit" data-poi-id="${escapeHtml(poi.id)}" class="text-[10px] text-[#ac3d29] font-bold hover:underline cursor-pointer">Aggiungi Nota</button>
+              <button data-poi-action="remove" data-poi-id="${escapeHtml(poi.id)}" class="text-[10px] text-slate-500 font-bold hover:underline cursor-pointer">Rimuovi</button>
             </div>
           </div>
         </div>

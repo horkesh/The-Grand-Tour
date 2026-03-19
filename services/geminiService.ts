@@ -104,7 +104,16 @@ export const getWeatherForecast = async (location: string, date: string): Promis
       const jsonStr = response.text?.match(/\{[\s\S]*\}/)?.[0];
       if (!jsonStr) throw new Error("Invalid JSON from model");
 
-      const data = JSON.parse(jsonStr) as WeatherInfo;
+      let data: WeatherInfo;
+      try {
+        data = JSON.parse(jsonStr) as WeatherInfo;
+      } catch {
+        console.warn("Weather JSON parse failed, using fallback");
+        data = { temp: "20°C", condition: "sunny", icon: "sunny", description: "Typical spring weather" };
+      }
+      if (!data.temp || !data.icon) {
+        data = { temp: data.temp || "20°C", condition: data.condition || "sunny", icon: data.icon || "sunny", description: data.description || "Typical spring weather" };
+      }
       weatherCache.set(cacheKey, data);
       return data;
     } catch (e) {

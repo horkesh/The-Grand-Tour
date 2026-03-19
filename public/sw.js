@@ -1,4 +1,5 @@
-const CACHE_NAME = 'grand-tour-v3';
+const CACHE_NAME = 'grand-tour-v4';
+const OFFLINE_URL = '/offline.html';
 
 // Only cache truly static CDN resources (versioned/immutable)
 const STATIC_CDN = [
@@ -6,6 +7,7 @@ const STATIC_CDN = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://grainy-gradients.vercel.app/noise.svg',
   'https://cdn-icons-png.flaticon.com/512/854/854878.png',
+  OFFLINE_URL,
 ];
 
 self.addEventListener('install', (event) => {
@@ -43,6 +45,15 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(request))
+      .catch(() =>
+        caches.match(request).then((cached) => {
+          if (cached) return cached;
+          // For navigation requests, serve the offline page
+          if (request.mode === 'navigate') {
+            return caches.match(OFFLINE_URL);
+          }
+          return cached;
+        })
+      )
   );
 });

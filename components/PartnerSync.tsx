@@ -22,8 +22,12 @@ const encode = (data: SyncPayload): string => {
 const decode = (str: string): SyncPayload | null => {
   try {
     const parsed = JSON.parse(atob(str.trim()));
-    if (parsed?.v === 1) return parsed;
-    return null;
+    if (parsed?.v !== 1) return null;
+    if (!Array.isArray(parsed.stamps) || !parsed.stamps.every((s: unknown) => typeof s === 'string')) return null;
+    if (!Array.isArray(parsed.pois) || !parsed.pois.every((p: any) =>
+      typeof p.id === 'string' && typeof p.title === 'string' && typeof p.uri === 'string'
+    )) return null;
+    return parsed;
   } catch {
     return null;
   }
