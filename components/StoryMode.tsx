@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES, ANNIVERSARY_DAY_ID } from '../constants';
 import { useStore } from '../store';
+import ExportHub from './ExportHub';
 
 const StoryMode: React.FC = () => {
   const navigate = useNavigate();
   const { stamps, postcards, waypointImages, weatherData } = useStore();
+  const [exportOpen, setExportOpen] = useState(false);
 
   const totalStamps = stamps.length;
   const totalPostcards = Object.values(postcards).flat().length;
@@ -41,6 +43,12 @@ const StoryMode: React.FC = () => {
             <span>·</span>
             <span>8 days</span>
           </div>
+          <button
+            onClick={() => setExportOpen(true)}
+            className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-full backdrop-blur-md border border-white/20 transition-all hover:scale-105"
+          >
+            Export &amp; Share
+          </button>
         </motion.div>
       </div>
 
@@ -196,14 +204,24 @@ const StoryMode: React.FC = () => {
               Days
             </div>
           </div>
-          <button
-            onClick={() => navigate('/')}
-            className="mt-10 px-8 py-3 bg-[#194f4c] text-white font-bold text-sm uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-xl"
-          >
-            Back to Map
-          </button>
+          <div className="flex items-center gap-4 mt-10">
+            <button
+              onClick={() => setExportOpen(true)}
+              className="px-8 py-3 bg-[#ac3d29] text-white font-bold text-sm uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-xl"
+            >
+              Export &amp; Share
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="px-8 py-3 bg-[#194f4c] text-white font-bold text-sm uppercase tracking-widest rounded-full hover:scale-105 transition-transform shadow-xl"
+            >
+              Back to Map
+            </button>
+          </div>
         </motion.div>
       </div>
+
+      <ExportHub open={exportOpen} onClose={() => setExportOpen(false)} />
     </motion.div>
   );
 };
