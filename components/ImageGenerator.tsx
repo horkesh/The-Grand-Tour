@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { fetchPlacePhoto } from '../services/placesService';
 
 const MAX_RETRIES = 2;
+const CONSECUTIVE_FAIL_BAIL = 5; // Stop entirely after this many consecutive failures
 
 interface QueueItem {
   key: string;
@@ -22,6 +23,7 @@ const ImageGenerator: React.FC = () => {
   const [done, setDone] = useState(false);
   const waypointImagesRef = useRef(waypointImages);
   waypointImagesRef.current = waypointImages;
+  const consecutiveFailsRef = useRef(0);
 
   // 1. Build the Queue on Mount
   useEffect(() => {
@@ -70,10 +72,21 @@ const ImageGenerator: React.FC = () => {
           const photoUrl = await fetchPlacePhoto(item.name, item.lat, item.lng);
           setWaypointImage(item.key, photoUrl);
         }
+        consecutiveFailsRef.current = 0;
         setQueue((prev) => prev.slice(1));
         setCompleted(c => c + 1);
       } catch (err) {
-        console.error(`[ImageGenerator] Failed ${item.key} "${item.name}" (attempt ${(item.retries || 0) + 1}):`, err);
+        consecutiveFailsRef.current += 1;
+        console.warn(`[ImageGenerator] Failed ${item.key} "${item.name}" (attempt ${(item.retries || 0) + 1}):`, (err as Error).message);
+
+        // Bail out entirely if we see too many consecutive failures
+        if (consecutiveFailsRef.current >= CONSECUTIVE_FAIL_BAIL) {
+          console.warn(`[ImageGenerator] ${CONSECUTIVE_FAIL_BAIL} consecutive failures — stopping queue.`);
+          setQueue([]);
+          setDone(true);
+          return;
+        }
+
         const attempts = (item.retries || 0) + 1;
         if (attempts <= MAX_RETRIES) {
           setQueue((prev) => [...prev.slice(1), { ...item, retries: attempts }]);
@@ -82,7 +95,6 @@ const ImageGenerator: React.FC = () => {
           setCompleted(c => c + 1);
         }
       } finally {
-        // Places API has generous rate limits — short delay is fine
         setTimeout(() => {
           setIsProcessing(false);
         }, 300);
