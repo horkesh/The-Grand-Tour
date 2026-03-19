@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard } from './types';
+import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard, TripUser, TripMeta } from './types';
 import { setImage as idbSetImage, getAllImages } from './services/imageDB';
 
 interface AppState {
@@ -58,6 +58,14 @@ interface AppState {
 
   wishlistNotes: Record<string, string>; // poiId → note
   setWishlistNote: (poiId: string, note: string) => void;
+
+  // Collaborative state
+  currentUser: TripUser | null;
+  setCurrentUser: (user: TripUser) => void;
+  tripMeta: TripMeta | null;
+  setTripMeta: (meta: TripMeta) => void;
+  partnerUser: TripUser | null;
+  setPartnerUser: (user: TripUser | null) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -151,6 +159,14 @@ export const useStore = create<AppState>()(
       wishlistNotes: {},
       setWishlistNote: (poiId, note) =>
         set((state) => ({ wishlistNotes: { ...state.wishlistNotes, [poiId]: note } })),
+
+      // Collaborative state
+      currentUser: null,
+      setCurrentUser: (user) => set({ currentUser: user }),
+      tripMeta: null,
+      setTripMeta: (meta) => set({ tripMeta: meta }),
+      partnerUser: null,
+      setPartnerUser: (user) => set({ partnerUser: user }),
     }),
     {
       name: 'grand-tour-storage',
@@ -168,6 +184,8 @@ export const useStore = create<AppState>()(
         checklist: state.checklist,
         audioPostcards: state.audioPostcards,
         wishlistNotes: state.wishlistNotes,
+        currentUser: state.currentUser,
+        tripMeta: state.tripMeta,
       }),
     }
   )

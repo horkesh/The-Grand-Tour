@@ -24,6 +24,7 @@ import ImageGenerator from './components/ImageGenerator';
 import Welcome from './components/Welcome';
 import TripComplete from './components/TripComplete';
 import { useGeolocation } from './hooks/useGeolocation';
+import AuthGate from './components/AuthGate';
 
 const useOnlineStatus = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -175,9 +176,11 @@ const AnimatedRoutes = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <Layout>
-        <AnimatedRoutes />
-      </Layout>
+      <AuthGate>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+      </AuthGate>
     </Router>
   );
 };
