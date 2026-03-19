@@ -14,7 +14,7 @@ import { TripMeta } from '../types';
 import { useStore } from '../store';
 
 const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { setCurrentUser, setTripMeta, setPartnerUser, currentUser, tripMeta } = useStore();
+  const { setCurrentUser, setTripMeta, setPartnerUser, currentUser, tripMeta, initSync } = useStore();
   const [user, setUser] = useState<User | null>(null);
   const [step, setStep] = useState<'loading' | 'signIn' | 'joinOrCreate' | 'joinInput' | 'ready'>('loading');
   const [joinCode, setJoinCode] = useState('');
@@ -24,6 +24,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
     if (currentUser && tripMeta) {
       setStep('ready');
+      setTimeout(() => useStore.getState().initSync(), 0);
       return;
     }
 
@@ -49,6 +50,9 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             const partner = await getPartnerInfo(existing.id, partnerUid);
             if (partner) setPartnerUser(partner);
           }
+
+          // Start real-time sync
+          setTimeout(() => useStore.getState().initSync(), 0);
 
           setStep('ready');
         } else {
@@ -83,6 +87,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         color: 'teal',
       });
       setTripMeta(newTrip);
+      setTimeout(() => useStore.getState().initSync(), 0);
       setStep('ready');
     } catch (e: any) {
       setError(e.message || 'Could not create trip');
@@ -110,6 +115,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         if (partner) setPartnerUser(partner);
       }
 
+      setTimeout(() => useStore.getState().initSync(), 0);
       setStep('ready');
     } catch (e: any) {
       setError(e.message || 'Could not join trip');
