@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { ITALIAN_CITIES, Icons } from '../constants';
 import { writeDoc } from '../services/firestoreSync';
+import { SavedPOI } from '../types';
 import UserAvatar from './UserAvatar';
 
 const Wishlist: React.FC = () => {
@@ -47,6 +48,9 @@ const Wishlist: React.FC = () => {
     const currentVote = poi.votes?.[myUid];
     const newVote = currentVote === vote ? undefined : vote;
     const newVotes = { ...poi.votes, [myUid]: newVote };
+    // Optimistic local update — Firestore listener will reconcile
+    const updatedPOIs = savedPOIs.map(p => p.id === poiId ? { ...p, votes: newVotes } : p);
+    useStore.setState({ savedPOIs: updatedPOIs });
     writeDoc(`trips/${tripMeta.id}/pois/${poiId}`, { votes: newVotes }).catch(() => {});
   };
 

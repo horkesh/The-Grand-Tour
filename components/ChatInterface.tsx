@@ -129,11 +129,8 @@ const ChatInterface: React.FC = () => {
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className="max-w-[90%] md:max-w-[85%]">
                 {msg.role === 'user' && senderUser && (
-                  <div className={`flex items-center gap-1.5 mb-1 ${isMine ? 'justify-end' : 'justify-end'}`}>
-                    <UserAvatar user={senderUser} size="sm" />
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      {senderUser.displayName?.split(' ')[0]}
-                    </span>
+                  <div className="flex items-center gap-1.5 mb-1 justify-end">
+                    <UserAvatar user={senderUser} size="sm" showName />
                   </div>
                 )}
                 <div className={`rounded-2xl p-4 shadow-sm ${

@@ -66,6 +66,9 @@ const PackingChecklist: React.FC = () => {
     const item = checklist.find(i => i.id === itemId);
     if (!item) return;
     const claimedBy = item.claimedBy === myUid ? undefined : myUid;
+    // Optimistic local update
+    const updatedChecklist = checklist.map(i => i.id === itemId ? { ...i, claimedBy } : i);
+    useStore.setState({ checklist: updatedChecklist });
     writeDoc(`trips/${tripMeta.id}/checklist/${itemId}`, { ...item, claimedBy }).catch(() => {});
   };
 
