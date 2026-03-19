@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Trip documents — only partners can read/write
+    match /trips/{tripId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid in resource.data.meta.partnerIds;
+
+      // Allow creation by any authenticated user
+      allow create: if request.auth != null;
+
+      // Subcollections inherit trip-level access
+      match /{subcollection}/{docId} {
+        allow read, write: if request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.meta.partnerIds;
+      }
+    }
+  }
+}

@@ -13,11 +13,6 @@ export interface WeatherInfo {
   description: string;
 }
 
-export interface PartnerSync {
-  enabled: boolean;
-  syncCode?: string;
-  partnerLocation?: Location;
-}
 
 export interface GroundingChunk {
   maps?: {
