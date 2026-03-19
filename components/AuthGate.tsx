@@ -10,6 +10,8 @@ import {
   joinTrip,
   getPartnerInfo,
   buildTripUser,
+  isKnownPartner,
+  findTripByPartnerEmail,
 } from '../services/firebaseAuth';
 import { TripMeta } from '../types';
 import { useStore } from '../store';
@@ -55,6 +57,16 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         if (existing) {
           await resolveTrip(fbUser, existing);
           setStep('ready');
+        } else if (isKnownPartner(fbUser.email)) {
+          // Auto-join: known partner (Maja) finds Haris's trip automatically
+          const partnerTrip = await findTripByPartnerEmail(fbUser.email || '');
+          if (partnerTrip) {
+            const joined = await joinTrip(fbUser, partnerTrip.joinCode);
+            await resolveTrip(fbUser, joined);
+            setStep('ready');
+          } else {
+            setStep('joinOrCreate');
+          }
         } else {
           setStep('joinOrCreate');
         }
