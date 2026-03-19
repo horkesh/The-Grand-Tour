@@ -37,7 +37,7 @@ const TogetherHub: React.FC = () => {
         <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <UserAvatar user={currentUser} size="md" showName />
-            <span className="text-slate-300 dark:text-slate-600 font-serif text-lg">&amp;</span>
+            <span className="text-slate-300 dark:text-slate-500 font-serif text-lg">&amp;</span>
             <UserAvatar user={partnerUser} size="md" showName />
           </div>
           {partnerUser ? (

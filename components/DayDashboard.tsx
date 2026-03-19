@@ -380,7 +380,7 @@ const DayDashboard: React.FC = () => {
             
             {selectedStopIdx !== null && (
                 <div className="mt-8 flex gap-4">
-                     <a href={currentStop?.uri} target="_blank" onClick={(e) => e.stopPropagation()} className="px-6 py-3 bg-white border border-slate-200 text-slate-800 rounded-full font-bold text-sm shadow-md flex items-center gap-2">
+                     <a href={currentStop?.uri} target="_blank" onClick={(e) => e.stopPropagation()} className="px-6 py-3 bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-full font-bold text-sm shadow-md flex items-center gap-2">
                         <Icons.Map /> Open Maps
                      </a>
                      <button onClick={(e) => { e.stopPropagation(); setSelectedStopIdx(null); }} className="px-6 py-3 border border-slate-300 dark:border-slate-700 text-slate-500 rounded-full font-bold text-sm">
@@ -402,7 +402,7 @@ const DayDashboard: React.FC = () => {
         <div className="lg:col-span-8 space-y-10">
           <section>
              <div className="flex items-center justify-between mb-4">
-               <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em]">Itinerary Waypoints</h3>
+               <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Itinerary Waypoints</h3>
                {weather && selectedStopIdx === null && (
                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                     <span className="text-[10px] font-bold uppercase tracking-widest">Forecast: {weather.description}</span>

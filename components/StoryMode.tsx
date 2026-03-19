@@ -170,7 +170,7 @@ const StoryMode: React.FC = () => {
               {dayPostcards.length > 0 && (
                 <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
                   {dayPostcards.map((url, i) => (
-                    <div key={i} className="shrink-0 bg-white p-2 pb-8 shadow-lg transform rotate-[-1deg] hover:rotate-0 transition-transform">
+                    <div key={i} className="shrink-0 bg-white dark:bg-[#1a1a1a] p-2 pb-8 shadow-lg transform rotate-[-1deg] hover:rotate-0 transition-transform">
                       <img src={url} alt={`Memory ${i + 1}`} className="w-40 h-28 object-cover" loading="lazy" />
                       <p className="absolute bottom-2 left-0 right-0 text-center text-[9px] font-serif text-slate-500 italic">
                         {city.location}

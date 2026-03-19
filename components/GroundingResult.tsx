@@ -73,7 +73,7 @@ const GroundingResult: React.FC<GroundingResultProps> = ({ chunks, onSavePOI, is
                     disabled={alreadySaved}
                     className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                       alreadySaved 
-                        ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 cursor-default' 
+                        ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 cursor-default' 
                         : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
                     }`}
                   >
