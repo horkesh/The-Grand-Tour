@@ -18,14 +18,14 @@ An AI-powered Italian travel companion PWA for an 8-day anniversary trip (May 2�
 ```
 App.tsx            Main app — Layout, routing, mobile nav, weather prefetch
 index.tsx          React DOM entry
-index.html         HTML shell with CDN imports (Tailwind, Leaflet, fonts), importmap
+index.html         HTML shell with CDN imports (Tailwind, Leaflet, fonts), importmap, @media print
 constants.tsx      8-day itinerary data (TripSegment[]), PlannedStops, SVG Icons
-types.ts           All shared type definitions
-store.ts           Zustand store (theme, POIs, stamps, postcards, images, weather)
-components/        UI components (12 files)
+types.ts           All shared type definitions (ChecklistItem, AudioPostcard, etc.)
+store.ts           Zustand store (theme, POIs, stamps, postcards, images, weather, checklist, audio, wishlist)
+components/        UI components (23 files)
 hooks/             Custom hooks (3 hooks)
 services/          Gemini AI service
-utils/             Image processing (postcard merging)
+utils/             Image processing, story export, bulk download, date utils
 docs/              Planning, architecture, and session ledger
 ```
 
@@ -33,7 +33,7 @@ docs/              Planning, architecture, and session ledger
 
 - `index.html` → `index.tsx` → `App.tsx`
 - `App.tsx` renders `<Layout>` wrapping `<AnimatedRoutes>` (React Router)
-- Routes: `/` (map), `/list` (itinerary), `/passport`, `/gallery`, `/chat`, `/day/:cityId`
+- Routes: `/` (map), `/list` (itinerary), `/passport`, `/gallery`, `/chat`, `/story`, `/countdown`, `/reveals`, `/packing`, `/phrases`, `/flyover`, `/wishlist`, `/day/:cityId`
 
 ## Commands
 
@@ -53,7 +53,7 @@ npx tsc --noEmit  # Type check
 ### State Management
 - Single Zustand store in `store.ts` with persist middleware
 - Components consume via `useStore()` directly
-- Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData
+- Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData, chatMessages, checklist, audioPostcards, wishlistNotes, hasSeenWelcome, hasFlippedCard, lastViewedDay, hasSeenTripComplete
 - Not persisted: userLocation
 
 ### Components
@@ -61,6 +61,10 @@ npx tsc --noEmit  # Type check
 - Leaflet map logic abstracted into `hooks/useLeaflet.ts`
 - AI image generation handled by `components/ImageGenerator.tsx` (background queue)
 - Postcard creation in `utils/imageProcessing.ts`
+- Postcard composer with borders/fonts in `components/PostcardComposer.tsx`
+- Story HTML export in `utils/storyExport.ts`
+- Bulk gallery download (JSZip CDN) in `utils/bulkDownload.ts`
+- Audio recording in `components/AudioRecorder.tsx`
 
 ### AI Integration
 - All Gemini calls go through `services/geminiService.ts`

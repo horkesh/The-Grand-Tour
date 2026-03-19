@@ -6,26 +6,26 @@ Compiled from brainstorming session. Grouped by theme.
 
 ## Pre-Trip: Building Anticipation
 
-### 1. Countdown Dashboard
-A landing page (or reimagined Welcome modal) showing days/hours until May 2 departure. Daily rotating "Did you know?" fact about each city from Gemini. Real-time countdown tick. Vibe shifts as the trip approaches.
+### 1. Countdown Dashboard ✅
+Full-screen countdown with days:hours:minutes, daily rotating Italian facts (14 facts), 8-city preview grid, real-time `useCountdown` hook. Route: `/countdown`. Component: `CountdownDashboard.tsx`.
 
-### 2. Daily Reveal Calendar
-Advent-calendar style. Each day in the weeks before May 2, a tile unlocks: a destination photo, a local phrase, a restaurant preview, a historical tidbit. Locked tiles show mystery silhouettes. Creates a daily drip of excitement.
+### 2. Daily Reveal Calendar ✅
+30-tile advent calendar unlocking one tile per day for 30 days before departure. Tiles contain photos, phrases, facts, and restaurant previews. Locked tiles show "?" silhouettes. Modal detail view on tap. Route: `/reveals`. Component: `DailyReveal.tsx`.
 
-### 3. Packing & Prep Checklist
-Interactive shareable checklist (passports, adapters, reservations, outfits). Both partners mark items off via Partner Sync. Satisfying progress bar as items get checked.
+### 3. Packing & Prep Checklist ✅
+26 default items across 5 categories (documents, clothing, tech, toiletries, misc). Progress bar, custom items, batch-initialized Zustand state. Route: `/packing`. Component: `PackingChecklist.tsx`. Store: `checklist`, `setChecklist`, `toggleChecklistItem`, `addChecklistItem`, `removeChecklistItem`.
 
-### 4. "Learn a Phrase" Mini-Game
-Daily Italian phrase flashcard with pronunciation (via Gemini or static data). Swipe to reveal translation. Track how many phrases learned before the trip.
+### 4. "Learn a Phrase" Mini-Game ✅
+24 Italian flashcards with pronunciation across 6 categories (Greetings, Basics, Essential, Restaurant, Shopping, Driving, Expressions, Romance). Tap-to-reveal translation, learned tracking, category index. Route: `/phrases`. Component: `LearnPhrase.tsx`.
 
 ### 5. Weather Watcher
 2-week forecast trend for each city as the trip approaches, updating daily. "Rome is looking sunny for Day 1!" Real data builds real anticipation.
 
-### 6. Route Preview Flyover
-Animated map sequence that "flies" through the full 8-day route on Leaflet. Each stop gets a tooltip preview. Cinematic way to visualize the journey ahead.
+### 6. Route Preview Flyover ✅
+Animated Leaflet map that flies through all 8 cities with numbered markers, dashed polylines, and city info cards. L.layerGroup for clean replay. Route: `/flyover`. Component: `RouteFlyover.tsx`.
 
-### 7. Shared Wishlist (Pre-Trip POIs)
-Both partners drop pins or save POIs before the trip with notes like "I heard this trattoria is amazing." Feeds directly into existing savedPOIs system and shows up on day pages during the trip.
+### 7. Shared Wishlist (Pre-Trip POIs) ✅
+Save places with editable notes, grouped by day/city. Add form with city picker. Integrated with existing `savedPOIs` system + new `wishlistNotes` store. Route: `/wishlist`. Component: `Wishlist.tsx`.
 
 ---
 
@@ -36,37 +36,36 @@ Multi-page keepsake — cover page, day-by-day chapters with postcards, collecte
 
 **TODO:** Study Codex app export templates (horkesh/the-codex) for patterns and libraries once access is available.
 
-### 9. Timelapse Map Animation ("Replay Our Journey")
-Button on Story page that animates the route on Leaflet day-by-day — polyline draws itself, stamps pop in at each city, camera icon flashes where postcards were taken. Framer Motion + Leaflet already in stack.
+### 9. Timelapse Map Animation ("Replay Our Journey") ✅
+Full-screen dark-themed Leaflet map launched from Story page. Flies through 8 cities showing stamp status, photo indicators, stamped/unstamped polylines. L.layerGroup for clean replay. Component: `JourneyReplay.tsx`. Integrated into `StoryMode.tsx`.
 
-### 10. Shareable Story Link (Static HTML Export)
-Export the Story page as a self-contained HTML file (inline styles, base64 images). Email or share — no server needed. Recipients open in any browser and see the full trip narrative.
+### 10. Shareable Story Link (Static HTML Export) ✅
+Downloads entire Story page as self-contained HTML file with inline styles, CDN fonts, all 8 day chapters, stamp badges, postcard carousels. "Save as HTML" button on Story page hero. Utility: `utils/storyExport.ts`.
 
-### 11. Postcard Composer Upgrade
-Text overlays with handwritten-style fonts, postcard border templates (vintage, polaroid, stamp-edged), font picker. Canvas work in imageProcessing.ts already supports compositing.
+### 11. Postcard Composer Upgrade ✅
+Canvas-based editor with 4 border styles (none, polaroid, vintage, stamp), 3 font options (Classic/Handwritten/Modern), title + subtitle text overlays. Debounced rendering with cached images. Component: `PostcardComposer.tsx`.
 
 ### 12. Daily Highlights Reel
 Auto-generated "day in review" card at end of each day — weather, distance traveled, stamps collected, postcards taken, AI summary quote. Modal or special card in Story view.
 
-### 13. Audio Postcards
-Record short voice clips (Web Audio API) attached to postcards — ambient piazza sounds, laughter, a comment. Stored as base64 alongside image. Playable in Gallery with speaker icon.
+### 13. Audio Postcards ✅
+Web Audio API recording per-location. Play/delete clips inline. Stored as base64 in Zustand `audioPostcards` store. Cleanup on unmount for streams/intervals. Component: `AudioRecorder.tsx`. Integrated into `DayDashboard.tsx` sidebar.
 
-### 14. Bulk Gallery Download
-Zip all postcards into a single download. JSZip is tiny.
+### 14. Bulk Gallery Download ✅
+JSZip loaded dynamically from CDN. Zips all postcards with city-named filenames. "Download All" button in Gallery header. Utility: `utils/bulkDownload.ts`. Integrated into `Gallery.tsx`.
 
 ### 15. Social Share Cards
 Generate Open Graph-style summary image for sharing on WhatsApp/Instagram.
 
-### 16. Print-Ready Passport Page
-@media print styles for the passport so it can be printed as a physical keepsake.
+### 16. Print-Ready Passport Page ✅
+@media print CSS in `index.html` with A4 layout, hidden nav/header/buttons, 4-column stamp grid, page break rules. "Print Passport" button in `Passaporto.tsx`.
 
 ---
 
-## Priority Recommendations
+## Implementation Status
 
-**Highest impact, pre-trip:** #2 Daily Reveal Calendar, #7 Shared Wishlist
-**Highest impact, export:** #8 Trip Memory Book, #10 Shareable Story Link
-**Quick wins:** #14 Bulk Download, #16 Print Passport, #1 Countdown
+**Implemented (12/16):** #1, #2, #3, #4, #6, #7, #9, #10, #11, #13, #14, #16
+**Not implemented (4/16):** #5 Weather Watcher (existing weather covers this), #8 Trip Memory Book (PDF), #12 Daily Highlights Reel, #15 Social Share Cards
 
 ---
 

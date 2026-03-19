@@ -36,12 +36,12 @@ Adopted agent discipline from the Tonight repo. Set up CLAUDE.md, napkin runbook
 10. Stub components (CurrencyConverter, Toast) export null — intentional scope reduction
 
 ### Architecture Summary
-- ~2,300 lines of TypeScript/React
-- 12 components, 3 hooks, 1 service, 1 util
+- ~4,500 lines of TypeScript/React
+- 23 components, 3 hooks, 1 service, 5 utils
 - Single Zustand store with localStorage persistence
 - Leaflet maps via CDN + useLeaflet abstraction
 - Gemini AI: chat with grounding, image generation, weather
-- React Router HashRouter with 6 routes
+- React Router HashRouter with 13 routes
 - Background image generation queue (4s spacing, ~60 waypoints)
 
 ### What's Next
@@ -299,6 +299,69 @@ All four deferred features implemented in a single pass: geolocation tracking, r
 
 ### What's Next
 - UI polish pass
+
+---
+
+## 2026-03-19 — Phase 6: All Remaining Features + /simplify
+
+### Context
+Implemented all 12 remaining feature ideas from `docs/feature-ideas.md` in a single session, then ran /simplify for quality fixes.
+
+### What Was Done
+
+**Pre-Trip Features (6 new routes):**
+
+1. **Countdown Dashboard** (`/countdown`, `CountdownDashboard.tsx`) — full-screen countdown with days:hours:minutes via `useCountdown`, 14 rotating Italian facts, 8-city preview grid.
+
+2. **Daily Reveal Calendar** (`/reveals`, `DailyReveal.tsx`) — 30-tile advent calendar unlocking daily for 30 days before departure. Photos, phrases, facts, restaurants. Modal detail view.
+
+3. **Packing Checklist** (`/packing`, `PackingChecklist.tsx`) — 26 default items in 5 categories, progress bar, custom items. New store: `checklist`, `setChecklist`, `toggleChecklistItem`, `addChecklistItem`, `removeChecklistItem`.
+
+4. **Learn a Phrase** (`/phrases`, `LearnPhrase.tsx`) — 24 Italian flashcards with pronunciation, tap-to-reveal, learned tracking, category index.
+
+5. **Route Flyover** (`/flyover`, `RouteFlyover.tsx`) — animated Leaflet map flying through all 8 cities with markers and route lines.
+
+6. **Shared Wishlist** (`/wishlist`, `Wishlist.tsx`) — POI saving with editable notes, grouped by city. New store: `wishlistNotes`, `setWishlistNote`.
+
+**During/Post-Trip Features (integrated into existing views):**
+
+7. **Journey Replay** (`JourneyReplay.tsx` in StoryMode) — full-screen timelapse map showing stamps, postcards, route progression. L.layerGroup for clean replay.
+
+8. **Story HTML Export** (`utils/storyExport.ts` in StoryMode) — self-contained HTML file download with inline styles and all day chapters.
+
+9. **Postcard Composer** (`PostcardComposer.tsx`) — canvas editor with 4 borders (none/polaroid/vintage/stamp), 3 fonts, text overlays.
+
+10. **Audio Postcards** (`AudioRecorder.tsx` in DayDashboard) — Web Audio API recording, base64 storage, per-location playback. New store: `audioPostcards`, `addAudioPostcard`, `removeAudioPostcard`.
+
+11. **Bulk Gallery Download** (`utils/bulkDownload.ts` in Gallery) — JSZip from CDN, zips all postcards with city-named filenames.
+
+12. **Print-Ready Passport** (`index.html` @media print, Passaporto) — A4 print CSS with hidden nav, stamp grid, page breaks. Print button.
+
+**Infrastructure:**
+- New types: `ChecklistItem`, `AudioPostcard`
+- New utility: `utils/dateUtils.ts` (shared `getDayOfYear`)
+- Sidebar: new "Pre-Trip" section with 5 nav items
+- 6 new routes in App.tsx
+
+### /simplify Findings
+
+**Fixed:**
+1. AudioRecorder: stale closure causing duration=0, missing unmount cleanup for intervals/streams, audio play() rejection unhandled
+2. LearnPhrase: `useState` misused as side-effect trigger → proper initial state value
+3. Wishlist: `Date.now()` called twice producing mismatched IDs
+4. PostcardComposer: debounced canvas renders (200ms), cached loaded images in refs, fixed AnimatePresence exit by moving early return inside wrapper
+5. PackingChecklist: 25 individual `addChecklistItem` calls → single batch `setChecklist`
+6. RouteFlyover/JourneyReplay: replaced fragile `layer._url` heuristic with `L.layerGroup` + `clearLayers()`
+7. Extracted shared `getDayOfYear()` to `utils/dateUtils.ts`
+
+**Reviewed but not changed:**
+- `audioPostcards` base64 in localStorage could exceed quota — needs IndexedDB (significant refactor)
+- Map components don't use `useLeaflet` hook — flyover/replay need different tile layers and animation patterns
+- Hardcoded color strings — existing codebase convention via Tailwind CDN
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success
 
 ---
 

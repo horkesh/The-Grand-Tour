@@ -8,9 +8,9 @@
 
 1. **State Management (`store.ts`)**
    - Single Zustand store with persist middleware
-   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData, hasSeenWelcome, hasFlippedCard, lastViewedDay, hasSeenTripComplete, chatMessages (stripped of grounding)
+   - Persisted: theme, savedPOIs, stamps, postcards, waypointImages, weatherData, hasSeenWelcome, hasFlippedCard, lastViewedDay, hasSeenTripComplete, chatMessages (stripped of grounding), checklist, audioPostcards, wishlistNotes
    - Ephemeral: userLocation
-   - No splitting needed at current ~120 lines
+   - ~180 lines with new state for checklist, audio postcards, wishlist notes
 
 2. **AI Service (`services/geminiService.ts`)**
    - `enrichTripPlan()` — Chat with grounding (googleMaps + googleSearch tools), model: `gemini-2.5-flash`
@@ -27,7 +27,7 @@
 
 4. **Routing (React Router)**
    - HashRouter for broad compatibility
-   - 7 routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`, `/story`
+   - 13 routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`, `/story`, `/countdown`, `/reveals`, `/packing`, `/phrases`, `/flyover`, `/wishlist`
    - AnimatePresence with popLayout for transitions
 
 5. **Image Pipeline**
