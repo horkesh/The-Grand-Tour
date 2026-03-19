@@ -101,13 +101,13 @@ const ChatInterface: React.FC = () => {
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0d0d0d] border-none rounded-3xl overflow-hidden shadow-inner transition-colors duration-300">
       {chatMessages.length > 0 && (
         <div className="shrink-0 flex items-center justify-between px-4 pt-3 pb-1">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">{chatMessages.length} messages</span>
-          <button onClick={clearChatMessages} className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest hover:text-red-500 dark:hover:text-red-400 transition-colors">Clear</button>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{chatMessages.length} messages</span>
+          <button onClick={clearChatMessages} className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest hover:text-red-500 dark:hover:text-red-400 transition-colors">Clear</button>
         </div>
       )}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar" ref={scrollRef}>
         {chatMessages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 space-y-4">
+          <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 space-y-4">
             <div className="bg-slate-200 dark:bg-white/5 p-6 rounded-full">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

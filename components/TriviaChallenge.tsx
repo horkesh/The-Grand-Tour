@@ -127,7 +127,7 @@ const TriviaChallenge: React.FC = () => {
             if (revealed || alreadyAnswered) {
               if (isCorrect) btnClass = 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-400';
               else if (isSelected && !isCorrect) btnClass = 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
-              else btnClass = 'bg-slate-50 dark:bg-white/5 text-slate-400';
+              else btnClass = 'bg-slate-50 dark:bg-white/5 text-slate-400 dark:text-slate-500';
             }
 
             return (
@@ -164,7 +164,7 @@ const TriviaChallenge: React.FC = () => {
                     </span>
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-400 italic">Partner hasn't answered yet</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 italic">Partner hasn't answered yet</span>
                 )}
               </div>
             </div>

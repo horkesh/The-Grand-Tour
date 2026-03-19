@@ -97,7 +97,7 @@ const Sidebar: React.FC = () => {
 
         {/* Pre-Trip Section */}
         <div className="pt-4 border-t border-slate-200 dark:border-white/10">
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest px-4 mb-2">Pre-Trip</p>
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-4 mb-2">Pre-Trip</p>
           <button onClick={() => navigate('/reveals')} className={btnClass('/reveals')}>
             <Icons.Calendar />
             <span className="text-sm font-bold">Daily Reveals</span>
@@ -122,7 +122,7 @@ const Sidebar: React.FC = () => {
 
         {/* Together Section */}
         <div className="pt-4 border-t border-slate-200 dark:border-white/10">
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest px-4 mb-2">Together</p>
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-4 mb-2">Together</p>
           <button onClick={() => navigate('/preferences')} className={btnClass('/preferences')}>
             <Icons.Hearts />
             <span className="text-sm font-bold">Our Preferences</span>
@@ -158,7 +158,7 @@ const Sidebar: React.FC = () => {
       {tripMeta?.joinCode && tripMeta.partnerIds.length < 2 && (
         <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl text-center mb-2">
           <p className="text-[9px] uppercase tracking-widest text-amber-600 font-bold mb-1">Invite Partner</p>
-          <p className="font-mono text-lg font-bold text-amber-700 tracking-[0.3em]">{tripMeta.joinCode}</p>
+          <p className="font-mono text-lg font-bold text-amber-700 dark:text-amber-400 tracking-[0.3em]">{tripMeta.joinCode}</p>
           <p className="text-[9px] text-amber-500 mt-1">Share this code</p>
         </div>
       )}

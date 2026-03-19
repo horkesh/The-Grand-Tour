@@ -170,7 +170,7 @@ const PackingChecklist: React.FC = () => {
               className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${
                 filter === f
                   ? 'bg-[#194f4c] text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-600'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
             >
               {f === 'theirs' ? (partnerUser?.displayName?.split(' ')[0] || 'Partner') + "'s" : f}
@@ -275,7 +275,7 @@ const PackingChecklist: React.FC = () => {
                       ) : (
                         <button
                           onClick={() => handleClaim(item.id)}
-                          className="text-[9px] font-bold text-slate-300 dark:text-slate-600 hover:text-[#194f4c] dark:hover:text-emerald-400 uppercase tracking-wider transition-colors"
+                          className="text-[9px] font-bold text-slate-300 dark:text-slate-500 hover:text-[#194f4c] dark:hover:text-emerald-400 uppercase tracking-wider transition-colors"
                         >
                           Claim
                         </button>
@@ -285,7 +285,7 @@ const PackingChecklist: React.FC = () => {
                       {claimedByMe && !item.checked && (
                         <button
                           onClick={() => handleClaim(item.id)}
-                          className="text-[9px] text-slate-300 hover:text-red-400 transition-colors"
+                          className="text-[9px] text-slate-300 dark:text-slate-500 hover:text-red-400 transition-colors"
                           title="Unclaim"
                         >
                           ×

@@ -150,7 +150,7 @@ const MiniCalendarHeader = () => {
         <div className="h-2.5 bg-[#CE2B37] dark:bg-red-900 w-full" />
         <div className="flex flex-col items-center justify-center h-full -mt-1">
           <span className="text-[14px] font-serif font-bold text-slate-900 dark:text-white leading-none">{days}</span>
-          <span className="text-[5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">GIORNI</span>
+          <span className="text-[5px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-tighter">GIORNI</span>
         </div>
       </div>
       <div className="flex flex-col">

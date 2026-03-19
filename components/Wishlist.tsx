@@ -241,7 +241,7 @@ const Wishlist: React.FC = () => {
                       ) : (
                         <p
                           onClick={() => setEditingNote(poi.id)}
-                          className="text-xs text-slate-400 dark:text-slate-500 mt-1 cursor-pointer hover:text-slate-600 italic"
+                          className="text-xs text-slate-400 dark:text-slate-500 mt-1 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 italic"
                         >
                           {poi.notes || wishlistNotes[poi.id] || 'Tap to add a note...'}
                         </p>
@@ -251,7 +251,7 @@ const Wishlist: React.FC = () => {
                       {partnerVote && (
                         <div className="flex items-center gap-1 mt-1.5">
                           <UserAvatar user={partnerUser} size="sm" />
-                          <span className="text-[9px] text-slate-400">
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500">
                             voted {partnerVote === 'up' ? '👍' : '👎'}
                           </span>
                         </div>

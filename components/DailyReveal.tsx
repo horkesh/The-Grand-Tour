@@ -221,7 +221,7 @@ const DailyReveal: React.FC = () => {
               <div className="p-8 text-center">
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <span className="text-3xl">{TYPE_ICONS[REVEAL_TILES[selectedTile].type]}</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     Day {selectedTile + 1} · {REVEAL_TILES[selectedTile].type}
                   </span>
                 </div>

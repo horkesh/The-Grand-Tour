@@ -76,7 +76,7 @@ const SurprisePlanner: React.FC = () => {
           <p className="font-serif text-lg font-bold">
             {hiddenForMe.length} surprise{hiddenForMe.length > 1 ? 's' : ''} waiting for you!
           </p>
-          <p className="text-xs text-slate-400 mt-1">They'll be revealed at just the right moment</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">They'll be revealed at just the right moment</p>
         </div>
       )}
 

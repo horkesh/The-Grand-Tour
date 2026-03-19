@@ -117,7 +117,7 @@ const ConversationStarters: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <UserAvatar user={currentUser} size="md" />
-                <div className="flex-1 p-3 bg-[#194f4c]/10 rounded-2xl">
+                <div className="flex-1 p-3 bg-[#194f4c]/10 dark:bg-[#194f4c]/20 rounded-2xl">
                   <p className="text-sm">{responses[todayPrompt.id][myUid]}</p>
                 </div>
               </div>
@@ -137,7 +137,7 @@ const ConversationStarters: React.FC = () => {
                   back={
                     <div className="flex items-start gap-3 h-full">
                       <UserAvatar user={partnerUser} size="md" />
-                      <div className="flex-1 p-3 bg-[#ac3d29]/10 rounded-2xl">
+                      <div className="flex-1 p-3 bg-[#ac3d29]/10 dark:bg-[#ac3d29]/20 rounded-2xl">
                         <p className="text-sm">{responses[todayPrompt.id][partnerUid]}</p>
                       </div>
                     </div>

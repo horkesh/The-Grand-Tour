@@ -158,7 +158,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           {step === 'joinOrCreate' && (
             <motion.div key="choice" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-              <p className="text-xs text-slate-500 mb-4">Welcome, {user?.displayName?.split(' ')[0]}!</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Welcome, {user?.displayName?.split(' ')[0]}!</p>
               <button
                 onClick={handleCreate}
                 className="w-full p-4 bg-[#194f4c] text-white rounded-2xl font-bold text-sm hover:bg-[#163f3d] transition-colors"
@@ -176,7 +176,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           {step === 'joinInput' && (
             <motion.div key="join" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-              <p className="text-xs text-slate-500 mb-2">Enter the 6-letter code your partner shared</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Enter the 6-letter code your partner shared</p>
               <input
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}

@@ -81,7 +81,7 @@ const LearnPhrase: React.FC = () => {
           <h2 className="font-serif text-3xl lg:text-4xl font-bold text-[#194f4c] dark:text-white mb-2">
             Learn a Phrase
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 dark:text-slate-500">
             {learned.size}/{PHRASES.length} phrases learned
           </p>
         </div>
@@ -99,7 +99,7 @@ const LearnPhrase: React.FC = () => {
               <span className="text-[9px] font-bold text-[#194f4c] bg-[#194f4c]/10 px-3 py-1 rounded-full uppercase tracking-widest">
                 {phrase.category}
               </span>
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">
                 {currentIndex + 1}/{PHRASES.length}
               </span>
             </div>

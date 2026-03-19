@@ -159,7 +159,7 @@ const StampButton = ({ id, label, subLabel, isCollected, onClick, type, currentU
             <span className="font-serif text-xs font-bold leading-tight text-center line-clamp-2 dark:text-slate-200">
                 {label}
             </span>
-            <span className="text-[8px] uppercase tracking-widest text-slate-400 mt-1">{subLabel}</span>
+            <span className="text-[8px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">{subLabel}</span>
 
             {/* Dual partner stamp dots */}
             {(currentUser || partnerUser) && (

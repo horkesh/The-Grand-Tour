@@ -41,7 +41,7 @@ const TripHub: React.FC = () => {
         <div className="text-center mb-8">
           <p className="text-[10px] font-bold text-[#ac3d29] uppercase tracking-widest mb-2">May 2 – 9, 2026</p>
           <h2 className="font-serif text-3xl font-bold text-[#194f4c] dark:text-white">The Trip</h2>
-          <p className="text-sm text-slate-400 mt-1">{stamps.length}/8 stamps collected</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{stamps.length}/8 stamps collected</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

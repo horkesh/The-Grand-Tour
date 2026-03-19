@@ -156,7 +156,7 @@ const PhotoChallenges: React.FC = () => {
                         ) : (
                           <>
                             <span className="text-xl">{'\u{1F4F8}'}</span>
-                            <span className="text-[9px] text-slate-400 font-bold">Add photo</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Add photo</span>
                           </>
                         )}
                       </button>
@@ -173,7 +173,7 @@ const PhotoChallenges: React.FC = () => {
                       <img src={partnerPhoto} alt="Partner submission" className="w-full aspect-square object-cover rounded-xl" />
                     ) : (
                       <div className="w-full aspect-square rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-center">
-                        <span className="text-[9px] text-slate-300 dark:text-slate-600">Waiting...</span>
+                        <span className="text-[9px] text-slate-300 dark:text-slate-500">Waiting...</span>
                       </div>
                     )}
                   </div>

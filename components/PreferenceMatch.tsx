@@ -114,7 +114,7 @@ const PreferenceMatch: React.FC = () => {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 text-center">
         <p className="text-4xl mb-4">✅</p>
         <h2 className="font-serif text-2xl font-bold mb-2">Submitted!</h2>
-        <p className="text-sm text-slate-500 mb-6">Waiting for your partner to finish rating...</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Waiting for your partner to finish rating...</p>
       </motion.div>
     );
   }
@@ -149,7 +149,7 @@ const PreferenceMatch: React.FC = () => {
               </button>
             ))}
           </div>
-          <p className="text-[9px] text-slate-300 mt-3">1 = skip it · 5 = must do</p>
+          <p className="text-[9px] text-slate-300 dark:text-slate-500 mt-3">1 = skip it · 5 = must do</p>
         </motion.div>
       </AnimatePresence>
     </motion.div>
