@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
 import { downloadAllPostcards } from '../utils/bulkDownload';
+import UserAvatar from './UserAvatar';
 
 const dataUrlToBlob = (dataUrl: string): Blob => {
   const [header, data] = dataUrl.split(',');
@@ -52,7 +53,7 @@ const PolaroidImage: React.FC<{ url: string; alt: string }> = ({ url, alt }) => 
 
 const Gallery: React.FC = () => {
   const navigate = useNavigate();
-  const { postcards } = useStore();
+  const { postcards, currentUser } = useStore();
   const [downloading, setDownloading] = useState(false);
   
   const allImages = Object.entries(postcards).flatMap(([key, urls]) => {
@@ -152,7 +153,14 @@ const Gallery: React.FC = () => {
               className="group relative"
             >
               <div className="bg-white p-3 pb-12 shadow-xl transform transition-all duration-300 group-hover:scale-105 group-hover:rotate-1 group-hover:z-10 relative">
-                <PolaroidImage url={item.url} alt={`Memory from ${item.cityName}`} />
+                <div className="relative">
+                  <PolaroidImage url={item.url} alt={`Memory from ${item.cityName}`} />
+                  {currentUser && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <UserAvatar user={currentUser} size="sm" />
+                    </div>
+                  )}
+                </div>
                 <div className="absolute bottom-4 left-0 right-0 text-center">
                   <p className="font-serif font-bold text-slate-800 text-sm truncate px-2">{item.cityName}</p>
                   <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">

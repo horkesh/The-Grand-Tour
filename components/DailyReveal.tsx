@@ -1,6 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ITALIAN_CITIES } from '../constants';
+import { useStore } from '../store';
+import UserAvatar from './UserAvatar';
+import { listenDoc, writeDoc } from '../services/firestoreSync';
 
 // 30 tiles of pre-trip reveals (unlocking daily from April 3 to May 2)
 const REVEAL_TILES = [
@@ -48,6 +51,69 @@ const TYPE_COLORS: Record<string, string> = {
   phrase: 'from-amber-500 to-orange-600',
   fact: 'from-blue-500 to-indigo-600',
   restaurant: 'from-rose-500 to-red-600',
+};
+
+const REACTION_EMOJIS = ['\u{1F60D}', '\u{1F602}', '\u{1F924}', '\u{1F1EE}\u{1F1F9}', '\u{2764}\u{FE0F}'];
+
+interface TileReactions {
+  [uid: string]: string;
+}
+
+const ReactionBar: React.FC<{ tileIndex: number }> = ({ tileIndex }) => {
+  const { currentUser, partnerUser, tripMeta } = useStore();
+  const [reactions, setReactions] = useState<TileReactions>({});
+  const tripId = tripMeta?.id;
+  const tileId = `tile-${tileIndex}`;
+
+  useEffect(() => {
+    if (!tripId) return;
+    const path = `trips/${tripId}/reveals/${tileId}`;
+    const unsub = listenDoc(path, (data) => {
+      setReactions(data as TileReactions);
+    });
+    return () => unsub();
+  }, [tripId, tileId]);
+
+  const handleReaction = useCallback(async (emoji: string) => {
+    if (!tripId || !currentUser) return;
+    const path = `trips/${tripId}/reveals/${tileId}`;
+    const currentEmoji = reactions[currentUser.uid];
+    // Toggle off if same emoji, otherwise set new one
+    if (currentEmoji === emoji) {
+      await writeDoc(path, { [currentUser.uid]: '' });
+    } else {
+      await writeDoc(path, { [currentUser.uid]: emoji });
+    }
+  }, [tripId, currentUser, tileId, reactions]);
+
+  const myReaction = currentUser ? reactions[currentUser.uid] : undefined;
+  const partnerReaction = partnerUser ? reactions[partnerUser.uid] : undefined;
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-5">
+      <div className="flex gap-1">
+        {REACTION_EMOJIS.map((emoji) => (
+          <button
+            key={emoji}
+            onClick={() => handleReaction(emoji)}
+            className={`text-xl p-1 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-white/10 ${
+              myReaction === emoji
+                ? 'scale-125 opacity-100'
+                : 'opacity-50 hover:opacity-75'
+            }`}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+      {partnerReaction && partnerReaction !== '' && (
+        <div className="flex items-center gap-1 ml-2 pl-2 border-l border-slate-200 dark:border-white/10">
+          <UserAvatar user={partnerUser} size="sm" />
+          <span className="text-lg">{partnerReaction}</span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const DailyReveal: React.FC = () => {
@@ -165,6 +231,7 @@ const DailyReveal: React.FC = () => {
                 <p className="text-xs text-[#194f4c] font-bold mt-4">
                   {REVEAL_TILES[selectedTile].city}
                 </p>
+                <ReactionBar tileIndex={selectedTile} />
               </div>
             </motion.div>
           </motion.div>

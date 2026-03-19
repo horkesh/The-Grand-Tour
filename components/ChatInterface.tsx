@@ -6,9 +6,10 @@ import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
 import GroundingResult from './GroundingResult';
 import { useToast } from './Toast';
+import UserAvatar from './UserAvatar';
 
 const ChatInterface: React.FC = () => {
-  const { userLocation, savedPOIs, addSavedPOI, updateSavedPOIPhoto, chatMessages, addChatMessage, clearChatMessages } = useStore();
+  const { userLocation, savedPOIs, addSavedPOI, updateSavedPOIPhoto, chatMessages, addChatMessage, clearChatMessages, currentUser, partnerUser } = useStore();
   const showToast = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +28,9 @@ const ChatInterface: React.FC = () => {
       id: Date.now().toString(),
       role: 'user',
       content: text,
+      sentBy: currentUser?.uid,
+      senderName: currentUser?.displayName,
+      timestamp: Date.now(),
     };
 
     addChatMessage(userMsg);
@@ -116,27 +120,45 @@ const ChatInterface: React.FC = () => {
           </div>
         )}
 
-        {chatMessages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[90%] md:max-w-[85%] rounded-2xl p-4 shadow-sm ${
-              msg.role === 'user' 
-                ? 'bg-blue-600 dark:bg-blue-700 text-white rounded-br-none' 
-                : 'bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-white/10'
-            }`}>
-              <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : 'prose-slate dark:prose-invert'}`}>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+        {chatMessages.map((msg) => {
+          const isMine = msg.role === 'user' && msg.sentBy === currentUser?.uid;
+          const isPartners = msg.role === 'user' && msg.sentBy != null && msg.sentBy !== currentUser?.uid;
+          const senderUser = isMine ? currentUser : isPartners ? partnerUser : null;
+
+          return (
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className="max-w-[90%] md:max-w-[85%]">
+                {msg.role === 'user' && senderUser && (
+                  <div className={`flex items-center gap-1.5 mb-1 ${isMine ? 'justify-end' : 'justify-end'}`}>
+                    <UserAvatar user={senderUser} size="sm" />
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      {senderUser.displayName?.split(' ')[0]}
+                    </span>
+                  </div>
+                )}
+                <div className={`rounded-2xl p-4 shadow-sm ${
+                  msg.role === 'user'
+                    ? isMine || !isPartners
+                      ? 'bg-[#194f4c] dark:bg-[#194f4c]/90 text-white rounded-br-none'
+                      : 'bg-[#ac3d29] dark:bg-[#ac3d29]/90 text-white rounded-br-none'
+                    : 'bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-white/10'
+                }`}>
+                  <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : 'prose-slate dark:prose-invert'}`}>
+                    <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  </div>
+                  {msg.grounding && (
+                    <GroundingResult
+                      chunks={msg.grounding}
+                      onSavePOI={handleSavePOI}
+                      isSaved={isSaved}
+                      getPhotoUrl={getPhotoUrl}
+                    />
+                  )}
+                </div>
               </div>
-              {msg.grounding && (
-                <GroundingResult
-                  chunks={msg.grounding}
-                  onSavePOI={handleSavePOI}
-                  isSaved={isSaved}
-                  getPhotoUrl={getPhotoUrl}
-                />
-              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex justify-start">

@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ITALIAN_CITIES, Icons } from '../constants';
 import { useStore } from '../store';
+import UserAvatar from './UserAvatar';
 
 const Passaporto: React.FC = () => {
   const navigate = useNavigate();
-  const { stamps } = useStore();
+  const { stamps, currentUser, partnerUser } = useStore();
 
   return (
     <motion.div 
@@ -47,6 +48,20 @@ const Passaporto: React.FC = () => {
                 <span>Year</span>
                 <span className="text-amber-100 text-lg">2026</span>
             </div>
+          {/* Stamp Race */}
+          {(currentUser || partnerUser) && (
+            <div className="w-full mt-6 bg-white/5 rounded-2xl px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserAvatar user={currentUser} size="sm" />
+                <span className="text-amber-100 font-bold text-sm">{stamps.length}/8</span>
+              </div>
+              <span className="text-amber-400/60 text-[10px] font-bold uppercase tracking-widest">Stamp Race</span>
+              <div className="flex items-center gap-2">
+                <span className="text-amber-100 font-bold text-sm">{stamps.length}/8</span>
+                <UserAvatar user={partnerUser} size="sm" />
+              </div>
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -79,27 +94,31 @@ const Passaporto: React.FC = () => {
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {/* Main City Stamp */}
-                    <StampButton 
-                        id={city.id} 
-                        label={city.location} 
+                    <StampButton
+                        id={city.id}
+                        label={city.location}
                         subLabel="City Check-in"
-                        isCollected={stamps.includes(city.id)} 
+                        isCollected={stamps.includes(city.id)}
                         onClick={() => navigate(`/day/${city.id}`)}
                         type="city"
+                        currentUser={currentUser}
+                        partnerUser={partnerUser}
                     />
 
                     {/* Waypoint Stamps */}
                     {city.plannedStops.map((stop, stopIdx) => {
                         const stampId = `${city.id}_${stopIdx}`;
                         return (
-                            <StampButton 
+                            <StampButton
                                 key={stampId}
-                                id={stampId} 
-                                label={stop.title} 
+                                id={stampId}
+                                label={stop.title}
                                 subLabel={stop.type}
-                                isCollected={stamps.includes(stampId)} 
-                                onClick={() => navigate(`/day/${city.id}`)} // Could pass state to pre-select, but simple nav is fine
+                                isCollected={stamps.includes(stampId)}
+                                onClick={() => navigate(`/day/${city.id}`)}
                                 type={stop.type}
+                                currentUser={currentUser}
+                                partnerUser={partnerUser}
                             />
                         );
                     })}
@@ -111,26 +130,26 @@ const Passaporto: React.FC = () => {
   );
 };
 
-const StampButton = ({ id, label, subLabel, isCollected, onClick, type }: any) => {
+const StampButton = ({ id, label, subLabel, isCollected, onClick, type, currentUser, partnerUser }: any) => {
     // Rotation randomization for stamped look
     const rotation = React.useMemo(() => Math.floor(Math.random() * 6) - 3, []);
-    
+
     return (
         <button
             onClick={onClick}
             className={`aspect-square flex flex-col items-center justify-center p-4 rounded-2xl transition-all group relative overflow-hidden ${
-                isCollected 
-                ? 'bg-white dark:bg-[#111] shadow-md border border-slate-200 dark:border-white/5' 
+                isCollected
+                ? 'bg-white dark:bg-[#111] shadow-md border border-slate-200 dark:border-white/5'
                 : 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 opacity-60'
             }`}
         >
             {isCollected && (
-                <div 
-                    className="absolute inset-0 border-4 border-amber-600/30 rounded-2xl pointer-events-none" 
+                <div
+                    className="absolute inset-0 border-4 border-amber-600/30 rounded-2xl pointer-events-none"
                     style={{ transform: `rotate(${rotation}deg) scale(0.9)` }}
                 />
             )}
-            
+
             <div className={`w-10 h-10 mb-3 rounded-full flex items-center justify-center ${
                 isCollected ? 'bg-[#194f4c] text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-400'
             }`}>
@@ -142,8 +161,30 @@ const StampButton = ({ id, label, subLabel, isCollected, onClick, type }: any) =
             </span>
             <span className="text-[8px] uppercase tracking-widest text-slate-400 mt-1">{subLabel}</span>
 
+            {/* Dual partner stamp dots */}
+            {(currentUser || partnerUser) && (
+                <div className="flex items-center gap-1.5 mt-2">
+                    <span
+                        className={`w-3 h-3 rounded-full ${
+                            isCollected
+                                ? 'bg-[#194f4c]'
+                                : 'border border-[#194f4c]/40'
+                        }`}
+                        title={currentUser?.displayName || 'You'}
+                    />
+                    <span
+                        className={`w-3 h-3 rounded-full ${
+                            isCollected
+                                ? 'bg-[#ac3d29]'
+                                : 'border border-[#ac3d29]/40'
+                        }`}
+                        title={partnerUser?.displayName || 'Partner'}
+                    />
+                </div>
+            )}
+
             {isCollected && (
-                <div 
+                <div
                     className="absolute top-2 right-2 text-[8px] font-bold text-amber-700/50 uppercase border border-amber-700/30 px-1 transform rotate-12"
                 >
                     Visto
