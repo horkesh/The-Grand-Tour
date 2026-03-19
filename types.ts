@@ -37,6 +37,9 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   grounding?: GroundingChunk[];
+  sentBy?: string;
+  senderName?: string;
+  timestamp?: number;
 }
 
 export interface SavedPOI {
@@ -56,6 +59,9 @@ export interface SavedPOI {
   isEnriching?: boolean;
   notes?: string;
   photoUrl?: string;
+  // Collaborative fields
+  addedBy?: string;
+  votes?: VoteRecord;
 }
 
 export interface PlannedStop {
@@ -90,6 +96,8 @@ export interface ChecklistItem {
   label: string;
   category: 'documents' | 'clothing' | 'tech' | 'toiletries' | 'misc';
   checked: boolean;
+  claimedBy?: string;
+  packedBy?: string;
 }
 
 export interface AudioPostcard {
@@ -99,6 +107,41 @@ export interface AudioPostcard {
   duration: number; // seconds
   timestamp: number;
   label?: string;
+}
+
+// === Collaborative Types ===
+
+export interface TripUser {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL: string | null;
+  color: 'teal' | 'rust';
+}
+
+export interface TripMeta {
+  id: string;
+  title: string;
+  createdAt: number;
+  createdBy: string;
+  partnerIds: string[];
+  joinCode: string;
+}
+
+export interface VoteRecord {
+  [uid: string]: 'up' | 'down' | undefined;
+}
+
+export interface DualTimestamp {
+  [uid: string]: number | null;
+}
+
+export interface DualResponse {
+  [uid: string]: string | undefined;
+}
+
+export interface PhotoCompletion {
+  [uid: string]: string | undefined;
 }
 
 // Leaflet Interface Definitions
