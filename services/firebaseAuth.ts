@@ -145,29 +145,13 @@ export async function getPartnerInfo(tripId: string, partnerUid: string): Promis
   return userDoc.data() as TripUser;
 }
 
-/** Find a trip created by the other known partner (for auto-join). */
-export async function findTripByPartnerEmail(myEmail: string): Promise<TripMeta | null> {
-  // Find the other known partner's email
-  const partnerEmails = Object.keys(KNOWN_PARTNERS).filter(e => e !== myEmail);
-  if (partnerEmails.length === 0) return null;
-
-  // Search all trips for one that has the partner
+/** Find any existing trip for auto-join (for known partners). */
+export async function findAnyTrip(): Promise<TripMeta | null> {
   const tripsRef = collection(db, 'trips');
   const snapshot = await getDocs(tripsRef);
   for (const tripDoc of snapshot.docs) {
-    const meta = tripDoc.data().meta as TripMeta;
-    if (meta && meta.partnerIds.length > 0) {
-      // Check if any partner in this trip matches a known partner email
-      for (const pid of meta.partnerIds) {
-        const userDocRef = await getDoc(doc(db, 'trips', tripDoc.id, 'users', pid));
-        if (userDocRef.exists()) {
-          const userData = userDocRef.data() as TripUser;
-          if (partnerEmails.includes(userData.email)) {
-            return meta;
-          }
-        }
-      }
-    }
+    const data = tripDoc.data();
+    if (data.meta) return data.meta as TripMeta;
   }
   return null;
 }

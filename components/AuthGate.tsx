@@ -11,7 +11,7 @@ import {
   getPartnerInfo,
   buildTripUser,
   isKnownPartner,
-  findTripByPartnerEmail,
+  findAnyTrip,
 } from '../services/firebaseAuth';
 import { TripMeta } from '../types';
 import { useStore } from '../store';
@@ -61,13 +61,21 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             await resolveTrip(fbUser, existing);
             setStep('ready');
           } else if (isKnownPartner(fbUser.email)) {
-            const partnerTrip = await findTripByPartnerEmail(fbUser.email || '');
-            console.log('[auth] partner trip found:', partnerTrip?.id || 'none');
-            if (partnerTrip) {
-              const joined = await joinTrip(fbUser, partnerTrip.joinCode);
-              await resolveTrip(fbUser, joined);
-              setStep('ready');
-            } else {
+            // Known partner — try auto-join
+            console.log('[auth] known partner, attempting auto-join...');
+            try {
+              const partnerTrip = await findAnyTrip();
+              console.log('[auth] trip found for auto-join:', partnerTrip?.id || 'none');
+              if (partnerTrip) {
+                const joined = await joinTrip(fbUser, partnerTrip.joinCode);
+                await resolveTrip(fbUser, joined);
+                setStep('ready');
+              } else {
+                console.log('[auth] no partner trip found, showing join/create');
+                setStep('joinOrCreate');
+              }
+            } catch (autoJoinErr) {
+              console.error('[auth] auto-join failed:', autoJoinErr);
               setStep('joinOrCreate');
             }
           } else {
