@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
 import { fetchPlacePhoto } from '../services/placesService';
+import { useToast } from './Toast';
 
 const MAX_RETRIES = 2;
 const CONSECUTIVE_FAIL_BAIL = 5; // Stop entirely after this many consecutive failures
@@ -16,6 +17,7 @@ interface QueueItem {
 
 const ImageGenerator: React.FC = () => {
   const { waypointImages, setWaypointImage } = useStore();
+  const showToast = useToast();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(0);
@@ -82,6 +84,7 @@ const ImageGenerator: React.FC = () => {
         // Bail out entirely if we see too many consecutive failures
         if (consecutiveFailsRef.current >= CONSECUTIVE_FAIL_BAIL) {
           console.warn(`[ImageGenerator] ${CONSECUTIVE_FAIL_BAIL} consecutive failures — stopping queue.`);
+          showToast('Photo loading paused — check Places API key restrictions.', 'error');
           setQueue([]);
           setDone(true);
           return;

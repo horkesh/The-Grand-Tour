@@ -1,9 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store';
+import { useToast } from '../components/Toast';
 
 export const useGeolocation = () => {
   const setUserLocation = useStore(s => s.setUserLocation);
+  const showToast = useToast();
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
   const watchIdRef = useRef<number | null>(null);
+  const hasWarnedRef = useRef(false);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -19,6 +24,10 @@ export const useGeolocation = () => {
       },
       (err) => {
         console.warn('Geolocation error:', err.message);
+        if (!hasWarnedRef.current && err.code === err.PERMISSION_DENIED) {
+          hasWarnedRef.current = true;
+          showToastRef.current('Location access denied — map won\'t show your position.', 'info');
+        }
       },
       {
         enableHighAccuracy: false,

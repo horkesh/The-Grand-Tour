@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
@@ -19,8 +19,21 @@ import Welcome from './components/Welcome';
 import TripComplete from './components/TripComplete';
 import { useGeolocation } from './hooks/useGeolocation';
 
+const useOnlineStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); };
+  }, []);
+  return isOnline;
+};
+
 const Layout = ({ children }: React.PropsWithChildren<{}>) => {
   const { theme, toggleTheme, weatherData, updateCityWeather, hydrateImages } = useStore();
+  const isOnline = useOnlineStatus();
   useGeolocation();
 
   useEffect(() => { hydrateImages(); }, []);
@@ -55,8 +68,13 @@ const Layout = ({ children }: React.PropsWithChildren<{}>) => {
       <Welcome />
       <TripComplete />
       <Toast />
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-[10001] bg-amber-500 text-white text-center py-2 text-xs font-bold uppercase tracking-widest" role="alert">
+          You're offline — some features may be unavailable
+        </div>
+      )}
       <ImageGenerator />
-      <aside className="hidden lg:flex w-80 bg-white dark:bg-[#070707] border-r border-slate-200 dark:border-white/5 p-8 flex-col z-10 shadow-2xl">
+      <aside className="hidden lg:flex w-80 bg-white dark:bg-[#070707] border-r border-slate-200 dark:border-white/5 p-8 flex-col z-10 shadow-2xl" role="complementary">
         <Sidebar />
       </aside>
 
@@ -87,20 +105,20 @@ const MobileNav = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="p-1 bg-white/60 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] border border-white/50 dark:border-white/10 shadow-2xl flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
+    <nav aria-label="Main navigation" className="p-1 bg-white/60 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] border border-white/50 dark:border-white/10 shadow-2xl flex items-center justify-between gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
       <NavButton active={isActive('/')} onClick={() => navigate('/')} icon={<Icons.Map />} label="Map" />
       <NavButton active={isActive('/list')} onClick={() => navigate('/list')} icon={<Icons.Route />} label="Route" />
-      <NavButton active={isActive('/passport') || isActive('/gallery')} onClick={() => navigate('/passport')} icon={<div className="h-4 w-4 border-2 border-current rounded-sm" />} label="Passport" />
+      <NavButton active={isActive('/passport') || isActive('/gallery')} onClick={() => navigate('/passport')} icon={<div className="h-4 w-4 border-2 border-current rounded-sm" aria-hidden="true" />} label="Passport" />
       <NavButton active={location.pathname.startsWith('/day')} onClick={() => navigate(`/day/${lastViewedDay}`)} icon={<Icons.Journal />} label="Journal" />
       <NavButton active={isActive('/story')} onClick={() => navigate('/story')} icon={<Icons.Story />} label="Story" />
       <NavButton active={isActive('/chat')} onClick={() => navigate('/chat')} icon={<Icons.Chat />} label="AI" />
-    </div>
+    </nav>
   );
 }
 
-const NavButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`shrink-0 flex flex-col items-center justify-center px-4 py-2 rounded-[1.8rem] transition-all gap-1 ${active ? 'bg-[#194f4c] text-white shadow-xl' : 'text-slate-500 dark:text-slate-400'}`}>
-    {icon}
+const NavButton = ({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) => (
+  <button onClick={onClick} aria-current={active ? 'page' : undefined} className={`shrink-0 flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-4 py-2 rounded-[1.8rem] transition-all gap-1 ${active ? 'bg-[#194f4c] text-white shadow-xl' : 'text-slate-500 dark:text-slate-400'}`}>
+    <span aria-hidden="true">{icon}</span>
     <span className="text-[7px] font-bold uppercase tracking-widest">{label}</span>
   </button>
 );

@@ -6,6 +6,7 @@ let isGlobalCooling = false;
 
 // Simple memory cache
 const weatherCache = new Map<string, WeatherInfo>();
+const DEFAULT_WEATHER: WeatherInfo = { temp: "20°C", condition: "sunny", icon: "sunny", description: "Typical spring weather" };
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   if (isGlobalCooling) {
@@ -92,24 +93,33 @@ export const getWeatherForecast = async (location: string, date: string): Promis
   const cacheKey = `${location}-${date}`;
   if (weatherCache.has(cacheKey)) return weatherCache.get(cacheKey)!;
 
-  return withRetry(async () => {
-    try {
+  try {
+    return await withRetry(async () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `What is the typical weather for ${location}, Italy on ${date}? Return JSON: {"temp": "22°C", "condition": "sunny", "icon": "sunny", "description": "Mild"}.`;
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt
       });
-      
+
       const jsonStr = response.text?.match(/\{[\s\S]*\}/)?.[0];
       if (!jsonStr) throw new Error("Invalid JSON from model");
 
-      const data = JSON.parse(jsonStr) as WeatherInfo;
+      let data: WeatherInfo;
+      try {
+        data = JSON.parse(jsonStr) as WeatherInfo;
+      } catch {
+        console.warn("Weather JSON parse failed, using fallback");
+        data = { ...DEFAULT_WEATHER };
+      }
+      if (!data.temp || !data.icon) {
+        data = { ...DEFAULT_WEATHER, ...data };
+      }
       weatherCache.set(cacheKey, data);
       return data;
-    } catch (e) {
-      console.warn("Weather fetch failed:", e); 
-      return null; 
-    }
-  });
+    });
+  } catch (e) {
+    console.warn("Weather fetch failed:", e);
+    return null;
+  }
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
@@ -29,6 +29,24 @@ const sharePostcard = async (url: string, name: string) => {
   } catch {
     downloadPostcard(url, name);
   }
+};
+
+const PolaroidImage: React.FC<{ url: string; alt: string }> = ({ url, alt }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100 relative">
+      {!loaded && (
+        <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      )}
+      <img
+        src={url}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      />
+    </div>
+  );
 };
 
 const Gallery: React.FC = () => {
@@ -104,9 +122,7 @@ const Gallery: React.FC = () => {
               className="group relative"
             >
               <div className="bg-white p-3 pb-12 shadow-xl transform transition-all duration-300 group-hover:scale-105 group-hover:rotate-1 group-hover:z-10 relative">
-                <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                  <img src={item.url} alt={`Memory from ${item.cityName}`} className="w-full h-full object-cover" />
-                </div>
+                <PolaroidImage url={item.url} alt={`Memory from ${item.cityName}`} />
                 <div className="absolute bottom-4 left-0 right-0 text-center">
                   <p className="font-serif font-bold text-slate-800 text-sm truncate px-2">{item.cityName}</p>
                   <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">
