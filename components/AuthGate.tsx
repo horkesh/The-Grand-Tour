@@ -61,22 +61,27 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             await resolveTrip(fbUser, existing);
             setStep('ready');
           } else if (isKnownPartner(fbUser.email)) {
-            // Known partner — try auto-join
-            console.log('[auth] known partner, attempting auto-join...');
+            // Known partner — auto-join with known code
+            console.log('[auth] known partner, auto-joining with code...');
             try {
-              const partnerTrip = await findAnyTrip();
-              console.log('[auth] trip found for auto-join:', partnerTrip?.id || 'none');
-              if (partnerTrip) {
-                const joined = await joinTrip(fbUser, partnerTrip.joinCode);
-                await resolveTrip(fbUser, joined);
-                setStep('ready');
-              } else {
-                console.log('[auth] no partner trip found, showing join/create');
-                setStep('joinOrCreate');
-              }
+              const joined = await joinTrip(fbUser, 'BW6B5R');
+              await resolveTrip(fbUser, joined);
+              setStep('ready');
             } catch (autoJoinErr) {
               console.error('[auth] auto-join failed:', autoJoinErr);
-              setStep('joinOrCreate');
+              // Fallback: try finding any trip
+              try {
+                const partnerTrip = await findAnyTrip();
+                if (partnerTrip) {
+                  const joined = await joinTrip(fbUser, partnerTrip.joinCode);
+                  await resolveTrip(fbUser, joined);
+                  setStep('ready');
+                } else {
+                  setStep('joinOrCreate');
+                }
+              } catch {
+                setStep('joinOrCreate');
+              }
             }
           } else {
             setStep('joinOrCreate');
