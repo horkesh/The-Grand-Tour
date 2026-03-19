@@ -22,6 +22,7 @@ interface AppState {
   addSavedPOI: (poi: SavedPOI) => void;
   removeSavedPOI: (id: string) => void;
   updateSavedPOINote: (id: string, note: string) => void;
+  updateSavedPOIPhoto: (id: string, photoUrl: string) => void;
 
   stamps: string[];
   addStamp: (cityId: string) => void;
@@ -69,6 +70,10 @@ export const useStore = create<AppState>()(
       updateSavedPOINote: (id, note) =>
         set((state) => ({
           savedPOIs: state.savedPOIs.map((p) => (p.id === id ? { ...p, notes: note } : p)),
+        })),
+      updateSavedPOIPhoto: (id, photoUrl) =>
+        set((state) => ({
+          savedPOIs: state.savedPOIs.map((p) => (p.id === id ? { ...p, photoUrl } : p)),
         })),
 
       stamps: [],

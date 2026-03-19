@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, SavedPOI } from '../types';
 import { enrichTripPlan } from '../services/geminiService';
+import { fetchPlacePhoto } from '../services/placesService';
 import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
 import GroundingResult from './GroundingResult';
 import { useToast } from './Toast';
 
 const ChatInterface: React.FC = () => {
-  const { userLocation, savedPOIs, addSavedPOI, chatMessages, addChatMessage, clearChatMessages } = useStore();
+  const { userLocation, savedPOIs, addSavedPOI, updateSavedPOIPhoto, chatMessages, addChatMessage, clearChatMessages } = useStore();
   const showToast = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +55,7 @@ const ChatInterface: React.FC = () => {
   };
 
   const isSaved = (uri: string) => savedPOIs.some(poi => poi.uri === uri);
+  const getPhotoUrl = (uri: string) => savedPOIs.find(poi => poi.uri === uri)?.photoUrl;
   
   const findNearestCityId = (lat?: number, lng?: number): string => {
     if (lat == null || lng == null) return 'planned';
@@ -73,14 +75,22 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleSavePOI = (poi: { title: string, uri: string, description?: string, lat?: number, lng?: number }) => {
+    const poiId = Date.now().toString();
     const newPoi: SavedPOI = {
       ...poi,
-      id: Date.now().toString(),
+      id: poiId,
       cityId: findNearestCityId(poi.lat, poi.lng),
       timestamp: Date.now(),
     };
     addSavedPOI(newPoi);
     showToast(`Saved: ${poi.title}`, 'success');
+
+    // Fetch photo in background
+    if (poi.lat != null && poi.lng != null) {
+      fetchPlacePhoto(poi.title, poi.lat, poi.lng)
+        .then((photoUrl) => updateSavedPOIPhoto(poiId, photoUrl))
+        .catch((err) => console.warn('[POI Photo] Failed to fetch:', err));
+    }
   };
 
   return (
@@ -117,10 +127,11 @@ const ChatInterface: React.FC = () => {
                 <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
               </div>
               {msg.grounding && (
-                <GroundingResult 
-                  chunks={msg.grounding} 
+                <GroundingResult
+                  chunks={msg.grounding}
                   onSavePOI={handleSavePOI}
                   isSaved={isSaved}
+                  getPhotoUrl={getPhotoUrl}
                 />
               )}
             </div>
