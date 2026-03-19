@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
+import { writeDoc } from '../services/firestoreSync';
+import UserAvatar from './UserAvatar';
 import type { ChecklistItem } from '../types';
 
 const DEFAULT_ITEMS: Omit<ChecklistItem, 'checked'>[] = [
@@ -40,20 +42,32 @@ const CATEGORY_META: Record<string, { label: string; icon: string }> = {
   misc: { label: 'Miscellaneous', icon: '🎒' },
 };
 
+const categories = ['documents', 'clothing', 'tech', 'toiletries', 'misc'] as const;
+
 const PackingChecklist: React.FC = () => {
-  const { checklist, setChecklist, toggleChecklistItem, addChecklistItem, removeChecklistItem } = useStore();
+  const { checklist, setChecklist, toggleChecklistItem, addChecklistItem, removeChecklistItem,
+    currentUser, partnerUser, tripMeta } = useStore();
   const [newItem, setNewItem] = useState('');
   const [newCategory, setNewCategory] = useState<ChecklistItem['category']>('misc');
+  const [filter, setFilter] = useState<'all' | 'mine' | 'theirs' | 'unclaimed'>('all');
 
-  // Initialize default items if checklist is empty (single batch update)
+  const myUid = currentUser?.uid || '';
+  const partnerUid = partnerUser?.uid || '';
+
+  // Initialize default items if checklist is empty
   useEffect(() => {
     if (checklist.length === 0) {
       setChecklist(DEFAULT_ITEMS.map((item) => ({ ...item, checked: false })));
     }
   }, [checklist.length, setChecklist]);
 
-  const checkedCount = checklist.filter((i) => i.checked).length;
-  const progress = checklist.length > 0 ? (checkedCount / checklist.length) * 100 : 0;
+  const handleClaim = (itemId: string) => {
+    if (!myUid || !tripMeta) return;
+    const item = checklist.find(i => i.id === itemId);
+    if (!item) return;
+    const claimedBy = item.claimedBy === myUid ? undefined : myUid;
+    writeDoc(`trips/${tripMeta.id}/checklist/${itemId}`, { ...item, claimedBy }).catch(() => {});
+  };
 
   const handleAddItem = () => {
     const label = newItem.trim();
@@ -67,7 +81,21 @@ const PackingChecklist: React.FC = () => {
     setNewItem('');
   };
 
-  const categories = ['documents', 'clothing', 'tech', 'toiletries', 'misc'] as const;
+  // Filter items
+  const filteredChecklist = checklist.filter(item => {
+    if (filter === 'mine') return item.claimedBy === myUid;
+    if (filter === 'theirs') return item.claimedBy === partnerUid;
+    if (filter === 'unclaimed') return !item.claimedBy;
+    return true;
+  });
+
+  // Per-user progress
+  const myItems = checklist.filter(i => i.claimedBy === myUid);
+  const myPacked = myItems.filter(i => i.checked).length;
+  const partnerItems = checklist.filter(i => i.claimedBy === partnerUid);
+  const partnerPacked = partnerItems.filter(i => i.checked).length;
+  const totalChecked = checklist.filter(i => i.checked).length;
+  const totalProgress = checklist.length > 0 ? (totalChecked / checklist.length) * 100 : 0;
 
   return (
     <motion.div
@@ -78,36 +106,73 @@ const PackingChecklist: React.FC = () => {
     >
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <p className="text-[10px] font-bold text-[#ac3d29] uppercase tracking-widest mb-2">
             Pre-Trip
           </p>
           <h2 className="font-serif text-3xl lg:text-5xl font-bold text-[#194f4c] dark:text-white mb-4">
             Packing List
           </h2>
+        </div>
 
-          {/* Progress bar */}
-          <div className="max-w-xs mx-auto">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-              <span>
-                {checkedCount}/{checklist.length} packed
-              </span>
-              <span>{Math.round(progress)}%</span>
+        {/* Dual progress bars */}
+        <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
+          <div className="bg-white dark:bg-white/5 rounded-xl p-3 border border-slate-100 dark:border-white/5">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <UserAvatar user={currentUser} size="sm" showName />
             </div>
-            <div className="h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-[#194f4c] rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
+            <div className="h-1.5 bg-slate-200 dark:bg-white/10 rounded-full">
+              <div className="h-full bg-[#194f4c] rounded-full transition-all" style={{ width: `${myItems.length ? (myPacked / myItems.length) * 100 : 0}%` }} />
             </div>
-            {progress === 100 && (
-              <p className="text-emerald-500 text-xs font-bold mt-2">
-                All packed! Pronto per l&apos;Italia!
-              </p>
-            )}
+            <span className="text-[10px] text-slate-400 mt-1 block">{myPacked}/{myItems.length} packed</span>
           </div>
+          <div className="bg-white dark:bg-white/5 rounded-xl p-3 border border-slate-100 dark:border-white/5">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <UserAvatar user={partnerUser} size="sm" showName />
+            </div>
+            <div className="h-1.5 bg-slate-200 dark:bg-white/10 rounded-full">
+              <div className="h-full bg-[#ac3d29] rounded-full transition-all" style={{ width: `${partnerItems.length ? (partnerPacked / partnerItems.length) * 100 : 0}%` }} />
+            </div>
+            <span className="text-[10px] text-slate-400 mt-1 block">{partnerPacked}/{partnerItems.length} packed</span>
+          </div>
+        </div>
+
+        {/* Overall progress */}
+        <div className="max-w-xs mx-auto mb-6">
+          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <span>{totalChecked}/{checklist.length} total</span>
+            <span>{Math.round(totalProgress)}%</span>
+          </div>
+          <div className="h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-[#194f4c] to-[#ac3d29] rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${totalProgress}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+          {totalProgress === 100 && (
+            <p className="text-emerald-500 text-xs font-bold mt-2 text-center">
+              All packed! Pronto per l&apos;Italia!
+            </p>
+          )}
+        </div>
+
+        {/* Filter tabs */}
+        <div className="flex justify-center gap-1 mb-6 p-1 bg-slate-100 dark:bg-white/5 rounded-full max-w-sm mx-auto">
+          {(['all', 'mine', 'theirs', 'unclaimed'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                filter === f
+                  ? 'bg-[#194f4c] text-white shadow-md'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {f === 'theirs' ? (partnerUser?.displayName?.split(' ')[0] || 'Partner') + "'s" : f}
+            </button>
+          ))}
         </div>
 
         {/* Add custom item */}
@@ -141,7 +206,7 @@ const PackingChecklist: React.FC = () => {
 
         {/* Categories */}
         {categories.map((cat) => {
-          const items = checklist.filter((i) => i.category === cat);
+          const items = filteredChecklist.filter((i) => i.category === cat);
           if (items.length === 0) return null;
           const meta = CATEGORY_META[cat];
           const catChecked = items.filter((i) => i.checked).length;
@@ -159,50 +224,84 @@ const PackingChecklist: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-                      item.checked
-                        ? 'bg-emerald-50 dark:bg-emerald-900/10'
-                        : 'bg-white dark:bg-white/5'
-                    } border border-slate-100 dark:border-white/5`}
-                  >
-                    <button
-                      onClick={() => toggleChecklistItem(item.id)}
-                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
+                {items.map((item) => {
+                  const claimedByMe = item.claimedBy === myUid;
+                  const claimedByPartner = item.claimedBy === partnerUid;
+                  const claimUser = claimedByMe ? currentUser : claimedByPartner ? partnerUser : null;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-all border ${
                         item.checked
-                          ? 'bg-emerald-500 border-emerald-500 text-white'
-                          : 'border-slate-300 dark:border-white/20'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/20'
+                          : claimedByMe
+                            ? 'bg-white dark:bg-white/5 border-[#194f4c]/20'
+                            : claimedByPartner
+                              ? 'bg-white dark:bg-white/5 border-[#ac3d29]/20'
+                              : 'bg-white dark:bg-white/5 border-slate-100 dark:border-white/5'
                       }`}
                     >
-                      {item.checked && (
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                    <span
-                      className={`text-sm flex-1 ${
-                        item.checked
-                          ? 'line-through text-slate-400 dark:text-slate-500'
-                          : 'text-slate-800 dark:text-slate-200'
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-                    {item.id.startsWith('custom-') && (
                       <button
-                        onClick={() => removeChecklistItem(item.id)}
-                        className="text-slate-300 hover:text-red-400 transition-colors"
+                        onClick={() => toggleChecklistItem(item.id)}
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
+                          item.checked
+                            ? 'bg-emerald-500 border-emerald-500 text-white'
+                            : 'border-slate-300 dark:border-white/20'
+                        }`}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        {item.checked && (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
                       </button>
-                    )}
-                  </div>
-                ))}
+                      <span
+                        className={`text-sm flex-1 ${
+                          item.checked
+                            ? 'line-through text-slate-400 dark:text-slate-500'
+                            : 'text-slate-800 dark:text-slate-200'
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+
+                      {/* Claim indicator or button */}
+                      {claimUser ? (
+                        <UserAvatar user={claimUser} size="sm" />
+                      ) : (
+                        <button
+                          onClick={() => handleClaim(item.id)}
+                          className="text-[9px] font-bold text-slate-300 dark:text-slate-600 hover:text-[#194f4c] dark:hover:text-emerald-400 uppercase tracking-wider transition-colors"
+                        >
+                          Claim
+                        </button>
+                      )}
+
+                      {/* Unclaim if mine */}
+                      {claimedByMe && !item.checked && (
+                        <button
+                          onClick={() => handleClaim(item.id)}
+                          className="text-[9px] text-slate-300 hover:text-red-400 transition-colors"
+                          title="Unclaim"
+                        >
+                          ×
+                        </button>
+                      )}
+
+                      {item.id.startsWith('custom-') && (
+                        <button
+                          onClick={() => removeChecklistItem(item.id)}
+                          className="text-slate-300 hover:text-red-400 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
