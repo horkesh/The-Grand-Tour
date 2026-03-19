@@ -24,8 +24,8 @@ const decode = (str: string): SyncPayload | null => {
     const parsed = JSON.parse(atob(str.trim()));
     if (parsed?.v !== 1) return null;
     if (!Array.isArray(parsed.stamps) || !parsed.stamps.every((s: unknown) => typeof s === 'string')) return null;
-    if (!Array.isArray(parsed.pois) || !parsed.pois.every((p: any) =>
-      typeof p.id === 'string' && typeof p.title === 'string' && typeof p.uri === 'string'
+    if (!Array.isArray(parsed.pois) || !parsed.pois.every((p: unknown) =>
+      p != null && typeof p === 'object' && typeof (p as Record<string, unknown>).id === 'string' && typeof (p as Record<string, unknown>).title === 'string' && typeof (p as Record<string, unknown>).uri === 'string'
     )) return null;
     return parsed;
   } catch {

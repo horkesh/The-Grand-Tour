@@ -117,7 +117,7 @@ const MobileNav = () => {
 }
 
 const NavButton = ({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) => (
-  <button onClick={onClick} aria-label={label} aria-current={active ? 'page' : undefined} className={`shrink-0 flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-4 py-2 rounded-[1.8rem] transition-all gap-1 ${active ? 'bg-[#194f4c] text-white shadow-xl' : 'text-slate-500 dark:text-slate-400'}`}>
+  <button onClick={onClick} aria-current={active ? 'page' : undefined} className={`shrink-0 flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-4 py-2 rounded-[1.8rem] transition-all gap-1 ${active ? 'bg-[#194f4c] text-white shadow-xl' : 'text-slate-500 dark:text-slate-400'}`}>
     <span aria-hidden="true">{icon}</span>
     <span className="text-[7px] font-bold uppercase tracking-widest">{label}</span>
   </button>

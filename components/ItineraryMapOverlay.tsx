@@ -4,7 +4,7 @@ import { useStore } from '../store';
 import { useLeaflet } from '../hooks/useLeaflet';
 
 const escapeHtml = (str: string): string =>
-  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 interface ItineraryMapOverlayProps {
   city: TripSegment;
