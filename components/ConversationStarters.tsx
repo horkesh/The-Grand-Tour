@@ -88,14 +88,14 @@ const ConversationStarters: React.FC = () => {
       exit={{ opacity: 0 }}
       className="absolute inset-0 w-full h-full overflow-y-auto custom-scrollbar bg-[#f9f7f4] dark:bg-black p-6 pb-32"
     >
-      <h1 className="font-serif text-3xl font-bold text-center mb-2">Daily Prompts</h1>
-      <p className="text-xs text-slate-400 text-center mb-8">Answer independently, then reveal together</p>
+      <h1 className="font-serif text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">Daily Prompts</h1>
+      <p className="text-xs text-slate-400 dark:text-slate-500 text-center mb-8">Answer independently, then reveal together</p>
 
       {/* Today's prompt (featured) */}
       {todayPrompt && (
         <div className="bg-white dark:bg-[#1a1a1a] rounded-[2rem] shadow-xl p-8 mb-8 max-w-lg mx-auto">
-          <p className="text-[10px] uppercase tracking-widest text-[#ac3d29] font-bold mb-3">Today's Prompt</p>
-          <h2 className="font-serif text-xl font-bold mb-6">{todayPrompt.text}</h2>
+          <p className="text-[10px] uppercase tracking-widest text-[#ac3d29] dark:text-[#d4654f] font-bold mb-3">Today's Prompt</p>
+          <h2 className="font-serif text-xl font-bold text-slate-900 dark:text-white mb-6">{todayPrompt.text}</h2>
 
           {!responses[todayPrompt.id]?.[myUid] ? (
             <div>
@@ -103,7 +103,7 @@ const ConversationStarters: React.FC = () => {
                 value={myAnswer}
                 onChange={(e) => setMyAnswer(e.target.value)}
                 placeholder="Your answer..."
-                className="w-full p-4 bg-slate-50 dark:bg-black rounded-2xl border border-slate-200 dark:border-white/10 text-sm resize-none h-24 outline-none focus:ring-2 focus:ring-[#194f4c] mb-3"
+                className="w-full p-4 bg-slate-50 dark:bg-black rounded-2xl border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none h-24 outline-none focus:ring-2 focus:ring-[#194f4c] mb-3"
               />
               <button
                 onClick={handleSubmit}
@@ -118,7 +118,7 @@ const ConversationStarters: React.FC = () => {
               <div className="flex items-start gap-3">
                 <UserAvatar user={currentUser} size="md" />
                 <div className="flex-1 p-3 bg-[#194f4c]/10 dark:bg-[#194f4c]/20 rounded-2xl">
-                  <p className="text-sm">{responses[todayPrompt.id][myUid]}</p>
+                  <p className="text-sm text-slate-800 dark:text-slate-200">{responses[todayPrompt.id][myUid]}</p>
                 </div>
               </div>
 
@@ -138,13 +138,13 @@ const ConversationStarters: React.FC = () => {
                     <div className="flex items-start gap-3 h-full">
                       <UserAvatar user={partnerUser} size="md" />
                       <div className="flex-1 p-3 bg-[#ac3d29]/10 dark:bg-[#ac3d29]/20 rounded-2xl">
-                        <p className="text-sm">{responses[todayPrompt.id][partnerUid]}</p>
+                        <p className="text-sm text-slate-800 dark:text-slate-200">{responses[todayPrompt.id][partnerUid]}</p>
                       </div>
                     </div>
                   }
                 />
               ) : (
-                <p className="text-xs text-slate-400 text-center italic">Waiting for your partner to answer...</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center italic">Waiting for your partner to answer...</p>
               )}
             </div>
           )}
@@ -155,10 +155,10 @@ const ConversationStarters: React.FC = () => {
       <div className="max-w-lg mx-auto space-y-4">
         {unlockedPrompts.slice(0, -1).reverse().map(prompt => (
           <div key={prompt.id} className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 shadow-sm">
-            <p className="text-xs text-slate-400 mb-2 font-bold">Day {prompt.day}</p>
-            <p className="font-serif text-sm font-bold mb-3">{prompt.text}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 font-bold">Day {prompt.day}</p>
+            <p className="font-serif text-sm font-bold text-slate-900 dark:text-white mb-3">{prompt.text}</p>
             {responses[prompt.id]?.[myUid] && responses[prompt.id]?.[partnerUid] && (
-              <div className="flex gap-4 text-xs text-slate-500">
+              <div className="flex gap-4 text-xs text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1"><UserAvatar user={currentUser} size="sm" /> Answered</span>
                 <span className="flex items-center gap-1"><UserAvatar user={partnerUser} size="sm" /> Answered</span>
               </div>
