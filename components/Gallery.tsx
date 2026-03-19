@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
+import { downloadAllPostcards } from '../utils/bulkDownload';
 
 const dataUrlToBlob = (dataUrl: string): Blob => {
   const [header, data] = dataUrl.split(',');
@@ -52,6 +53,7 @@ const PolaroidImage: React.FC<{ url: string; alt: string }> = ({ url, alt }) => 
 const Gallery: React.FC = () => {
   const navigate = useNavigate();
   const { postcards } = useStore();
+  const [downloading, setDownloading] = useState(false);
   
   const allImages = Object.entries(postcards).flatMap(([key, urls]) => {
     // Key format: "cityId" or "cityId_stopIndex"
@@ -99,6 +101,34 @@ const Gallery: React.FC = () => {
             {allImages.length} Polaroids Collected
           </p>
         </div>
+        {allImages.length > 0 && (
+          <button
+            onClick={async () => {
+              setDownloading(true);
+              try {
+                await downloadAllPostcards(postcards, (key) => {
+                  const [cityId, stopIdx] = key.split('_');
+                  const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+                  if (city && stopIdx !== undefined) {
+                    const stop = city.plannedStops[parseInt(stopIdx)];
+                    return stop ? stop.title : city.location;
+                  }
+                  return city ? city.location : 'Italy';
+                });
+              } finally {
+                setDownloading(false);
+              }
+            }}
+            disabled={downloading}
+            className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-lg ${
+              downloading
+                ? 'bg-slate-300 text-slate-500 cursor-wait'
+                : 'bg-[#194f4c] text-white hover:scale-105'
+            }`}
+          >
+            {downloading ? 'Zipping...' : 'Download All'}
+          </button>
+        )}
       </div>
 
       {allImages.length === 0 ? (

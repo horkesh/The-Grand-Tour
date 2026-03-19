@@ -51,6 +51,16 @@ const Passaporto: React.FC = () => {
         </div>
       </div>
 
+      {/* Print button */}
+      <div className="flex justify-center mb-6 shrink-0">
+        <button
+          onClick={() => window.print()}
+          className="px-5 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/10 transition-colors print-visible"
+        >
+          Print Passport
+        </button>
+      </div>
+
       {stamps.length === 0 && (
         <div className="text-center mb-8 px-4">
           <p className="text-sm text-slate-400 dark:text-slate-500 font-serif italic">

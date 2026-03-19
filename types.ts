@@ -85,6 +85,22 @@ export interface TripSegment {
   parking?: string; // Parking/ZTL warning for this day
 }
 
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  category: 'documents' | 'clothing' | 'tech' | 'toiletries' | 'misc';
+  checked: boolean;
+}
+
+export interface AudioPostcard {
+  id: string;
+  cityId: string;
+  audioData: string; // base64 encoded audio
+  duration: number; // seconds
+  timestamp: number;
+  label?: string;
+}
+
 // Leaflet Interface Definitions
 export interface LeafletMap {
   setView: (center: [number, number], zoom: number) => LeafletMap;
