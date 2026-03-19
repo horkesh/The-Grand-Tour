@@ -15,6 +15,8 @@ import PackingChecklist from './components/PackingChecklist';
 import LearnPhrase from './components/LearnPhrase';
 import RouteFlyover from './components/RouteFlyover';
 import Wishlist from './components/Wishlist';
+import PreferenceMatch from './components/PreferenceMatch';
+import ConversationStarters from './components/ConversationStarters';
 import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
@@ -166,6 +168,8 @@ const AnimatedRoutes = () => {
         <Route path="/phrases" element={<LearnPhrase />} />
         <Route path="/flyover" element={<RouteFlyover />} />
         <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/preferences" element={<PreferenceMatch />} />
+        <Route path="/prompts" element={<ConversationStarters />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
