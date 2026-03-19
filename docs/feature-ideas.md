@@ -70,8 +70,59 @@ Generate Open Graph-style summary image for sharing on WhatsApp/Instagram.
 
 ---
 
+## Codex Export System — Reference Architecture
+
+Studied from `horkesh/the-codex` (`src/export/`). This is the pattern to follow for Grand Tour exports.
+
+### Core: `exporter.ts`
+- **`html2canvas`** renders any DOM element to PNG at 3x scale (`useCORS: true`, `backgroundColor: null`)
+- 30s timeout via `Promise.race`
+- `exportToPng(element)` → `Blob`
+- `shareImage(blob, filename)` → Web Share API with download fallback
+- `exportAndShare(element, filename)` — one-call convenience
+- `exportMultipleToPng(elements[], onProgress?)` — carousel/multi-page with progress callback
+- `shareMultipleImages(blobs[], prefix)` — batch share or sequential download fallback
+
+### Template Pattern
+All templates use **inline styles** (not Tailwind) because html2canvas needs computed styles. Pattern:
+- Fixed canvas sizes: `1080×1920` (story), `1080×1350` (portrait), `1080×1080` (square)
+- `React.forwardRef` on every template so exporter can grab the DOM node
+- Inline style objects, not CSS classes
+- Design tokens in `shared/utils.ts`: `FONT` (display/body/mono), `COLOR` (obsidian/gold/ivory)
+
+### Shared Components (`templates/shared/`)
+- **`BackgroundLayer`** — full-bleed image + dark gradient overlay (two strengths)
+- **`InsetFrame`** — decorative gold border 24px inset with darkened/blurred edges (gallery mat effect)
+- **`GoldRule`** — gradient horizontal divider (transparent → gold → transparent)
+- **`BrandMark`** — logo at sm/md/lg sizes
+- **`ParticipantRow`** — avatar row for multi-person entries
+- **`PassportFrame`** — reusable passport layout wrapper
+
+### Template Gallery (what exists)
+- **CountdownCard** — days-until with giant number, event title, location, background image
+- **PassportPage** — 4-column stamp grid, dark bg, gold accents, country/stamp counts
+- **AnnualWrapped** — Spotify-wrapped style year-in-review with stat boxes + per-person rows
+- **MissionCarousel** — 4 visual variants (V1 centered, V2 bold hero, V3 passport stamp, V4 full-bleed)
+- **Plus:** AchievementCard, CallingCard, DebriefPage, GatheringInviteCard, GatheringRecap, IftarCard, InterludeCard, LiveMusicCard, NightOutCard, PS5MatchCard, RivalryCard, SteakVerdict, ToastCard, WrappedCard, YearInReview, visa-carousel/
+
+### Key Takeaways for Grand Tour
+1. **Use html2canvas, not jsPDF** — render React templates to PNG, share via Web Share API
+2. **Inline styles only** in export templates (html2canvas doesn't reliably read Tailwind CDN)
+3. **forwardRef pattern** — template components expose ref, exporter calls `exportToPng(ref.current)`
+4. **Design token system** — adapt Codex's FONT/COLOR to Grand Tour's palette (teal/rust/warm-white)
+5. **Multi-image export** with progress callback for carousel-style sharing (Instagram stories)
+6. **Fixed canvas sizes** for pixel-perfect social media output (1080px width standard)
+
+### Grand Tour Adaptations
+- Replace Codex gold (#C9A84C) → Grand Tour teal (#194f4c) + rust (#ac3d29) + warm white (#f9f7f4)
+- Replace "The Gents Chronicles" branding → "The Grand Tour" with Italian typography
+- Reuse: BackgroundLayer, InsetFrame, GoldRule patterns (rename GoldRule → TealRule or AccentRule)
+- New templates needed: DayCard, TripSummaryCard, StampCollectionPage, PostcardGrid, CountdownCard
+
+---
+
 ## Notes
 
-- Codex app (horkesh/the-codex) has export templates to study — not yet accessible in this session. Need to review before implementing #8.
 - All pre-trip features should gracefully transition into during-trip mode on May 2.
 - Current stack: React 19, Vite, Tailwind (CDN), Leaflet, Framer Motion, Gemini AI, Zustand.
+- Export dependency to add: `html2canvas` (the only new dep needed).
