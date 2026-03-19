@@ -17,6 +17,9 @@ import RouteFlyover from './components/RouteFlyover';
 import Wishlist from './components/Wishlist';
 import PreferenceMatch from './components/PreferenceMatch';
 import ConversationStarters from './components/ConversationStarters';
+import SurprisePlanner from './components/SurprisePlanner';
+import PhotoChallenges from './components/PhotoChallenges';
+import TriviaChallenge from './components/TriviaChallenge';
 import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
@@ -121,6 +124,7 @@ const MobileNav = () => {
       <NavButton active={location.pathname.startsWith('/day')} onClick={() => navigate(`/day/${lastViewedDay}`)} icon={<Icons.Journal />} label="Journal" />
       <NavButton active={isActive('/story')} onClick={() => navigate('/story')} icon={<Icons.Story />} label="Story" />
       <NavButton active={isActive('/chat')} onClick={() => navigate('/chat')} icon={<Icons.Chat />} label="AI" />
+      <NavButton active={['/preferences','/prompts','/trivia','/challenges','/surprises'].some(p => isActive(p))} onClick={() => navigate('/preferences')} icon={<span className="text-xs">💕</span>} label="Us" />
     </nav>
   );
 }
@@ -170,6 +174,9 @@ const AnimatedRoutes = () => {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/preferences" element={<PreferenceMatch />} />
         <Route path="/prompts" element={<ConversationStarters />} />
+        <Route path="/surprises" element={<SurprisePlanner />} />
+        <Route path="/challenges" element={<PhotoChallenges />} />
+        <Route path="/trivia" element={<TriviaChallenge />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

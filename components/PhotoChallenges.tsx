@@ -1,0 +1,181 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { useStore } from '../store';
+import { listenCollection, writeDoc } from '../services/firestoreSync';
+import UserAvatar from './UserAvatar';
+
+const CHALLENGES = [
+  { id: 'ch1', title: 'The Kiss', desc: 'Kiss in front of a famous Italian landmark', emoji: '\u{1F48B}', day: null },
+  { id: 'ch2', title: 'Gelato Face', desc: 'Capture the first bite of gelato reaction', emoji: '\u{1F366}', day: null },
+  { id: 'ch3', title: 'Golden Hour', desc: 'Silhouette photo at sunset', emoji: '\u{1F305}', day: null },
+  { id: 'ch4', title: 'La Vespa', desc: 'Pose with a Vespa (bonus: ride one)', emoji: '\u{1F6F5}', day: null },
+  { id: 'ch5', title: 'Mirror Mirror', desc: 'Reflection photo in water or glass', emoji: '\u{1FA9E}', day: null },
+  { id: 'ch6', title: 'Local Friend', desc: 'Photo with a friendly local (with permission)', emoji: '\u{1F91D}', day: null },
+  { id: 'ch7', title: 'The Toast', desc: 'Glasses clinking \u2014 aperitivo hour', emoji: '\u{1F942}', day: null },
+  { id: 'ch8', title: 'Lost & Found', desc: 'Photo of a beautiful unexpected discovery', emoji: '\u{1F5FA}\uFE0F', day: null },
+  { id: 'ch9', title: 'Door Envy', desc: 'The most beautiful Italian door you find', emoji: '\u{1F6AA}', day: null },
+  { id: 'ch10', title: 'Market Haul', desc: 'Show off your local market finds', emoji: '\u{1F9FA}', day: null },
+  { id: 'ch11', title: 'The View', desc: 'Best panoramic view of the trip', emoji: '\u26F0\uFE0F', day: null },
+  { id: 'ch12', title: 'Nonna Approved', desc: 'A plate of food so good nonna would approve', emoji: '\u{1F475}', day: null },
+  { id: 'ch13', title: 'Street Art', desc: 'Find and photograph street art', emoji: '\u{1F3A8}', day: null },
+  { id: 'ch14', title: 'Us \u00D7 20', desc: 'Recreate a photo from early in your relationship', emoji: '\u{1F4F7}', day: null },
+  { id: 'ch15', title: 'Tiny Street', desc: 'The narrowest, most charming alley you find', emoji: '\u{1F3D8}\uFE0F', day: null },
+  { id: 'ch16', title: 'Anniversary Selfie', desc: 'The official anniversary day portrait', emoji: '\u2764\uFE0F', day: 'day-5' as string | null },
+];
+
+/** Convert a File to a base64 data URL string */
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+const PhotoChallenges: React.FC = () => {
+  const { currentUser, partnerUser, tripMeta } = useStore();
+  const [completions, setCompletions] = useState<Record<string, Record<string, string>>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!tripMeta) return;
+    const unsub = listenCollection(`trips/${tripMeta.id}/challenges`, (docs) => {
+      const map: Record<string, Record<string, string>> = {};
+      for (const d of docs) map[d.id] = (d.data as Record<string, unknown>).completions as Record<string, string> || {};
+      setCompletions(map);
+    });
+    return unsub;
+  }, [tripMeta]);
+
+  const handleUpload = async (challengeId: string, file: File) => {
+    if (!currentUser || !tripMeta) return;
+    setUploadingId(challengeId);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      await writeDoc(`trips/${tripMeta.id}/challenges/${challengeId}`, {
+        completions: { ...completions[challengeId], [currentUser.uid]: dataUrl },
+      });
+    } catch (e) {
+      console.error('Upload failed:', e);
+    }
+    setUploadingId(null);
+  };
+
+  const myUid = currentUser?.uid || '';
+  const partnerUid = partnerUser?.uid || '';
+  const completedCount = CHALLENGES.filter(c => completions[c.id]?.[myUid] && completions[c.id]?.[partnerUid]).length;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 w-full h-full overflow-y-auto custom-scrollbar bg-[#f9f7f4] dark:bg-black p-6 pb-32"
+    >
+      <h1 className="font-serif text-3xl font-bold text-center mb-2">Photo Challenges</h1>
+      <p className="text-xs text-slate-400 text-center mb-2">{completedCount}/{CHALLENGES.length} completed by both</p>
+
+      {/* Progress bar */}
+      <div className="max-w-lg mx-auto mb-8">
+        <div className="h-2 bg-slate-200 dark:bg-white/10 rounded-full">
+          <div
+            className="h-full bg-gradient-to-r from-[#194f4c] to-[#ac3d29] rounded-full transition-all"
+            style={{ width: `${(completedCount / CHALLENGES.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && uploadingId) handleUpload(uploadingId, file);
+          e.target.value = '';
+        }}
+      />
+
+      <div className="max-w-lg mx-auto grid grid-cols-1 gap-4">
+        {CHALLENGES.map(ch => {
+          const myPhoto = completions[ch.id]?.[myUid];
+          const partnerPhoto = completions[ch.id]?.[partnerUid];
+          const bothDone = myPhoto && partnerPhoto;
+
+          return (
+            <div
+              key={ch.id}
+              className={`bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm overflow-hidden ${
+                bothDone ? 'ring-2 ring-emerald-400' : ''
+              }`}
+            >
+              <div className="p-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-2xl">{ch.emoji}</span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-sm">{ch.title}</h3>
+                    <p className="text-[10px] text-slate-400">{ch.desc}</p>
+                  </div>
+                  {bothDone && <span className="text-emerald-500 font-bold text-[9px] uppercase">Both done!</span>}
+                </div>
+
+                {/* Photo submissions */}
+                <div className="flex gap-3 mt-3">
+                  {/* My submission */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1 mb-1">
+                      <UserAvatar user={currentUser} size="sm" />
+                      <span className="text-[9px] text-slate-400 font-bold">You</span>
+                    </div>
+                    {myPhoto ? (
+                      <img src={myPhoto} alt="My submission" className="w-full aspect-square object-cover rounded-xl" />
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setUploadingId(ch.id);
+                          fileInputRef.current?.click();
+                        }}
+                        disabled={uploadingId === ch.id}
+                        className="w-full aspect-square rounded-xl border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-1 hover:border-[#194f4c] transition-colors"
+                      >
+                        {uploadingId === ch.id ? (
+                          <div className="w-5 h-5 border-2 border-[#194f4c] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <span className="text-xl">{'\u{1F4F8}'}</span>
+                            <span className="text-[9px] text-slate-400 font-bold">Add photo</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Partner submission */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1 mb-1">
+                      <UserAvatar user={partnerUser} size="sm" />
+                      <span className="text-[9px] text-slate-400 font-bold">{partnerUser?.displayName?.split(' ')[0] || 'Partner'}</span>
+                    </div>
+                    {partnerPhoto ? (
+                      <img src={partnerPhoto} alt="Partner submission" className="w-full aspect-square object-cover rounded-xl" />
+                    ) : (
+                      <div className="w-full aspect-square rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-center">
+                        <span className="text-[9px] text-slate-300 dark:text-slate-600">Waiting...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+};
+
+export default PhotoChallenges;

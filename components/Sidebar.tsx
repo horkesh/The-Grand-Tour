@@ -3,14 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Icons } from '../constants';
 import { useStore } from '../store';
 import { useCountdown } from '../hooks/useCountdown';
-import PartnerSync from './PartnerSync';
+import UserAvatar from './UserAvatar';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme, lastViewedDay } = useStore();
+  const { theme, toggleTheme, lastViewedDay, currentUser, partnerUser, tripMeta } = useStore();
   const countdown = useCountdown();
-  const [showSync, setShowSync] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -120,19 +119,49 @@ const Sidebar: React.FC = () => {
             <span className="text-sm font-bold">Route Flyover</span>
           </button>
         </div>
+
+        {/* Together Section */}
+        <div className="pt-4 border-t border-slate-200 dark:border-white/10">
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest px-4 mb-2">Together</p>
+          <button onClick={() => navigate('/preferences')} className={btnClass('/preferences')}>
+            <span className="text-sm">💕</span>
+            <span className="text-sm font-bold">Our Preferences</span>
+          </button>
+          <button onClick={() => navigate('/prompts')} className={btnClass('/prompts')}>
+            <span className="text-sm">💬</span>
+            <span className="text-sm font-bold">Daily Prompts</span>
+          </button>
+          <button onClick={() => navigate('/trivia')} className={btnClass('/trivia')}>
+            <span className="text-sm">🧠</span>
+            <span className="text-sm font-bold">Trivia</span>
+          </button>
+          <button onClick={() => navigate('/challenges')} className={btnClass('/challenges')}>
+            <span className="text-sm">📸</span>
+            <span className="text-sm font-bold">Photo Challenges</span>
+          </button>
+          <button onClick={() => navigate('/surprises')} className={btnClass('/surprises')}>
+            <span className="text-sm">🎁</span>
+            <span className="text-sm font-bold">Surprises</span>
+          </button>
+        </div>
       </nav>
 
-      <button
-        onClick={() => setShowSync(true)}
-        className="w-full flex items-center gap-4 p-4 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
-        <span className="text-sm font-bold">Partner Sync</span>
-      </button>
+      {/* Partner status */}
+      {partnerUser && (
+        <div className="flex items-center gap-2 px-4 py-3 mb-2">
+          <UserAvatar user={partnerUser} size="md" showName />
+          <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-wider">Connected</span>
+        </div>
+      )}
 
-      {showSync && <PartnerSync onClose={() => setShowSync(false)} />}
+      {/* Join code (show when waiting for partner) */}
+      {tripMeta?.joinCode && tripMeta.partnerIds.length < 2 && (
+        <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl text-center mb-2">
+          <p className="text-[9px] uppercase tracking-widest text-amber-600 font-bold mb-1">Invite Partner</p>
+          <p className="font-mono text-lg font-bold text-amber-700 tracking-[0.3em]">{tripMeta.joinCode}</p>
+          <p className="text-[9px] text-amber-500 mt-1">Share this code</p>
+        </div>
+      )}
     </div>
   );
 };
