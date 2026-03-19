@@ -183,11 +183,10 @@ const DayDashboard: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="absolute inset-0 w-full h-full flex flex-col gap-8 overflow-y-auto custom-scrollbar p-4 lg:p-12 pb-32"
     >
-      <div ref={topRef} className="perspective-1000 shrink-0 h-[45vh] lg:h-[60vh] relative group">
-        <div className={`relative h-full w-full transition-transform duration-700 preserve-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`} onClick={handleFlip}>
-          
+      <div ref={topRef} className="shrink-0 h-[45vh] lg:h-[60vh] relative group cursor-pointer" onClick={handleFlip}>
+
           {/* Front Face */}
-          <div className="absolute inset-0 backface-hidden rounded-[3rem] overflow-hidden shadow-2xl bg-slate-900">
+          <div className={`absolute inset-0 rounded-[3rem] overflow-hidden shadow-2xl bg-slate-900 transition-opacity duration-500 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             {isCameraActive ? (
               <div className="relative w-full h-full bg-black">
                 <video 
@@ -332,7 +331,7 @@ const DayDashboard: React.FC = () => {
           </div>
 
           {/* Back Face (Flip) */}
-          <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-[3rem] p-12 shadow-2xl flex flex-col items-center justify-center text-center ${isAnniversary ? 'bg-gradient-to-br from-[#f4e8e4] to-[#f4f1ea] dark:from-[#2a1515] dark:to-[#1a1a1a]' : 'bg-[#f4f1ea] dark:bg-[#1a1a1a]'}`}>
+          <div className={`absolute inset-0 rounded-[3rem] p-12 shadow-2xl flex flex-col items-center justify-center text-center transition-opacity duration-500 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isAnniversary ? 'bg-gradient-to-br from-[#f4e8e4] to-[#f4f1ea] dark:from-[#2a1515] dark:to-[#1a1a1a]' : 'bg-[#f4f1ea] dark:bg-[#1a1a1a]'}`}>
             {isAnniversary && selectedStopIdx === null && (
               <p className="text-[#ac3d29] text-xs font-bold uppercase tracking-[0.3em] mb-4">May 6, 2006 — May 6, 2026</p>
             )}
@@ -389,7 +388,6 @@ const DayDashboard: React.FC = () => {
                 </div>
             )}
           </div>
-        </div>
       </div>
 
       {/* Itinerary List */}
