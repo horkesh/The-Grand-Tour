@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard, TripUser, TripMeta } from './types';
 import { setImage as idbSetImage, getAllImages } from './services/imageDB';
-import { listenCollection, listenDoc, writeDoc, removeDoc, teardownSync } from './services/firestoreSync';
+import {
+  listenCollection, listenDoc, writeDoc, removeDoc,
+  teardownSync, isSyncing, setSyncing, isSyncInitialized, markSyncInitialized,
+} from './services/firestoreSync';
 
 // Helper: get Firestore base path for the current trip
 function tripPath(): string | null {
@@ -11,18 +14,16 @@ function tripPath(): string | null {
 }
 
 // Helper: write to Firestore if syncing is available and not an echo
-function syncWrite(subpath: string, data: any) {
+function syncWrite(subpath: string, data: Record<string, unknown>) {
   const base = tripPath();
-  const { _isSyncing } = useStore.getState();
-  if (base && !_isSyncing) {
+  if (base && !isSyncing()) {
     writeDoc(`${base}/${subpath}`, data).catch(e => console.warn('[sync] write failed:', e));
   }
 }
 
 function syncRemove(subpath: string) {
   const base = tripPath();
-  const { _isSyncing } = useStore.getState();
-  if (base && !_isSyncing) {
+  if (base && !isSyncing()) {
     removeDoc(`${base}/${subpath}`).catch(e => console.warn('[sync] remove failed:', e));
   }
 }
@@ -92,7 +93,6 @@ interface AppState {
   setPartnerUser: (user: TripUser | null) => void;
 
   // Sync
-  _isSyncing: boolean;
   initSync: () => void;
   destroySync: () => void;
 }
@@ -117,7 +117,7 @@ export const useStore = create<AppState>()(
       savedPOIs: [],
       addSavedPOI: (poi) => {
         set((state) => ({ savedPOIs: [...state.savedPOIs, poi] }));
-        syncWrite(`pois/${poi.id}`, poi);
+        syncWrite(`pois/${poi.id}`, poi as unknown as Record<string, unknown>);
       },
       removeSavedPOI: (id) => {
         set((state) => ({ savedPOIs: state.savedPOIs.filter((p) => p.id !== id) }));
@@ -152,7 +152,7 @@ export const useStore = create<AppState>()(
           }
         }));
         const updatedPostcards = useStore.getState().postcards;
-        syncWrite('postcardIndex', { postcards: updatedPostcards });
+        syncWrite('postcardIndex', { postcards: updatedPostcards } as unknown as Record<string, unknown>);
       },
 
       waypointImages: {},
@@ -185,7 +185,8 @@ export const useStore = create<AppState>()(
           const updated = [...state.chatMessages, msg];
           return { chatMessages: updated.length > 50 ? updated.slice(-50) : updated };
         });
-        syncWrite(`chat/${msg.id}`, { ...msg, grounding: undefined, timestamp: msg.timestamp || Date.now() });
+        const { grounding: _, ...msgWithoutGrounding } = msg;
+        syncWrite(`chat/${msg.id}`, { ...msgWithoutGrounding, timestamp: msg.timestamp || Date.now() } as unknown as Record<string, unknown>);
       },
       clearChatMessages: () => set({ chatMessages: [] }),
 
@@ -198,11 +199,11 @@ export const useStore = create<AppState>()(
           ),
         }));
         const item = useStore.getState().checklist.find(i => i.id === id);
-        if (item) syncWrite(`checklist/${id}`, item);
+        if (item) syncWrite(`checklist/${id}`, item as unknown as Record<string, unknown>);
       },
       addChecklistItem: (item) => {
         set((state) => ({ checklist: [...state.checklist, item] }));
-        syncWrite(`checklist/${item.id}`, item);
+        syncWrite(`checklist/${item.id}`, item as unknown as Record<string, unknown>);
       },
       removeChecklistItem: (id) => {
         set((state) => ({ checklist: state.checklist.filter((i) => i.id !== id) }));
@@ -229,56 +230,63 @@ export const useStore = create<AppState>()(
       setPartnerUser: (user) => set({ partnerUser: user }),
 
       // Sync
-      _isSyncing: false,
-
       initSync: () => {
+        // Idempotency: don't set up duplicate listeners
+        if (isSyncInitialized()) return;
+
         const state = useStore.getState();
         const tripId = state.tripMeta?.id;
         if (!tripId) return;
+
+        // Tear down any stale listeners before setting up new ones
+        teardownSync();
+        markSyncInitialized();
 
         const basePath = `trips/${tripId}`;
 
         // Listen for stamps
         listenCollection(`${basePath}/stamps`, (docs) => {
-          set({ _isSyncing: true });
-          const stamps = docs.map(d => d.id);
-          set({ stamps, _isSyncing: false });
+          setSyncing(true);
+          set({ stamps: docs.map(d => d.id) });
+          setSyncing(false);
         });
 
         // Listen for POIs
         listenCollection(`${basePath}/pois`, (docs) => {
-          set({ _isSyncing: true });
-          const pois = docs.map(d => ({ ...d.data, id: d.id })) as SavedPOI[];
-          set({ savedPOIs: pois, _isSyncing: false });
+          setSyncing(true);
+          set({ savedPOIs: docs.map(d => ({ ...d.data, id: d.id })) as SavedPOI[] });
+          setSyncing(false);
         });
 
         // Listen for checklist
         listenCollection(`${basePath}/checklist`, (docs) => {
-          set({ _isSyncing: true });
-          const items = docs.map(d => ({ ...d.data, id: d.id })) as ChecklistItem[];
-          set({ checklist: items, _isSyncing: false });
+          setSyncing(true);
+          set({ checklist: docs.map(d => ({ ...d.data, id: d.id })) as ChecklistItem[] });
+          setSyncing(false);
         });
 
         // Listen for chat messages
         listenCollection(`${basePath}/chat`, (docs) => {
-          set({ _isSyncing: true });
+          setSyncing(true);
           const msgs = docs
             .map(d => ({ ...d.data, id: d.id }))
-            .sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0)) as ChatMessage[];
-          set({ chatMessages: msgs, _isSyncing: false });
+            .sort((a, b) => ((a as any).timestamp || 0) - ((b as any).timestamp || 0)) as ChatMessage[];
+          set({ chatMessages: msgs });
+          setSyncing(false);
         });
 
         // Listen for postcards
         listenDoc(`${basePath}/postcardIndex`, (data) => {
-          set({ _isSyncing: true });
-          set({ postcards: data?.postcards || {}, _isSyncing: false });
+          setSyncing(true);
+          set({ postcards: (data as any)?.postcards || {} });
+          setSyncing(false);
         });
 
         // Listen for partner user info
         const partnerUid = state.tripMeta?.partnerIds.find(id => id !== state.currentUser?.uid);
         if (partnerUid) {
           listenDoc(`${basePath}/users/${partnerUid}`, (data) => {
-            if (data) set({ partnerUser: data as TripUser });
+            set({ partnerUser: data as TripUser });
           });
         }
       },

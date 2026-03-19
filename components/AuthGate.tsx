@@ -9,12 +9,31 @@ import {
   createTrip,
   joinTrip,
   getPartnerInfo,
+  buildTripUser,
 } from '../services/firebaseAuth';
 import { TripMeta } from '../types';
 import { useStore } from '../store';
 
+/** Load partner info and start real-time sync after trip is resolved. */
+async function resolveTrip(fbUser: User, meta: TripMeta) {
+  const { setCurrentUser, setTripMeta, setPartnerUser, initSync } = useStore.getState();
+  const color = meta.createdBy === fbUser.uid ? 'teal' as const : 'rust' as const;
+
+  setCurrentUser(buildTripUser(fbUser, color));
+  setTripMeta(meta);
+
+  const partnerUid = meta.partnerIds.find(id => id !== fbUser.uid);
+  if (partnerUid) {
+    const partner = await getPartnerInfo(meta.id, partnerUid);
+    if (partner) setPartnerUser(partner);
+  }
+
+  // Defer to allow state to settle before setting up listeners
+  setTimeout(() => useStore.getState().initSync(), 0);
+}
+
 const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { setCurrentUser, setTripMeta, setPartnerUser, currentUser, tripMeta, initSync } = useStore();
+  const { currentUser, tripMeta } = useStore();
   const [user, setUser] = useState<User | null>(null);
   const [step, setStep] = useState<'loading' | 'signIn' | 'joinOrCreate' | 'joinInput' | 'ready'>('loading');
   const [joinCode, setJoinCode] = useState('');
@@ -34,26 +53,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         await handleRedirectResult();
         const existing = await getUserTrip(fbUser.uid);
         if (existing) {
-          const userColor = existing.createdBy === fbUser.uid ? 'teal' as const : 'rust' as const;
-          setCurrentUser({
-            uid: fbUser.uid,
-            displayName: fbUser.displayName || 'Partner',
-            email: fbUser.email || '',
-            photoURL: fbUser.photoURL,
-            color: userColor,
-          });
-          setTripMeta(existing);
-
-          // Load partner info
-          const partnerUid = existing.partnerIds.find(id => id !== fbUser.uid);
-          if (partnerUid) {
-            const partner = await getPartnerInfo(existing.id, partnerUid);
-            if (partner) setPartnerUser(partner);
-          }
-
-          // Start real-time sync
-          setTimeout(() => useStore.getState().initSync(), 0);
-
+          await resolveTrip(fbUser, existing);
           setStep('ready');
         } else {
           setStep('joinOrCreate');
@@ -69,8 +69,8 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setError('');
     try {
       await signInWithGoogle();
-    } catch (e: any) {
-      setError(e.message || 'Sign-in failed');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Sign-in failed');
     }
   };
 
@@ -79,18 +79,10 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setError('');
     try {
       const newTrip = await createTrip(user);
-      setCurrentUser({
-        uid: user.uid,
-        displayName: user.displayName || 'Partner',
-        email: user.email || '',
-        photoURL: user.photoURL,
-        color: 'teal',
-      });
-      setTripMeta(newTrip);
-      setTimeout(() => useStore.getState().initSync(), 0);
+      await resolveTrip(user, newTrip);
       setStep('ready');
-    } catch (e: any) {
-      setError(e.message || 'Could not create trip');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Could not create trip');
     }
   };
 
@@ -99,26 +91,10 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setError('');
     try {
       const joined = await joinTrip(user, joinCode.trim());
-      setCurrentUser({
-        uid: user.uid,
-        displayName: user.displayName || 'Partner',
-        email: user.email || '',
-        photoURL: user.photoURL,
-        color: 'rust',
-      });
-      setTripMeta(joined);
-
-      // Load partner info
-      const partnerUid = joined.partnerIds.find(id => id !== user.uid);
-      if (partnerUid) {
-        const partner = await getPartnerInfo(joined.id, partnerUid);
-        if (partner) setPartnerUser(partner);
-      }
-
-      setTimeout(() => useStore.getState().initSync(), 0);
+      await resolveTrip(user, joined);
       setStep('ready');
-    } catch (e: any) {
-      setError(e.message || 'Could not join trip');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Could not join trip');
     }
   };
 

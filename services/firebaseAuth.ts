@@ -22,20 +22,27 @@ import { TripMeta, TripUser } from '../types';
 
 function generateJoinCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
+  const values = crypto.getRandomValues(new Uint8Array(6));
+  return Array.from(values, v => chars[v % chars.length]).join('');
 }
 
-export async function signInWithGoogle(): Promise<User> {
+/** Build a TripUser from a Firebase User — single source of truth for shape. */
+export function buildTripUser(fbUser: User, color: 'teal' | 'rust'): TripUser {
+  return {
+    uid: fbUser.uid,
+    displayName: fbUser.displayName || 'Partner',
+    email: fbUser.email || '',
+    photoURL: fbUser.photoURL,
+    color,
+  };
+}
+
+export async function signInWithGoogle(): Promise<User | null> {
   const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
   if (isMobile) {
+    // signInWithRedirect navigates away — result is handled on return via handleRedirectResult
     await signInWithRedirect(auth, googleProvider);
-    const result = await getRedirectResult(auth);
-    if (!result) throw new Error('Redirect sign-in failed');
-    return result.user;
+    return null; // page will reload
   } else {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -68,14 +75,11 @@ export async function createTrip(user: User): Promise<TripMeta> {
   };
   await setDoc(tripRef, { meta });
 
+  const tripUser = buildTripUser(user, 'teal');
   await setDoc(doc(db, 'trips', tripRef.id, 'users', user.uid), {
-    uid: user.uid,
-    displayName: user.displayName || 'Partner 1',
-    email: user.email,
-    photoURL: user.photoURL,
-    color: 'teal',
+    ...tripUser,
     joinedAt: Date.now(),
-  } satisfies TripUser & { joinedAt: number });
+  });
 
   return meta;
 }
@@ -100,14 +104,11 @@ export async function joinTrip(user: User, joinCode: string): Promise<TripMeta> 
       'meta.partnerIds': arrayUnion(user.uid),
     });
 
+    const tripUser = buildTripUser(user, 'rust');
     await setDoc(doc(db, 'trips', tripDoc.id, 'users', user.uid), {
-      uid: user.uid,
-      displayName: user.displayName || 'Partner 2',
-      email: user.email,
-      photoURL: user.photoURL,
-      color: 'rust',
+      ...tripUser,
       joinedAt: Date.now(),
-    } satisfies TripUser & { joinedAt: number });
+    });
   }
 
   return { ...meta, partnerIds: [...new Set([...meta.partnerIds, user.uid])] };
