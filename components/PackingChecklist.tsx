@@ -41,16 +41,16 @@ const CATEGORY_META: Record<string, { label: string; icon: string }> = {
 };
 
 const PackingChecklist: React.FC = () => {
-  const { checklist, toggleChecklistItem, addChecklistItem, removeChecklistItem } = useStore();
+  const { checklist, setChecklist, toggleChecklistItem, addChecklistItem, removeChecklistItem } = useStore();
   const [newItem, setNewItem] = useState('');
   const [newCategory, setNewCategory] = useState<ChecklistItem['category']>('misc');
 
-  // Initialize default items if checklist is empty
+  // Initialize default items if checklist is empty (single batch update)
   useEffect(() => {
     if (checklist.length === 0) {
-      DEFAULT_ITEMS.forEach((item) => addChecklistItem({ ...item, checked: false }));
+      setChecklist(DEFAULT_ITEMS.map((item) => ({ ...item, checked: false })));
     }
-  }, []);
+  }, [checklist.length, setChecklist]);
 
   const checkedCount = checklist.filter((i) => i.checked).length;
   const progress = checklist.length > 0 ? (checkedCount / checklist.length) * 100 : 0;

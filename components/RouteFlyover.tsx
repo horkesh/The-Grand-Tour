@@ -9,9 +9,9 @@ const RouteFlyover: React.FC = () => {
   const navigate = useNavigate();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const layerGroupRef = useRef<any>(null);
   const [currentStop, setCurrentStop] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const animationRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize map
@@ -29,13 +29,14 @@ const RouteFlyover: React.FC = () => {
       maxZoom: 19,
     }).addTo(map);
 
+    layerGroupRef.current = L.layerGroup().addTo(map);
     mapInstance.current = map;
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
       map.remove();
       mapInstance.current = null;
+      layerGroupRef.current = null;
     };
   }, []);
 
@@ -50,13 +51,11 @@ const RouteFlyover: React.FC = () => {
         const city = ITALIAN_CITIES[index];
         setCurrentStop(index);
 
-        // Fly to city
         mapInstance.current.flyTo([city.center.lat, city.center.lng], city.zoom, {
           duration: 2,
           easeLinearity: 0.25,
         });
 
-        // Add marker with popup
         const icon = L.divIcon({
           className: '',
           html: `<div style="width:36px;height:36px;background:#194f4c;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:3px solid white;">${index + 1}</div>`,
@@ -64,9 +63,8 @@ const RouteFlyover: React.FC = () => {
           iconAnchor: [18, 18],
         });
 
-        L.marker([city.center.lat, city.center.lng], { icon }).addTo(mapInstance.current);
+        L.marker([city.center.lat, city.center.lng], { icon }).addTo(layerGroupRef.current);
 
-        // Draw line from previous city
         if (index > 0) {
           const prev = ITALIAN_CITIES[index - 1];
           L.polyline(
@@ -75,10 +73,9 @@ const RouteFlyover: React.FC = () => {
               [city.center.lat, city.center.lng],
             ],
             { color: '#194f4c', weight: 3, opacity: 0.6, dashArray: '8 8' },
-          ).addTo(mapInstance.current);
+          ).addTo(layerGroupRef.current);
         }
 
-        // Wait 3 seconds at each stop
         timeoutRef.current = setTimeout(resolve, 3000);
       });
     },
@@ -89,21 +86,13 @@ const RouteFlyover: React.FC = () => {
     if (isPlaying) return;
     setIsPlaying(true);
 
-    // Reset map
-    if (mapInstance.current) {
-      mapInstance.current.eachLayer((layer: any) => {
-        if (layer._url === undefined) return; // keep tile layer
-        try {
-          mapInstance.current.removeLayer(layer);
-        } catch {}
-      });
-    }
+    // Clear previous markers/polylines
+    if (layerGroupRef.current) layerGroupRef.current.clearLayers();
 
     for (let i = 0; i < ITALIAN_CITIES.length; i++) {
       await flyToCity(i);
     }
 
-    // Final zoom out
     if (mapInstance.current) {
       mapInstance.current.flyTo([42.5, 12.5], 7, { duration: 2 });
     }
@@ -121,10 +110,8 @@ const RouteFlyover: React.FC = () => {
       exit={{ opacity: 0 }}
       className="absolute inset-0 w-full h-full"
     >
-      {/* Full-screen map */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
 
-      {/* Top overlay */}
       <div className="absolute top-0 left-0 right-0 z-10 p-6 bg-gradient-to-b from-black/50 to-transparent">
         <div className="flex items-center justify-between">
           <div>
@@ -144,7 +131,6 @@ const RouteFlyover: React.FC = () => {
         </div>
       </div>
 
-      {/* City info card */}
       {city && (
         <motion.div
           key={currentStop}
@@ -171,7 +157,6 @@ const RouteFlyover: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Play button */}
       <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center">
         <button
           onClick={startFlyover}
@@ -186,7 +171,6 @@ const RouteFlyover: React.FC = () => {
         </button>
       </div>
 
-      {/* Progress dots */}
       <div className="absolute bottom-16 left-0 right-0 z-10 flex justify-center gap-2">
         {ITALIAN_CITIES.map((_, i) => (
           <div

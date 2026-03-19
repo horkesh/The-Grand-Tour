@@ -15,9 +15,9 @@ const Wishlist: React.FC = () => {
 
   const handleAdd = () => {
     if (!newTitle.trim()) return;
-    const city = ITALIAN_CITIES.find((c) => c.id === newCityId);
+    const id = `wish-${Date.now()}`;
     addSavedPOI({
-      id: `wish-${Date.now()}`,
+      id,
       cityId: newCityId,
       title: newTitle.trim(),
       uri: '',
@@ -25,7 +25,7 @@ const Wishlist: React.FC = () => {
       notes: newNote.trim() || undefined,
     });
     if (newNote.trim()) {
-      setWishlistNote(`wish-${Date.now()}`, newNote.trim());
+      setWishlistNote(id, newNote.trim());
     }
     setNewTitle('');
     setNewNote('');

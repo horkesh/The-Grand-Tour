@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useCountdown } from '../hooks/useCountdown';
 import { ITALIAN_CITIES } from '../constants';
+import { getDayOfYear } from '../utils/dateUtils';
 
 const FACTS = [
   { city: 'Fiumicino', fact: 'Fiumicino was once the port city of Ancient Rome, called Portus.' },
@@ -26,12 +27,8 @@ const CountdownDashboard: React.FC = () => {
   const { days, hours, mins } = useCountdown();
   const [factIndex, setFactIndex] = useState(0);
 
-  // Rotate fact daily based on date
   useEffect(() => {
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 864e5,
-    );
-    setFactIndex(dayOfYear % FACTS.length);
+    setFactIndex(getDayOfYear() % FACTS.length);
   }, []);
 
   const fact = FACTS[factIndex];

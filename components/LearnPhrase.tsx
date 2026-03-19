@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getDayOfYear } from '../utils/dateUtils';
 
 interface Phrase {
   italian: string;
@@ -35,23 +36,13 @@ const PHRASES: Phrase[] = [
   { italian: 'Buon anniversario', english: 'Happy anniversary', pronunciation: 'bwon ahn-nee-vehr-SAH-ree-oh', category: 'Romance' },
 ];
 
+const CATEGORIES = [...new Set(PHRASES.map((p) => p.category))];
+
 const LearnPhrase: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const dailyIndex = useMemo(() => getDayOfYear() % PHRASES.length, []);
+  const [currentIndex, setCurrentIndex] = useState(() => getDayOfYear() % PHRASES.length);
   const [revealed, setRevealed] = useState(false);
   const [learned, setLearned] = useState<Set<number>>(new Set());
-
-  // Get today's phrase based on day-of-year for the daily rotation
-  const dailyIndex = useMemo(() => {
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 864e5,
-    );
-    return dayOfYear % PHRASES.length;
-  }, []);
-
-  // Start with today's daily phrase
-  useState(() => {
-    setCurrentIndex(dailyIndex);
-  });
 
   const phrase = PHRASES[currentIndex];
 
@@ -73,8 +64,6 @@ const LearnPhrase: React.FC = () => {
       return next;
     });
   };
-
-  const categories = [...new Set(PHRASES.map((p) => p.category))];
 
   return (
     <motion.div
@@ -192,7 +181,7 @@ const LearnPhrase: React.FC = () => {
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             All Phrases
           </h3>
-          {categories.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <div key={cat}>
               <p className="text-xs font-bold text-[#194f4c] dark:text-emerald-400 mb-2">{cat}</p>
               <div className="flex flex-wrap gap-2">

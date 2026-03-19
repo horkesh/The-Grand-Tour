@@ -17,6 +17,7 @@ const JourneyReplay: React.FC<JourneyReplayProps> = ({ open, onClose }) => {
   const [currentDay, setCurrentDay] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const layerGroupRef = useRef<any>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -36,6 +37,7 @@ const JourneyReplay: React.FC<JourneyReplayProps> = ({ open, onClose }) => {
         maxZoom: 19,
       }).addTo(map);
 
+      layerGroupRef.current = L.layerGroup().addTo(map);
       mapInstance.current = map;
     }, 100);
 
@@ -53,7 +55,8 @@ const JourneyReplay: React.FC<JourneyReplayProps> = ({ open, onClose }) => {
     if (!mapInstance.current || isPlaying) return;
     setIsPlaying(true);
 
-    const allCoords = ITALIAN_CITIES.map((c) => [c.center.lat, c.center.lng] as [number, number]);
+    // Clear previous markers/polylines
+    if (layerGroupRef.current) layerGroupRef.current.clearLayers();
 
     for (let i = 0; i < ITALIAN_CITIES.length; i++) {
       const city = ITALIAN_CITIES[i];
@@ -89,7 +92,7 @@ const JourneyReplay: React.FC<JourneyReplayProps> = ({ open, onClose }) => {
         iconAnchor: [20, 20],
       });
 
-      L.marker([city.center.lat, city.center.lng], { icon }).addTo(mapInstance.current);
+      L.marker([city.center.lat, city.center.lng], { icon }).addTo(layerGroupRef.current);
 
       // Draw polyline from previous
       if (i > 0) {
@@ -105,7 +108,7 @@ const JourneyReplay: React.FC<JourneyReplayProps> = ({ open, onClose }) => {
             opacity: 0.7,
             dashArray: isStamped ? undefined : '6 6',
           },
-        ).addTo(mapInstance.current);
+        ).addTo(layerGroupRef.current);
       }
 
       // Dwell at each city

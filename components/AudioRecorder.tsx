@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 
@@ -14,8 +14,25 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ cityId, locationName }) =
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedRef = useRef(0);
+  const playingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const cityAudios = audioPostcards.filter((a) => a.cityId === cityId);
+
+  // Cleanup on unmount: stop recording, clear interval, stop media stream
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stream.getTracks().forEach((t) => t.stop());
+        mediaRecorderRef.current.stop();
+      }
+      if (playingAudioRef.current) {
+        playingAudioRef.current.pause();
+        playingAudioRef.current = null;
+      }
+    };
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -25,15 +42,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ cityId, locationName }) =
       });
 
       chunksRef.current = [];
+      elapsedRef.current = 0;
+
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
+        const duration = elapsedRef.current;
 
-        // Convert to base64
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64 = reader.result as string;
@@ -41,7 +60,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ cityId, locationName }) =
             id: `audio-${Date.now()}`,
             cityId,
             audioData: base64,
-            duration: recordingTime,
+            duration,
             timestamp: Date.now(),
             label: locationName,
           });
@@ -57,12 +76,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ cityId, locationName }) =
       setRecordingTime(0);
 
       timerRef.current = setInterval(() => {
+        elapsedRef.current += 1;
         setRecordingTime((t) => t + 1);
       }, 1000);
     } catch (err) {
       console.error('Microphone access denied:', err);
     }
-  }, [cityId, locationName, recordingTime, addAudioPostcard]);
+  }, [cityId, locationName, addAudioPostcard]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -73,6 +93,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ cityId, locationName }) =
       timerRef.current = null;
     }
     setIsRecording(false);
+  }, []);
+
+  const playClip = useCallback((audioData: string) => {
+    if (playingAudioRef.current) {
+      playingAudioRef.current.pause();
+    }
+    const audio = new Audio(audioData);
+    playingAudioRef.current = audio;
+    audio.play().catch(() => {});
   }, []);
 
   const formatTime = (s: number) =>
@@ -118,10 +147,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ cityId, locationName }) =
             className="flex items-center gap-3 bg-white dark:bg-white/5 rounded-xl p-3 border border-slate-100 dark:border-white/5"
           >
             <button
-              onClick={() => {
-                const audio = new Audio(clip.audioData);
-                audio.play();
-              }}
+              onClick={() => playClip(clip.audioData)}
               className="w-8 h-8 bg-[#194f4c] rounded-full flex items-center justify-center text-white shrink-0"
             >
               <svg className="w-3 h-3 ml-0.5" viewBox="0 0 24 24" fill="currentColor">

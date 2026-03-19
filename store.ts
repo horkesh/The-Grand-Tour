@@ -47,6 +47,7 @@ interface AppState {
   clearChatMessages: () => void;
 
   checklist: ChecklistItem[];
+  setChecklist: (items: ChecklistItem[]) => void;
   toggleChecklistItem: (id: string) => void;
   addChecklistItem: (item: ChecklistItem) => void;
   removeChecklistItem: (id: string) => void;
@@ -131,6 +132,7 @@ export const useStore = create<AppState>()(
       clearChatMessages: () => set({ chatMessages: [] }),
 
       checklist: [],
+      setChecklist: (items) => set({ checklist: items }),
       toggleChecklistItem: (id) =>
         set((state) => ({
           checklist: state.checklist.map((item) =>
