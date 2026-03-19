@@ -1,5 +1,4 @@
 import {
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   onAuthStateChanged,
@@ -50,15 +49,9 @@ export function isKnownPartner(email: string | null): boolean {
 }
 
 export async function signInWithGoogle(): Promise<User | null> {
-  const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-  if (isMobile) {
-    // signInWithRedirect navigates away — result is handled on return via handleRedirectResult
-    await signInWithRedirect(auth, googleProvider);
-    return null; // page will reload
-  } else {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  }
+  // Always use redirect — popup is blocked by COOP headers on many hosts (Vercel, etc.)
+  await signInWithRedirect(auth, googleProvider);
+  return null; // page will reload, onAuthStateChanged handles the rest
 }
 
 export async function handleRedirectResult(): Promise<User | null> {
