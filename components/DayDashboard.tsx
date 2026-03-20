@@ -8,6 +8,7 @@ import { resizeImage } from '../utils/imageResize';
 import ItineraryMapOverlay from './ItineraryMapOverlay';
 import { useToast } from './Toast';
 import AudioRecorder from './AudioRecorder';
+import CarePackageInbox from './CarePackageInbox';
 
 const DayDashboard: React.FC = () => {
   const { cityId } = useParams();
@@ -407,6 +408,9 @@ const DayDashboard: React.FC = () => {
                  </div>
                )}
              </div>
+
+             {/* Care packages from family/friends */}
+             <CarePackageInbox cityId={city.id} />
 
              {/* Parking / ZTL Warning */}
              {city.parking && (

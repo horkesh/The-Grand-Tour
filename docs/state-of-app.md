@@ -27,8 +27,23 @@
 
 4. **Routing (React Router)**
    - HashRouter for broad compatibility
-   - 7 routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`, `/story`
+   - 20+ routes including public routes (`/live`, `/family`, `/family/join`) outside AuthGate
    - AnimatePresence with popLayout for transitions
+   - Public routes bypass AuthGate for spectator/family access
+
+5. **Family & Friends System**
+   - **Live Trip Page** (`/live`) — public read-only map-first page, no auth required
+   - **Family Hub** (`/family`) — inner circle with reactions, guestbook, care packages, puzzle leaderboard
+   - **Family Join** (`/family/join`) — code + nickname entry, validates against Firestore
+   - **Feed System** — auto-publishes stamp/postcard events to `trips/{tripId}/feed/`
+   - **Care Packages** — surprise notes from family targeting specific cities, shown in DayDashboard
+
+6. **Piazza Puzzle (Block Blast)**
+   - Italy-themed block puzzle game at `/gioco`
+   - Daily mode (seeded RNG, same pieces for all players) + free play
+   - Firebase-synced daily scores between partners and family
+   - Unlocks bonus Daily Reveal tiles at 200+ punti
+   - Italian phrase reward after each game
 
 5. **Image Pipeline**
    - `ImageGenerator.tsx` — background queue, 4s spacing, generates images for all cities/stops

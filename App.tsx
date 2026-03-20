@@ -22,6 +22,10 @@ import PhotoChallenges from './components/PhotoChallenges';
 import TriviaChallenge from './components/TriviaChallenge';
 import TripHub from './components/TripHub';
 import TogetherHub from './components/TogetherHub';
+import BlockBlast from './components/BlockBlast';
+import LiveTripPage from './components/LiveTripPage';
+import FamilyHub from './components/FamilyHub';
+import FamilyJoin from './components/FamilyJoin';
 import { useStore } from './store';
 import { ITALIAN_CITIES, Icons } from './constants';
 import { getWeatherForecast } from './services/geminiService';
@@ -118,7 +122,7 @@ const MobileNav = () => {
   const p = location.pathname;
 
   const tripPaths = ['/list', '/countdown', '/reveals', '/phrases', '/flyover', '/chat', '/story'];
-  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist'];
+  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist', '/gioco'];
 
   const isMap = p === '/';
   const isTrip = p === '/trip' || p.startsWith('/day') || tripPaths.some(tp => p === tp);
@@ -185,6 +189,7 @@ const AnimatedRoutes = () => {
         <Route path="/trivia" element={<TriviaChallenge />} />
         <Route path="/trip" element={<TripHub />} />
         <Route path="/together" element={<TogetherHub />} />
+        <Route path="/gioco" element={<BlockBlast />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -192,14 +197,31 @@ const AnimatedRoutes = () => {
   );
 };
 
+const AppContent = () => {
+  const location = useLocation();
+  const isPublic = location.pathname === '/live' || location.pathname.startsWith('/family');
+  if (isPublic) {
+    return (
+      <Routes location={location}>
+        <Route path="/live" element={<LiveTripPage />} />
+        <Route path="/family" element={<FamilyHub />} />
+        <Route path="/family/join" element={<FamilyJoin />} />
+      </Routes>
+    );
+  }
+  return (
+    <AuthGate>
+      <Layout>
+        <AnimatedRoutes />
+      </Layout>
+    </AuthGate>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <Router>
-      <AuthGate>
-        <Layout>
-          <AnimatedRoutes />
-        </Layout>
-      </AuthGate>
+      <AppContent />
     </Router>
   );
 };

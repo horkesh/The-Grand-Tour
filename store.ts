@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard, TripUser, TripMeta } from './types';
+import { ITALIAN_CITIES } from './constants';
 import { setImage as idbSetImage, getAllImages } from './services/imageDB';
 import {
   listenCollection, listenDoc, writeDoc, removeDoc,
@@ -141,6 +142,17 @@ export const useStore = create<AppState>()(
         set((state) => ({ stamps: Array.from(new Set([...state.stamps, cityId])) }));
         const uid = useStore.getState().currentUser?.uid;
         if (uid) syncWrite(`stamps/${cityId}`, { [uid]: Date.now() });
+        // Auto-publish feed item for family/friends
+        const feedId = `stamp-${cityId}-${Date.now()}`;
+        const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+        syncWrite(`feed/${feedId}`, {
+          type: 'stamp',
+          cityId,
+          title: city ? `Arrived in ${city.location}!` : `Stamp collected: ${cityId}`,
+          detail: city?.milestone || '',
+          imageUrl: city?.image || '',
+          timestamp: Date.now(),
+        });
       },
 
       postcards: {},
@@ -153,6 +165,15 @@ export const useStore = create<AppState>()(
         }));
         const updatedPostcards = useStore.getState().postcards;
         syncWrite('postcardIndex', { postcards: updatedPostcards } as unknown as Record<string, unknown>);
+        // Auto-publish feed item for family/friends
+        const feedId = `postcard-${cityId}-${Date.now()}`;
+        const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+        syncWrite(`feed/${feedId}`, {
+          type: 'postcard',
+          cityId,
+          title: `New postcard from ${city?.location || cityId}`,
+          timestamp: Date.now(),
+        });
       },
 
       waypointImages: {},

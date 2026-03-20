@@ -130,6 +130,13 @@ const DailyReveal: React.FC = () => {
     return Math.max(0, Math.min(30, unlocked));
   }, []);
 
+  // Bonus tiles unlocked by Piazza Puzzle scores
+  const puzzleUnlocks = useMemo(() => {
+    try {
+      return new Set<number>(JSON.parse(localStorage.getItem('bb_reveal_unlocks') || '[]'));
+    } catch { return new Set<number>(); }
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -146,14 +153,14 @@ const DailyReveal: React.FC = () => {
             Daily Reveals
           </h2>
           <p className="text-sm text-slate-400 dark:text-slate-500">
-            {unlockedCount}/30 tiles unlocked · A new tile each day before departure
+            {Math.min(30, unlockedCount + puzzleUnlocks.size)}/30 tiles unlocked · A new tile each day before departure
           </p>
         </div>
 
         {/* Grid */}
         <div className="grid grid-cols-5 sm:grid-cols-6 gap-3">
           {REVEAL_TILES.map((tile, i) => {
-            const isUnlocked = i < unlockedCount;
+            const isUnlocked = i < unlockedCount || puzzleUnlocks.has(i);
             return (
               <motion.div
                 key={i}

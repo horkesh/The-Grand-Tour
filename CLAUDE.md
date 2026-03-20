@@ -22,7 +22,7 @@ index.html         HTML shell with CDN imports (Tailwind, Leaflet, fonts), impor
 constants.tsx      8-day itinerary data (TripSegment[]), PlannedStops, SVG Icons
 types.ts           All shared type definitions
 store.ts           Zustand store (theme, POIs, stamps, postcards, images, weather)
-components/        UI components (12 files)
+components/        UI components (38 files)
 hooks/             Custom hooks (3 hooks)
 services/          Gemini AI service
 utils/             Image processing (postcard merging)
@@ -33,7 +33,8 @@ docs/              Planning, architecture, and session ledger
 
 - `index.html` → `index.tsx` → `App.tsx`
 - `App.tsx` renders `<Layout>` wrapping `<AnimatedRoutes>` (React Router)
-- Routes: `/` (map), `/list` (itinerary), `/passport`, `/gallery`, `/chat`, `/day/:cityId`
+- Routes: `/` (map), `/list`, `/passport`, `/gallery`, `/chat`, `/day/:cityId`, `/gioco`, `/live`, `/family`
+- Public routes (`/live`, `/family`, `/family/join`) bypass AuthGate via `AppContent` check
 
 ## Commands
 
@@ -73,6 +74,14 @@ npx tsc --noEmit  # Type check
 - HashRouter for compatibility
 - `AnimatePresence mode="popLayout"` wraps Routes for transitions
 - Mobile bottom nav + desktop sidebar nav
+- Public routes (`/live`, `/family/*`) bypass AuthGate — checked in `AppContent` before rendering
+
+### Family & Friends
+- Public Live Trip Page (`/live`) — read-only Leaflet map + feed, no auth
+- Family Hub (`/family`) — reactions, guestbook, care packages, puzzle leaderboard
+- Family Join (`/family/join`) — validates join code against Firestore, stores familyUid in localStorage
+- Feed system: `store.ts` auto-writes feed items to Firestore on stamp/postcard events
+- Care packages: family sends surprise notes for specific cities, shown in DayDashboard
 
 ### Styling
 - Tailwind CSS via CDN (not Vite plugin) — utility classes throughout

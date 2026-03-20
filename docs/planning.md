@@ -153,4 +153,38 @@ Goal: Transform from a functional tool into a personal anniversary gift. Three s
 - **Files**: New `components/PartnerSync.tsx`, `components/Sidebar.tsx`
 
 ### Phase 6: UI Polish
-- TBD — user-directed polish pass
+- DONE — see project ledger 2026-03-13
+
+### Phase 7: Piazza Puzzle
+
+#### 7.1 Block Blast Game
+- **Status**: DONE
+- **Task**: Italy-themed block puzzle game. 8x8 grid, 27 piece shapes, daily + free modes, seeded RNG, Italian cheers on line clears.
+- **Files**: New `components/BlockBlast.tsx`, `App.tsx`, `components/TogetherHub.tsx`, `constants.tsx`
+
+#### 7.2 Game Integrations
+- **Status**: DONE
+- **Task**: Firebase daily score sync, partner competition, Daily Reveal tile unlock at 200+ punti, Italian phrase reward after each game.
+- **Files**: `components/BlockBlast.tsx`, `components/DailyReveal.tsx`, `components/Toast.tsx`
+
+### Phase 8: Family & Friends Live
+
+#### 8.1 Live Trip Page
+- **Status**: DONE
+- **Task**: Public read-only map-first page. Route polyline, visited/upcoming markers, real-time feed of stamps and postcards.
+- **Files**: New `components/LiveTripPage.tsx`, `App.tsx`
+
+#### 8.2 Family Hub
+- **Status**: DONE
+- **Task**: Inner circle hub with 4 tabs: Feed (reactions), Guestbook, Care Packages, Puzzle leaderboard.
+- **Files**: New `components/FamilyHub.tsx`, `components/FamilyJoin.tsx`
+
+#### 8.3 Care Packages
+- **Status**: DONE
+- **Task**: Family sends surprise notes for specific cities. Shown in DayDashboard with unread glow.
+- **Files**: New `components/CarePackageInbox.tsx`, `components/DayDashboard.tsx`
+
+#### 8.4 Feed System
+- **Status**: DONE
+- **Task**: Auto-publish feed items to Firestore on stamp collection and postcard creation.
+- **Files**: `store.ts`

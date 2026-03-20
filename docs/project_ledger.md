@@ -337,3 +337,46 @@ Full UI/UX audit followed by targeted fixes across the app.
 
 ### What's Next
 - App is feature-complete and polished. Ready for the trip.
+
+---
+
+## 2026-03-20 — Piazza Puzzle + Family & Friends Live
+
+### Context
+Two major features: an Italy-themed Block Blast puzzle game and a family/friends live trip experience.
+
+### What Was Done
+
+#### Piazza Puzzle (Block Blast)
+1. **Game Component** (`components/BlockBlast.tsx`) — 8x8 grid puzzle with 27 piece shapes, 7 Italian-inspired tile colors. Tap-to-select, tap-to-place mechanics. Line clear animations with Italian cheers ("Bravo!", "Magnifico!"). Daily mode (seeded RNG) + free play.
+2. **Firebase Score Sync** — Daily scores written to `trips/{tripId}/puzzle/{date}`, real-time partner score listener with toast notifications.
+3. **Daily Reveal Integration** — Scoring 200+ punti in daily mode unlocks the next locked reveal tile. DailyReveal.tsx checks both date-based and puzzle-earned unlocks.
+4. **Italian Phrase Reward** — Random phrase shown on game-over screen from 12 curated trip phrases.
+5. **Route & Navigation** — `/gioco` route, accessible from TogetherHub. Puzzle icon added to Icons.
+
+#### Family & Friends Live
+1. **Live Trip Page** (`components/LiveTripPage.tsx`) — Public read-only page at `/live`. Map-first Leaflet view with route polyline, city markers (visited/upcoming), and real-time feed. No auth required.
+2. **Family Hub** (`components/FamilyHub.tsx`) — Inner circle hub at `/family` with 4 tabs: Feed (with emoji reactions), Guestbook (messages), Care Packages (surprise notes for specific cities), Puzzle (leaderboard + play).
+3. **Family Join** (`components/FamilyJoin.tsx`) — Join flow at `/family/join`. Enter 6-letter code + nickname + color. Validates code against Firestore (queries `trips` collection). Stores familyUid in localStorage.
+4. **Care Package Inbox** (`components/CarePackageInbox.tsx`) — Embedded in DayDashboard. Shows surprise notes from family for the current city. Expand to read, mark-as-read tracking.
+5. **Feed System** (`store.ts`) — Auto-publishes feed items to Firestore when stamps are collected or postcards created.
+6. **Public Route Architecture** (`App.tsx`) — `/live`, `/family`, `/family/join` routes bypass AuthGate via `AppContent` component that checks pathname before rendering.
+
+### /simplify Findings
+
+**Fixed:**
+1. CarePackageInbox `markRead` was spreading entire pkg into writeDoc — now only writes `readBy` field
+2. FamilyJoin validated join code against localStorage (which doesn't exist on family devices) — now queries Firestore
+3. App.tsx had duplicated `isPublic` check in both `PublicRoutes` and `AppContent` — collapsed into single component
+4. FamilyHub had dead `useEffect` that set reactions to empty object — removed
+5. FamilyHub tripId resolution now checks `bb_family_tripId` (set during join) as primary source
+
+**Reviewed but not changed:**
+- FeedItem interface duplicated in LiveTripPage + FamilyHub — acceptable for 2 files
+- relTime helper duplicated — same reasoning
+- CarePackageInbox filters full collection client-side — trivial for trip scale
+- LiveTripPage visitedIds Set reference triggers marker rebuild — 8 cities, negligible
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success

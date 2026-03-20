@@ -10,6 +10,7 @@ const TogetherHub: React.FC = () => {
   const { currentUser, partnerUser, tripMeta } = useStore();
 
   const cards = [
+    { path: '/gioco', label: 'Piazza Puzzle', subtitle: 'Daily block challenge', icon: <Icons.Puzzle />, color: 'bg-[#ac3d29]' },
     { path: '/preferences', label: 'Our Preferences', subtitle: 'Rate trip categories together', icon: <Icons.Hearts />, color: 'bg-[#ac3d29]' },
     { path: '/prompts', label: 'Daily Prompts', subtitle: 'Answer & reveal together', icon: <Icons.Conversation />, color: 'bg-[#ac3d29]' },
     { path: '/trivia', label: 'Italy Trivia', subtitle: 'Who knows Italy better?', icon: <Icons.Lightbulb />, color: 'bg-[#194f4c]' },
@@ -18,6 +19,8 @@ const TogetherHub: React.FC = () => {
     { path: '/packing', label: 'Packing List', subtitle: 'Claim & track together', icon: <Icons.Backpack />, color: 'bg-slate-700' },
     { path: '/wishlist', label: 'Wishlist', subtitle: 'Vote on places to visit', icon: <Icons.Pin />, color: 'bg-slate-700' },
     { path: '/phrases', label: 'Learn Italian', subtitle: 'Practice phrases', icon: <Icons.Language />, color: 'bg-slate-700' },
+    { path: '/live', label: 'Live Page', subtitle: 'Share trip with anyone', icon: <Icons.Live />, color: 'bg-slate-700' },
+    { path: '/family', label: 'Family Hub', subtitle: 'For invited friends & family', icon: <Icons.Family />, color: 'bg-slate-700' },
   ];
 
   return (
