@@ -380,3 +380,37 @@ Two major features: an Italy-themed Block Blast puzzle game and a family/friends
 ### Verification
 - `npx tsc --noEmit`: 0 errors
 - `npm run build`: success
+
+---
+
+## 2026-03-20 — Piazza Puzzle Rewrite: Drag-and-Drop + Premium Visuals
+
+### Context
+Wife tested the game and found tap-to-select unintuitive (real Block Blast uses drag-and-drop) and visuals too basic. Full rewrite needed.
+
+### What Was Done
+
+1. **Drag-and-Drop** — replaced tap-to-select/tap-to-place with pointer event drag. Touch a piece in the tray, it lifts and follows your finger as a floating overlay, ghost preview appears on the grid at the snapped position, release to place or cancel. Uses `setPointerCapture` for reliable tracking.
+
+2. **Premium Visual Overhaul** — dark gradient background (deep navy/indigo), 3D glossy block tiles with per-color light/base/dark gradient system (`TILE_PALETTES`), `BlockTile` sub-component for reusable rendering, dark glass game board with inner glow, frosted glass score bar, amber accent system, floating +score popups, spring-animated cheers with gold glow, line clear glow effects.
+
+3. **All Integrations Preserved** — Firebase daily score sync, partner score display/toast, Daily Reveal tile unlock at 200+ punti, Italian phrase reward, streak tracking.
+
+### /simplify Findings
+
+**Fixed:**
+1. `setDrag` on every pointer pixel caused hundreds of re-renders/sec — now only re-renders on grid cell boundary changes; floating piece position updated via direct DOM ref mutation
+2. `getBoundingClientRect()` called in render path — replaced with `cellSizeRef` cached via `ResizeObserver`
+3. `canPieceFitAnywhere` called for each piece on every render during drag — memoized into `pieceFits` array keyed on `[grid, pieces]`
+4. `ghostCells` Set recreated every render — wrapped in `useMemo([drag, pieces, grid])`
+5. Score popup timeouts untracked — IDs now stored in `popupTimerRefs`, cleaned up on unmount and reset
+6. Cell size CSS string recreated 64x per render — extracted to module-level `CELL_SIZE_CSS` constant; `dragColorIdx` hoisted outside cell loop
+
+**Reviewed but not changed:**
+- `drag` + `dragRef` duplication — intentional pattern (ref for callbacks, state for render)
+- `doPlace` dependency array — correctly includes all 5 used values
+- `dateKey`/`REWARD_PHRASES` overlap with other files — acceptable for self-contained game component
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success

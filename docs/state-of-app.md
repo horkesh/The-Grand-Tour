@@ -40,6 +40,9 @@
 
 6. **Piazza Puzzle (Block Blast)**
    - Italy-themed block puzzle game at `/gioco`
+   - Drag-and-drop: pointer events with `setPointerCapture`, floating piece follows finger, ghost preview on grid
+   - Performance: DOM ref for floating piece position, `useMemo` for ghost cells and piece fit checks, `ResizeObserver` for cached cell size, re-renders only on grid cell boundary changes during drag
+   - Premium visuals: dark gradient background, 3D glossy tiles with per-color light/base/dark gradients, glow effects, spring-animated cheers, floating score popups
    - Daily mode (seeded RNG, same pieces for all players) + free play
    - Firebase-synced daily scores between partners and family
    - Unlocks bonus Daily Reveal tiles at 200+ punti

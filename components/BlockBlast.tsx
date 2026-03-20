@@ -1,9 +1,11 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { useToast } from './Toast';
 import { writeDoc, listenDoc } from '../services/firestoreSync';
+
+const CELL_SIZE_CSS = `clamp(34px, calc((100vw - 48px) / 8), 50px)`;
 
 // === Constants ===
 
@@ -225,11 +227,23 @@ const BlockBlast: React.FC = () => {
 
   // Refs
   const gridRef = useRef<HTMLDivElement>(null);
+  const floatingRef = useRef<HTMLDivElement>(null);
   const cheerTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const clearTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const popupIdRef = useRef(0);
+  const popupTimerRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const cellSizeRef = useRef(40);
 
-  useEffect(() => () => { clearTimeout(cheerTimerRef.current); clearTimeout(clearTimerRef.current); }, []);
+  // Cache cell size and update on resize
+  useEffect(() => {
+    const update = () => {
+      if (gridRef.current) cellSizeRef.current = gridRef.current.getBoundingClientRect().width / GRID_SIZE;
+    };
+    update();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    if (gridRef.current && ro) ro.observe(gridRef.current);
+    return () => { ro?.disconnect(); clearTimeout(cheerTimerRef.current); clearTimeout(clearTimerRef.current); popupTimerRefs.current.forEach(clearTimeout); };
+  }, []);
 
   // Mode
   const [isDaily, setIsDaily] = useState(true);
@@ -281,6 +295,8 @@ const BlockBlast: React.FC = () => {
   const initGame = useCallback((daily: boolean) => {
     clearTimeout(cheerTimerRef.current);
     clearTimeout(clearTimerRef.current);
+    popupTimerRefs.current.forEach(clearTimeout);
+    popupTimerRefs.current = [];
     const r = daily ? mulberry32(dateSeed()) : mulberry32(Date.now());
     setRng(() => r);
     setPieces(generatePieces(r, 0));
@@ -375,10 +391,11 @@ const BlockBlast: React.FC = () => {
     // Score popup
     if (gridRef.current) {
       const rect = gridRef.current.getBoundingClientRect();
-      const cellSize = rect.width / GRID_SIZE;
+      const cs = rect.width / GRID_SIZE;
       const popId = ++popupIdRef.current;
-      setScorePopups(prev => [...prev, { id: popId, value: earned, x: rect.left + col * cellSize + cellSize, y: rect.top + row * cellSize }]);
-      setTimeout(() => setScorePopups(prev => prev.filter(p => p.id !== popId)), 1000);
+      setScorePopups(prev => [...prev, { id: popId, value: earned, x: rect.left + col * cs + cs, y: rect.top + row * cs }]);
+      const tid = setTimeout(() => setScorePopups(prev => prev.filter(p => p.id !== popId)), 1000);
+      popupTimerRefs.current.push(tid);
     }
 
     setScore((s) => s + earned);
@@ -393,21 +410,24 @@ const BlockBlast: React.FC = () => {
   }, [grid, pieces, combo, rng, nextPieceId]);
 
   // === Drag handlers ===
-  const getCellSize = useCallback(() => {
-    if (!gridRef.current) return 40;
-    return gridRef.current.getBoundingClientRect().width / GRID_SIZE;
-  }, []);
-
   const getGridPos = useCallback((clientX: number, clientY: number, shape: boolean[][]) => {
     if (!gridRef.current) return { row: null as number | null, col: null as number | null };
     const rect = gridRef.current.getBoundingClientRect();
-    const cellSize = rect.width / GRID_SIZE;
-    // Offset so piece centers on finger (shifted up so you can see it)
+    const cs = cellSizeRef.current;
     const shapeRows = shape.length;
     const shapeCols = Math.max(...shape.map(r => r.length));
-    const row = Math.round((clientY - rect.top - cellSize * 2) / cellSize - shapeRows / 2 + 0.5);
-    const col = Math.round((clientX - rect.left) / cellSize - shapeCols / 2 + 0.5);
+    const row = Math.round((clientY - rect.top - cs * 2) / cs - shapeRows / 2 + 0.5);
+    const col = Math.round((clientX - rect.left) / cs - shapeCols / 2 + 0.5);
     return { row, col };
+  }, []);
+
+  // Move floating piece via DOM — no React re-render needed
+  const updateFloatingPos = useCallback((clientX: number, clientY: number) => {
+    if (floatingRef.current) {
+      const offset = cellSizeRef.current * 2.5;
+      floatingRef.current.style.left = `${clientX}px`;
+      floatingRef.current.style.top = `${clientY - offset}px`;
+    }
   }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent, pieceIdx: number) => {
@@ -415,33 +435,31 @@ const BlockBlast: React.FC = () => {
     e.preventDefault();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     const state: DragState = {
-      pieceIdx,
-      startX: e.clientX,
-      startY: e.clientY,
-      currentX: e.clientX,
-      currentY: e.clientY,
-      gridRow: null,
-      gridCol: null,
+      pieceIdx, startX: e.clientX, startY: e.clientY,
+      currentX: e.clientX, currentY: e.clientY, gridRow: null, gridCol: null,
     };
     dragRef.current = state;
     setDrag(state);
-  }, [gameOver]);
+    updateFloatingPos(e.clientX, e.clientY);
+  }, [gameOver, updateFloatingPos]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragRef.current) return;
-    const piece = pieces[dragRef.current.pieceIdx];
+    const d = dragRef.current;
+    if (!d) return;
+    // Always update floating piece position via DOM (no re-render)
+    updateFloatingPos(e.clientX, e.clientY);
+    d.currentX = e.clientX;
+    d.currentY = e.clientY;
+    // Only trigger React re-render when grid cell changes (for ghost preview)
+    const piece = pieces[d.pieceIdx];
     if (!piece) return;
     const { row, col } = getGridPos(e.clientX, e.clientY, piece.shape);
-    const updated: DragState = {
-      ...dragRef.current,
-      currentX: e.clientX,
-      currentY: e.clientY,
-      gridRow: row,
-      gridCol: col,
-    };
-    dragRef.current = updated;
-    setDrag(updated);
-  }, [pieces, getGridPos]);
+    if (row !== d.gridRow || col !== d.gridCol) {
+      d.gridRow = row;
+      d.gridCol = col;
+      setDrag({ ...d });
+    }
+  }, [pieces, getGridPos, updateFloatingPos]);
 
   const handlePointerUp = useCallback(() => {
     const d = dragRef.current;
@@ -454,20 +472,24 @@ const BlockBlast: React.FC = () => {
     setDrag(null);
   }, [pieces, grid, doPlace]);
 
-  // Compute ghost preview
-  const ghostCells = new Set<string>();
-  let ghostValid = false;
-  if (drag) {
-    const piece = pieces[drag.pieceIdx];
-    if (piece && drag.gridRow !== null && drag.gridCol !== null) {
-      ghostValid = canPlace(grid, piece.shape, drag.gridRow, drag.gridCol);
-      for (let r = 0; r < piece.shape.length; r++)
-        for (let c = 0; c < piece.shape[r].length; c++)
-          if (piece.shape[r][c]) ghostCells.add(`${drag.gridRow + r}-${drag.gridCol + c}`);
+  // Memoize ghost preview — only recomputes when drag cell or grid changes
+  const { ghostCells, ghostValid } = useMemo(() => {
+    const cells = new Set<string>();
+    let valid = false;
+    if (drag) {
+      const piece = pieces[drag.pieceIdx];
+      if (piece && drag.gridRow !== null && drag.gridCol !== null) {
+        valid = canPlace(grid, piece.shape, drag.gridRow, drag.gridCol);
+        for (let r = 0; r < piece.shape.length; r++)
+          for (let c = 0; c < piece.shape[r].length; c++)
+            if (piece.shape[r][c]) cells.add(`${drag.gridRow + r}-${drag.gridCol + c}`);
+      }
     }
-  }
+    return { ghostCells: cells, ghostValid: valid };
+  }, [drag, pieces, grid]);
 
-  const cellSize = getCellSize();
+  // Memoize which pieces can fit (only changes when grid/pieces change, not during drag)
+  const pieceFits = useMemo(() => pieces.map(p => canPieceFitAnywhere(grid, p)), [grid, pieces]);
 
   return (
     <div
@@ -563,34 +585,34 @@ const BlockBlast: React.FC = () => {
             className="grid"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, gap: 2 }}
           >
-            {grid.map((row, r) =>
-              row.map((cell, c) => {
-                const key = `${r}-${c}`;
-                const isClearing = clearingCells.has(key);
-                const isGhost = ghostCells.has(key);
-                const dragPiece = drag ? pieces[drag.pieceIdx] : null;
-                const sz = `clamp(34px, calc((100vw - 48px) / ${GRID_SIZE}), 50px)`;
+            {(() => {
+              const dragColorIdx = drag ? pieces[drag.pieceIdx]?.colorIdx ?? 0 : 0;
+              return grid.map((row, r) =>
+                row.map((cell, c) => {
+                  const key = `${r}-${c}`;
+                  const isClearing = clearingCells.has(key);
+                  const isGhost = ghostCells.has(key);
 
-                return (
-                  <div
-                    key={key}
-                    className="relative"
-                    style={{ width: sz, height: sz }}
-                  >
-                    {/* Empty cell background */}
+                  return (
                     <div
-                      className="absolute inset-0 rounded-[4px] transition-colors duration-150"
-                      style={{
-                        background: isGhost
-                          ? ghostValid
-                            ? `${TILE_PALETTES[dragPiece?.colorIdx ?? 0].base}44`
-                            : 'rgba(239,68,68,0.25)'
-                          : 'rgba(255,255,255,0.03)',
-                        border: isGhost && ghostValid
-                          ? `1px solid ${TILE_PALETTES[dragPiece?.colorIdx ?? 0].base}88`
-                          : '1px solid rgba(255,255,255,0.04)',
-                      }}
-                    />
+                      key={key}
+                      className="relative"
+                      style={{ width: CELL_SIZE_CSS, height: CELL_SIZE_CSS }}
+                    >
+                      {/* Empty cell background */}
+                      <div
+                        className="absolute inset-0 rounded-[4px] transition-colors duration-150"
+                        style={{
+                          background: isGhost
+                            ? ghostValid
+                              ? `${TILE_PALETTES[dragColorIdx].base}44`
+                              : 'rgba(239,68,68,0.25)'
+                            : 'rgba(255,255,255,0.03)',
+                          border: isGhost && ghostValid
+                            ? `1px solid ${TILE_PALETTES[dragColorIdx].base}88`
+                            : '1px solid rgba(255,255,255,0.04)',
+                        }}
+                      />
                     {/* Filled cell */}
                     {cell !== null && (
                       <motion.div
@@ -620,7 +642,7 @@ const BlockBlast: React.FC = () => {
                   </div>
                 );
               })
-            )}
+            );})()}
           </div>
         </div>
 
@@ -632,14 +654,13 @@ const BlockBlast: React.FC = () => {
               const cols = Math.max(...piece.shape.map((r) => r.length));
               const miniSize = Math.min(12, Math.floor(48 / Math.max(rows, cols)));
               const isDragging = drag?.pieceIdx === idx;
-              const fitsAnywhere = canPieceFitAnywhere(grid, piece);
 
               return (
                 <div
                   key={piece.id}
                   onPointerDown={(e) => handlePointerDown(e, idx)}
                   className={`p-3 rounded-xl cursor-grab active:cursor-grabbing transition-all ${
-                    isDragging ? 'opacity-30 scale-90' : fitsAnywhere ? 'opacity-100' : 'opacity-20'
+                    isDragging ? 'opacity-30 scale-90' : pieceFits[idx] ? 'opacity-100' : 'opacity-20'
                   }`}
                   style={{ touchAction: 'none' }}
                 >
@@ -672,34 +693,34 @@ const BlockBlast: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating drag piece */}
-      {drag && pieces[drag.pieceIdx] && (
-        <div
-          className="fixed pointer-events-none z-30"
-          style={{
-            left: drag.currentX,
-            top: drag.currentY - cellSize * 2.5,
-            transform: 'translate(-50%, -50%) scale(1.1)',
-            filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.5))',
-          }}
-        >
+      {/* Floating drag piece — positioned via DOM ref for performance */}
+      {drag && pieces[drag.pieceIdx] && (() => {
+        const dp = pieces[drag.pieceIdx];
+        const cs = cellSizeRef.current;
+        const dpCols = Math.max(...dp.shape.map(r => r.length));
+        return (
           <div
-            className="grid"
+            ref={floatingRef}
+            className="fixed pointer-events-none z-30"
             style={{
-              gridTemplateColumns: `repeat(${Math.max(...pieces[drag.pieceIdx].shape.map(r => r.length))}, ${cellSize - 2}px)`,
-              gap: 2,
+              left: drag.currentX,
+              top: drag.currentY - cs * 2.5,
+              transform: 'translate(-50%, -50%) scale(1.1)',
+              filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.5))',
             }}
           >
-            {pieces[drag.pieceIdx].shape.map((row, r) =>
-              row.map((cell, c) => (
-                <div key={`${r}-${c}`} style={{ width: cellSize - 2, height: cellSize - 2 }}>
-                  {cell && <BlockTile colorIdx={pieces[drag.pieceIdx].colorIdx} size={cellSize - 2} />}
-                </div>
-              ))
-            )}
+            <div className="grid" style={{ gridTemplateColumns: `repeat(${dpCols}, ${cs - 2}px)`, gap: 2 }}>
+              {dp.shape.map((row, r) =>
+                row.map((cell, c) => (
+                  <div key={`${r}-${c}`} style={{ width: cs - 2, height: cs - 2 }}>
+                    {cell && <BlockTile colorIdx={dp.colorIdx} size={cs - 2} />}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Game Over */}
       <AnimatePresence>
