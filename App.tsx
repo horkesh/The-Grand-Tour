@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
@@ -8,12 +8,12 @@ import Passaporto from './components/Passaporto';
 import DayDashboard from './components/DayDashboard';
 import ItineraryList from './components/ItineraryList';
 import Gallery from './components/Gallery';
-import StoryMode from './components/StoryMode';
+const StoryMode = React.lazy(() => import('./components/StoryMode'));
 import CountdownDashboard from './components/CountdownDashboard';
 import DailyReveal from './components/DailyReveal';
 import PackingChecklist from './components/PackingChecklist';
 import LearnPhrase from './components/LearnPhrase';
-import RouteFlyover from './components/RouteFlyover';
+const RouteFlyover = React.lazy(() => import('./components/RouteFlyover'));
 import Wishlist from './components/Wishlist';
 import PreferenceMatch from './components/PreferenceMatch';
 import ConversationStarters from './components/ConversationStarters';
@@ -165,9 +165,16 @@ const MiniCalendarHeader = () => {
   );
 };
 
+const LazyFallback = () => (
+  <div className="absolute inset-0 flex items-center justify-center bg-[#f9f7f4] dark:bg-black">
+    <div className="w-8 h-8 border-2 border-[#194f4c] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
+    <Suspense fallback={<LazyFallback />}>
     <AnimatePresence mode="popLayout">
       <Routes location={location}>
         <Route path="/" element={<OverviewMap />} />
@@ -194,6 +201,7 @@ const AnimatedRoutes = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
+    </Suspense>
   );
 };
 

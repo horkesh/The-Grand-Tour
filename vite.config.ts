@@ -22,6 +22,23 @@ export default defineConfig(({ mode }) => {
         'process.env.FIREBASE_APP_ID': JSON.stringify(env.FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || ''),
         'process.env.MAPBOX_TOKEN': JSON.stringify(env.MAPBOX_TOKEN || process.env.MAPBOX_TOKEN || ''),
       },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks(id) {
+              if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
+              if (id.includes('node_modules/protobufjs') || id.includes('node_modules/@protobufjs') || id.includes('node_modules/long')) return 'firebase';
+              if (id.includes('node_modules/framer-motion') || id.includes('node_modules/@motionone')) return 'framer';
+              if (id.includes('node_modules/@google') || id.includes('node_modules/google-') || id.includes('node_modules/gcp-') || id.includes('node_modules/gaxios')) return 'gemini';
+              if (id.includes('node_modules/react-dom')) return 'react-dom';
+              if (id.includes('node_modules/react') || id.includes('node_modules/react-router')) return 'react';
+              if (id.includes('node_modules/mapbox-gl')) return 'mapbox';
+              if (id.includes('node_modules/html2canvas')) return 'html2canvas';
+              if (id.includes('node_modules/')) return 'vendor';
+            },
+          },
+        },
+      },
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
