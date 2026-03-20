@@ -416,8 +416,12 @@ const BlockBlast: React.FC = () => {
     const cs = cellSizeRef.current;
     const shapeRows = shape.length;
     const shapeCols = Math.max(...shape.map(r => r.length));
-    const row = Math.round((clientY - rect.top - cs * 2) / cs - shapeRows / 2 + 0.5);
-    const col = Math.round((clientX - rect.left) / cs - shapeCols / 2 + 0.5);
+    // Map finger position to grid cell, centering the piece under the finger
+    // The -cs*2 vertical offset keeps the piece visible above the finger
+    const rawRow = (clientY - rect.top - cs * 2) / cs;
+    const rawCol = (clientX - rect.left) / cs;
+    const row = Math.floor(rawRow - (shapeRows - 1) / 2);
+    const col = Math.floor(rawCol - (shapeCols - 1) / 2);
     return { row, col };
   }, []);
 
