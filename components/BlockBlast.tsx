@@ -225,7 +225,7 @@ const BlockBlast: React.FC = () => {
   const { currentUser, partnerUser, tripMeta } = useStore();
   const showToast = useToast();
 
-  // Refs
+  // Refs — gridRef points to the INNER grid (no padding) for accurate cell size
   const gridRef = useRef<HTMLDivElement>(null);
   const floatingRef = useRef<HTMLDivElement>(null);
   const cheerTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -237,7 +237,11 @@ const BlockBlast: React.FC = () => {
   // Cache cell size and update on resize
   useEffect(() => {
     const update = () => {
-      if (gridRef.current) cellSizeRef.current = gridRef.current.getBoundingClientRect().width / GRID_SIZE;
+      if (gridRef.current) {
+        const w = gridRef.current.getBoundingClientRect().width;
+        // Account for 2px gaps between cells: total = 8 cells + 7 gaps of 2px
+        cellSizeRef.current = (w - (GRID_SIZE - 1) * 2) / GRID_SIZE;
+      }
     };
     update();
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
@@ -358,10 +362,13 @@ const BlockBlast: React.FC = () => {
     const piece = pieces[pieceIdx];
     if (!piece || !canPlace(grid, piece.shape, row, col)) return;
 
-    let newGrid = placePiece(grid, piece, row, col);
+    const newGrid = placePiece(grid, piece, row, col);
     let earned = countCells(piece.shape);
     const { rows, cols } = findFullLines(newGrid);
     const totalLines = rows.length + cols.length;
+
+    // Always set the grid immediately so the placed piece is visible
+    setGrid(newGrid);
 
     if (totalLines > 0) {
       const clearing = new Set<string>();
@@ -380,12 +387,12 @@ const BlockBlast: React.FC = () => {
 
       if (navigator.vibrate) navigator.vibrate(totalLines > 1 ? [50, 50, 100] : [50]);
 
+      // Clear lines after animation — compute from newGrid (which is now the current state)
       const clearedGrid = clearLines(newGrid, rows, cols);
       clearTimeout(clearTimerRef.current);
       clearTimerRef.current = setTimeout(() => { setGrid(clearedGrid); setClearingCells(new Set()); }, 350);
     } else {
       setCombo(0);
-      setGrid(newGrid);
     }
 
     // Score popup
@@ -414,12 +421,14 @@ const BlockBlast: React.FC = () => {
     if (!gridRef.current) return { row: null as number | null, col: null as number | null };
     const rect = gridRef.current.getBoundingClientRect();
     const cs = cellSizeRef.current;
+    const gap = 2;
+    const stride = cs + gap; // distance from one cell start to the next
     const shapeRows = shape.length;
     const shapeCols = Math.max(...shape.map(r => r.length));
     // Map finger position to grid cell, centering the piece under the finger
     // The -cs*2 vertical offset keeps the piece visible above the finger
-    const rawRow = (clientY - rect.top - cs * 2) / cs;
-    const rawCol = (clientX - rect.left) / cs;
+    const rawRow = (clientY - rect.top - cs * 2) / stride;
+    const rawCol = (clientX - rect.left) / stride;
     const row = Math.floor(rawRow - (shapeRows - 1) / 2);
     const col = Math.floor(rawCol - (shapeCols - 1) / 2);
     return { row, col };
@@ -435,7 +444,7 @@ const BlockBlast: React.FC = () => {
   }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent, pieceIdx: number) => {
-    if (gameOver) return;
+    if (gameOver || dragRef.current) return; // Block second touch while dragging
     e.preventDefault();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     const state: DragState = {
@@ -577,7 +586,6 @@ const BlockBlast: React.FC = () => {
 
         {/* Grid */}
         <div
-          ref={gridRef}
           className="relative rounded-2xl p-1.5 shrink-0"
           style={{
             background: 'linear-gradient(145deg, #0a0e1a, #151b30)',
@@ -586,6 +594,7 @@ const BlockBlast: React.FC = () => {
           }}
         >
           <div
+            ref={gridRef}
             className="grid"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, gap: 2 }}
           >
@@ -750,7 +759,7 @@ const BlockBlast: React.FC = () => {
               >{score}</motion.h2>
               <p className="text-sm text-white/40 mb-3">punti</p>
 
-              {score >= bestScore && score > 0 && (
+              {score > bestScore && score > 0 && (
                 <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-sm font-bold text-amber-400 mb-2">
                   Nuovo record!
                 </motion.p>
