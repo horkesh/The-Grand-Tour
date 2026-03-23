@@ -414,3 +414,46 @@ Wife tested the game and found tap-to-select unintuitive (real Block Blast uses 
 ### Verification
 - `npx tsc --noEmit`: 0 errors
 - `npm run build`: success
+
+---
+
+## 2026-03-20 — Piazza Puzzle Edge-Case Fixes
+
+### Context
+Two rounds of bug fixes after real-device testing revealed game-breaking issues.
+
+### Fixes Applied
+
+**Round 1 — Grid Edge Placement** (`ad2016c`)
+1. `getGridPos` used `Math.round` with asymmetric offset (`- shapeCols/2 + 0.5`) creating a left-biased dead zone. Wide pieces (e.g., 1x5) couldn't reach rightmost columns. Fixed with `Math.floor` and symmetric centering `(shapeCols - 1) / 2`.
+
+**Round 2 — Five Game-Breaking Edge Cases** (`54438a8`)
+1. **Invisible placed piece during clear** — grid state jumped from pre-placement to post-clear, skipping the placed state. Now `setGrid(newGrid)` fires immediately so the piece is visible, then `clearedGrid` replaces it after 350ms animation.
+2. **Second piece erased by clear timeout** — clear timeout overwrote grid with stale snapshot from before second placement. Fixed by immediate grid update on every placement.
+3. **Multi-touch drag corruption** — second finger started new drag overwriting `dragRef`. Added guard: `handlePointerDown` returns early if `dragRef.current` is set.
+4. **Grid cell size miscalculation** — `gridRef` pointed to padded outer container and ignored 2px gaps. Moved ref to inner grid div, accounted for gaps in both `cellSize` computation and `getGridPos` stride.
+5. **False "Nuovo record" badge** — displayed on tied scores (`>=`) but save used strict `>`. Aligned display condition to `>`.
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success
+
+---
+
+## 2026-03-24 — Piazza Puzzle iPhone 16 Pro Viewport Fix
+
+### Context
+Wife reported the game doesn't render completely on iPhone 16 Pro — the piece tray (bottom block) is cut off.
+
+### Root Cause
+`CELL_SIZE_CSS` only constrained cell size by viewport **width**: `clamp(34px, calc((100vw - 48px) / 8), 50px)`. The outer container uses `overflow-hidden` and all children are `shrink-0`. On iPhone 16 Pro with Safari chrome + safe areas + app bottom nav, total content height exceeds available viewport height, clipping the piece tray.
+
+### Fix Applied
+Changed `CELL_SIZE_CSS` to constrain by both width and height using CSS `min()`:
+```
+clamp(34px, min(calc((100vw - 48px) / 8), calc((100dvh - 310px) / 8)), 50px)
+```
+The 310px accounts for header (~44px), score bar (~65px), piece tray (~90px), padding/gaps (~45px), bottom nav (~34px), and safe areas (~32px). Uses `dvh` (dynamic viewport height) to handle Safari's collapsing address bar.
+
+### Verification
+- `npx tsc --noEmit`: 0 errors

@@ -5,7 +5,7 @@ import { useStore } from '../store';
 import { useToast } from './Toast';
 import { writeDoc, listenDoc } from '../services/firestoreSync';
 
-const CELL_SIZE_CSS = `clamp(34px, calc((100vw - 48px) / 8), 50px)`;
+const CELL_SIZE_CSS = `clamp(34px, min(calc((100vw - 48px) / 8), calc((100dvh - 310px) / 8)), 50px)`;
 
 // === Constants ===
 
