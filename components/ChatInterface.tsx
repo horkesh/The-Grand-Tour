@@ -1,19 +1,22 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChatMessage, SavedPOI } from '../types';
 import { enrichTripPlan } from '../services/geminiService';
 import { fetchPlacePhoto } from '../services/placesService';
 import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
+import { buildSystemInstruction, buildConversationHistory, buildSuggestedPrompts } from '../services/conciergeContext';
 import GroundingResult from './GroundingResult';
 import { useToast } from './Toast';
 import UserAvatar from './UserAvatar';
 
 const ChatInterface: React.FC = () => {
-  const { userLocation, savedPOIs, addSavedPOI, updateSavedPOIPhoto, chatMessages, addChatMessage, clearChatMessages, currentUser, partnerUser } = useStore();
+  const { userLocation, savedPOIs, weatherData, addSavedPOI, updateSavedPOIPhoto, chatMessages, addChatMessage, clearChatMessages, currentUser, partnerUser } = useStore();
   const showToast = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const suggestedPrompts = useMemo(() => buildSuggestedPrompts(), []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,7 +41,15 @@ const ChatInterface: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const result = await enrichTripPlan(text, userLocation);
+      const systemInstruction = buildSystemInstruction({
+        userLocation,
+        weatherData,
+        savedPOIs,
+        userName: currentUser?.displayName?.split(' ')[0],
+        partnerName: partnerUser?.displayName?.split(' ')[0],
+      });
+      const history = buildConversationHistory(chatMessages);
+      const result = await enrichTripPlan(text, { userLocation, systemInstruction, history });
       const assistantMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -107,16 +118,30 @@ const ChatInterface: React.FC = () => {
       )}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar" ref={scrollRef}>
         {chatMessages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 space-y-4">
-            <div className="bg-slate-200 dark:bg-white/5 p-6 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <div className="flex flex-col items-center justify-center h-full px-2 py-6 space-y-5">
+            <div className="bg-[#194f4c]/10 dark:bg-emerald-900/20 p-5 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#194f4c] dark:text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <p className="text-center max-w-xs text-sm font-medium">
-              Ask about restaurants, hidden gems, or navigation details for your trip to Italy.
-            </p>
+            <div className="text-center space-y-1">
+              <h3 className="font-serif text-xl font-bold text-[#194f4c] dark:text-white">Your Italian concierge</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                I know your itinerary, where you are, and the weather. Ask me anything.
+              </p>
+            </div>
+            <div className="w-full max-w-sm space-y-2">
+              {suggestedPrompts.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => handleSend(q)}
+                  className="w-full text-left text-sm px-4 py-3 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-[#194f4c] dark:hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

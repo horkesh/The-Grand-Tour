@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { Location, WeatherInfo } from "../types";
+import { Location, WeatherInfo, ChatMessage } from "../types";
 
 const NON_RETRYABLE_STATUS = [400, 401, 403, 404];
 let isGlobalCooling = false;
@@ -38,17 +38,34 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Pr
   }
 }
 
-export const enrichTripPlan = async (prompt: string, userLocation?: Location) => {
+export interface ConciergeOptions {
+  userLocation?: Location;
+  systemInstruction?: string;
+  history?: ChatMessage[];
+}
+
+export const enrichTripPlan = async (prompt: string, options: ConciergeOptions = {}) => {
   return withRetry(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    // Multi-turn contents: prior history + current user prompt
+    const contents = [
+      ...(options.history || []).map((m) => ({
+        role: (m.role === 'user' ? 'user' : 'model') as 'user' | 'model',
+        parts: [{ text: m.content }],
+      })),
+      { role: 'user' as const, parts: [{ text: prompt }] },
+    ];
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: prompt,
+      contents,
       config: {
+        ...(options.systemInstruction ? { systemInstruction: options.systemInstruction } : {}),
         tools: [{ googleMaps: {} }, { googleSearch: {} }],
         toolConfig: {
-          retrievalConfig: userLocation ? {
-            latLng: { latitude: userLocation.lat, longitude: userLocation.lng }
+          retrievalConfig: options.userLocation ? {
+            latLng: { latitude: options.userLocation.lat, longitude: options.userLocation.lng }
           } : undefined
         }
       },
