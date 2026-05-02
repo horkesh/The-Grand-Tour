@@ -33,19 +33,34 @@ const REACTIONS = ['❤️','😍','🤌','😂','🙌','😢'];
 export default function FamilyHub() {
   const navigate = useNavigate();
 
-  const familyUid  = localStorage.getItem('bb_family_uid')  || '';
-  const familyName = localStorage.getItem('bb_family_name') || 'Guest';
-
-  const tripId = (() => {
-    const familyTripId = localStorage.getItem('bb_family_tripId');
-    if (familyTripId) return familyTripId;
+  // Authenticated trip owner (Haris/Maja) viewing as themselves — read off the
+  // persisted Zustand snapshot directly so we don't need the auth provider here.
+  const ownerInfo = (() => {
     try {
       const stored = JSON.parse(localStorage.getItem('grand-tour-storage') || '{}');
-      return stored?.state?.tripMeta?.id || '';
-    } catch { return ''; }
+      const u = stored?.state?.currentUser;
+      const t = stored?.state?.tripMeta;
+      if (u?.uid && t?.id) return { uid: u.uid as string, name: (u.displayName as string) || 'Trip', tripId: t.id as string };
+    } catch { /* ignore */ }
+    return null;
   })();
+  const isOwner = !!ownerInfo;
 
-  useEffect(() => { if (!familyUid) navigate('/family/join', { replace: true }); }, [familyUid, navigate]);
+  const storedFamilyUid  = localStorage.getItem('bb_family_uid')  || '';
+  const storedFamilyName = localStorage.getItem('bb_family_name') || 'Guest';
+
+  // Owners use their authenticated identity; guests use the family-join one.
+  const familyUid  = isOwner ? ownerInfo!.uid  : storedFamilyUid;
+  const familyName = isOwner ? ownerInfo!.name : storedFamilyName;
+
+  const tripId = ownerInfo?.tripId
+    || localStorage.getItem('bb_family_tripId')
+    || '';
+
+  // Only redirect guests to the join screen — owners drop straight in.
+  useEffect(() => {
+    if (!isOwner && !storedFamilyUid) navigate('/family/join', { replace: true });
+  }, [isOwner, storedFamilyUid, navigate]);
 
   // Ensure family visitors have a Firebase auth identity for Firestore reads/writes
   const [authReady, setAuthReady] = useState(false);
@@ -141,11 +156,25 @@ export default function FamilyHub() {
     type === 'stamp' ? '🏛️' : type === 'postcard' ? '📮' : type === 'voice' ? '🎙️' : '✈️';
 
   return (
-    <div className="min-h-screen bg-[#f9f7f4] dark:bg-gray-950 pb-20">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 pb-20">
       {/* Header */}
       <div className="bg-[#194f4c] px-4 pt-10 pb-4">
+        {isOwner && (
+          <button
+            onClick={() => navigate('/together')}
+            className="mb-3 inline-flex items-center gap-1 text-teal-200 hover:text-white text-xs font-bold uppercase tracking-wider"
+          >
+            <span aria-hidden>←</span> Back to your trip
+          </button>
+        )}
         <h1 className="text-white font-serif text-xl font-bold">The Grand Tour</h1>
-        <p className="text-teal-200 text-sm">Following along as <span className="font-semibold text-white">{familyName}</span></p>
+        <p className="text-teal-200 text-sm">
+          {isOwner ? (
+            <>Previewing what family sees — as <span className="font-semibold text-white">{familyName}</span></>
+          ) : (
+            <>Following along as <span className="font-semibold text-white">{familyName}</span></>
+          )}
+        </p>
       </div>
 
       {/* Tabs */}

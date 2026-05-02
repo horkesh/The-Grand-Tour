@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
@@ -68,6 +69,7 @@ function typeLabel(type: FeedItem['type']): string {
 }
 
 const LiveTripPage: React.FC = () => {
+  const navigate = useNavigate();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const liveMarkerRef = useRef<any>(null);
@@ -84,14 +86,16 @@ const LiveTripPage: React.FC = () => {
     });
   }, []);
 
-  // Resolve tripId from localStorage (same key as Zustand persist)
-  const tripId = React.useMemo(() => {
+  // Resolve tripId + owner status from the persisted Zustand snapshot
+  const { tripId, isOwner } = React.useMemo(() => {
     try {
       const raw = localStorage.getItem('grand-tour-storage');
       const parsed = JSON.parse(raw || '{}');
-      return parsed?.state?.tripMeta?.id as string | undefined;
+      const id = parsed?.state?.tripMeta?.id as string | undefined;
+      const uid = parsed?.state?.currentUser?.uid as string | undefined;
+      return { tripId: id, isOwner: !!(id && uid) };
     } catch {
-      return undefined;
+      return { tripId: undefined, isOwner: false };
     }
   }, []);
 
@@ -268,6 +272,16 @@ const LiveTripPage: React.FC = () => {
 
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col">
+      {isOwner && (
+        <div className="px-4 pt-3 max-w-xl mx-auto w-full">
+          <button
+            onClick={() => navigate('/together')}
+            className="inline-flex items-center gap-1 text-[#194f4c] dark:text-teal-300 hover:opacity-80 text-xs font-bold uppercase tracking-wider"
+          >
+            <span aria-hidden>←</span> Back to your trip
+          </button>
+        </div>
+      )}
       {/* Header */}
       <header className="px-4 pt-8 pb-4 text-center">
         <motion.h1
