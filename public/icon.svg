@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="gt-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f5d5a"/>
+      <stop offset="1" stop-color="#0f3735"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded-square background with subtle vertical gradient -->
+  <rect width="512" height="512" rx="112" fill="url(#gt-bg)"/>
+
+  <!-- Italic serif "G" — centered, oversized, cream -->
+  <text
+    x="256" y="312"
+    font-family="'Playfair Display', 'Times New Roman', Georgia, serif"
+    font-size="340"
+    font-style="italic"
+    font-weight="700"
+    fill="#f9f7f4"
+    text-anchor="middle"
+  >G</text>
+
+  <!-- Anniversary mark: thin rust rules flanking 'XX' -->
+  <line x1="172" y1="394" x2="218" y2="394" stroke="#ac3d29" stroke-width="2.5"/>
+  <line x1="294" y1="394" x2="340" y2="394" stroke="#ac3d29" stroke-width="2.5"/>
+  <text
+    x="256" y="404"
+    font-family="'Playfair Display', 'Times New Roman', Georgia, serif"
+    font-size="36"
+    font-style="italic"
+    font-weight="500"
+    fill="#ac3d29"
+    text-anchor="middle"
+    letter-spacing="6"
+  >XX</text>
+</svg>
