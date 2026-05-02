@@ -85,6 +85,9 @@ interface AppState {
   wishlistNotes: Record<string, string>;
   setWishlistNote: (poiId: string, note: string) => void;
 
+  learnedPhrases: string[];
+  toggleLearnedPhrase: (id: string) => void;
+
   // Collaborative state
   currentUser: TripUser | null;
   setCurrentUser: (user: TripUser) => void;
@@ -242,6 +245,14 @@ export const useStore = create<AppState>()(
         syncWrite(`wishlistNotes/${poiId}`, { note });
       },
 
+      learnedPhrases: [],
+      toggleLearnedPhrase: (id) =>
+        set((state) => ({
+          learnedPhrases: state.learnedPhrases.includes(id)
+            ? state.learnedPhrases.filter((p) => p !== id)
+            : [...state.learnedPhrases, id],
+        })),
+
       // Collaborative state
       currentUser: null,
       setCurrentUser: (user) => set({ currentUser: user }),
@@ -332,6 +343,7 @@ export const useStore = create<AppState>()(
         checklist: state.checklist,
         audioPostcards: state.audioPostcards,
         wishlistNotes: state.wishlistNotes,
+        learnedPhrases: state.learnedPhrases,
         currentUser: state.currentUser,
         tripMeta: state.tripMeta,
       }),
