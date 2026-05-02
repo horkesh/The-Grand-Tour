@@ -165,6 +165,9 @@
         .user-pulse { position: absolute; top: 0; left: 0; width: 24px; height: 24px; background: rgba(59,130,246,0.25); border-radius: 50%; animation: user-ping 2s ease-out infinite; }
         @keyframes user-ping { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
+        /* Live position pulse on /live page */
+        @keyframes gtour-live-ping { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+
         /* Card Stagger Entrance (single element) */
         .stagger-enter {
             animation: staggerIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;

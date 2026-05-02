@@ -9,7 +9,7 @@ import { useToast } from './Toast';
 const TogetherHub: React.FC = () => {
   const navigate = useNavigate();
   const showToast = useToast();
-  const { currentUser, partnerUser, tripMeta } = useStore();
+  const { currentUser, partnerUser, tripMeta, shareLivePosition, toggleShareLivePosition } = useStore();
   const [shareCopied, setShareCopied] = useState(false);
 
   const familyJoinUrl = tripMeta?.joinCode
@@ -101,6 +101,35 @@ const TogetherHub: React.FC = () => {
             </span>
           </button>
         )}
+
+        {/* Live position toggle */}
+        <div className="mb-6 flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] rounded-2xl px-5 py-3 border border-slate-100 dark:border-white/5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#194f4c]/10 dark:bg-emerald-900/20 flex items-center justify-center text-base shrink-0">
+              📍
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Live position</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                {shareLivePosition ? 'Family sees a pulsing dot of where you are' : 'Paused — your location stays private'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleShareLivePosition}
+            role="switch"
+            aria-checked={shareLivePosition}
+            className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+              shareLivePosition ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-white/10'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                shareLivePosition ? 'translate-x-5' : ''
+              }`}
+            />
+          </button>
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           {cards.map((card, i) => (

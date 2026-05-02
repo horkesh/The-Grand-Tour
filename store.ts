@@ -8,6 +8,9 @@ import {
   teardownSync, isSyncing, setSyncing, isSyncInitialized, markSyncInitialized,
 } from './services/firestoreSync';
 
+// Module-level guard so live-position writes throttle correctly across renders.
+let lastLivePositionWriteAt = 0;
+
 // Helper: get Firestore base path for the current trip
 function tripPath(): string | null {
   const meta = useStore.getState().tripMeta;
@@ -43,6 +46,9 @@ interface AppState {
 
   userLocation?: Location;
   setUserLocation: (loc: Location) => void;
+
+  shareLivePosition: boolean;
+  toggleShareLivePosition: () => void;
 
   savedPOIs: SavedPOI[];
   addSavedPOI: (poi: SavedPOI) => void;
@@ -117,7 +123,25 @@ export const useStore = create<AppState>()(
       setLastViewedDay: (cityId) => set((state) => state.lastViewedDay === cityId ? state : { lastViewedDay: cityId }),
 
       userLocation: undefined,
-      setUserLocation: (loc) => set({ userLocation: loc }),
+      setUserLocation: (loc) => {
+        set({ userLocation: loc });
+        // Stream debounced position to Firestore so /live can show a pulsing pin.
+        // Throttle to once every 30s to spare battery and write quota.
+        const state = useStore.getState();
+        if (!state.shareLivePosition) return;
+        const last = lastLivePositionWriteAt;
+        if (last && Date.now() - last < 30_000) return;
+        lastLivePositionWriteAt = Date.now();
+        syncWrite('livePosition', {
+          lat: loc.lat,
+          lng: loc.lng,
+          heading: loc.heading ?? null,
+          timestamp: loc.timestamp,
+        });
+      },
+
+      shareLivePosition: true,
+      toggleShareLivePosition: () => set((s) => ({ shareLivePosition: !s.shareLivePosition })),
 
       savedPOIs: [],
       addSavedPOI: (poi) => {
@@ -172,10 +196,14 @@ export const useStore = create<AppState>()(
         // Auto-publish feed item for family/friends
         const feedId = `postcard-${cityId}-${Date.now()}`;
         const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+        // Skip oversized data URLs in the feed item to stay under Firestore's
+        // 1 MB doc limit. https URLs are tiny and embed cleanly.
+        const safeImageUrl = url.length < 600_000 ? url : '';
         syncWrite(`feed/${feedId}`, {
           type: 'postcard',
           cityId,
           title: `New postcard from ${city?.location || cityId}`,
+          imageUrl: safeImageUrl,
           timestamp: Date.now(),
         });
       },
@@ -347,6 +375,7 @@ export const useStore = create<AppState>()(
         audioPostcards: state.audioPostcards,
         wishlistNotes: state.wishlistNotes,
         learnedPhrases: state.learnedPhrases,
+        shareLivePosition: state.shareLivePosition,
         currentUser: state.currentUser,
         tripMeta: state.tripMeta,
       }),

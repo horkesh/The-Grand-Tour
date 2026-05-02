@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ITALIAN_CITIES } from '../constants';
-import { listenCollection } from '../services/firestoreSync';
+import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 
 interface FeedItem {
@@ -13,6 +13,32 @@ interface FeedItem {
   imageUrl?: string;
   timestamp: number;
 }
+
+interface LivePosition {
+  lat: number;
+  lng: number;
+  heading?: number | null;
+  timestamp: number;
+}
+
+const TRIP_START = new Date('2026-05-02T00:00:00').getTime();
+const TRIP_TOTAL_DAYS = 8;
+
+function tripDayLabel(now = Date.now()): string {
+  const days = Math.floor((now - TRIP_START) / 86_400_000) + 1;
+  if (days < 1) return 'Pre-departure';
+  if (days > TRIP_TOTAL_DAYS) return 'Trip complete';
+  return `Day ${days} of ${TRIP_TOTAL_DAYS}`;
+}
+
+const StatTile: React.FC<{ value: string; label: string }> = ({ value, label }) => (
+  <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 px-3 py-2.5 text-center shadow-sm">
+    <p className="font-serif text-base sm:text-lg font-bold text-[#194f4c] dark:text-teal-300 leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+      {value}
+    </p>
+    <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-gray-500 mt-0.5">{label}</p>
+  </div>
+);
 
 function relativeTime(ts: number): string {
   const diff = Date.now() - ts;
@@ -40,10 +66,13 @@ function typeLabel(type: FeedItem['type']): string {
 const LiveTripPage: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
+  const liveMarkerRef = useRef<any>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [livePosition, setLivePosition] = useState<LivePosition | null>(null);
   const [currentCityId, setCurrentCityId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   useEffect(() => {
     ensureAnonymousAuth().then(() => setAuthReady(true)).catch((e) => {
@@ -75,6 +104,18 @@ const LiveTripPage: React.FC = () => {
       // Latest stamp determines current city
       const latestStamp = items.find((i) => i.type === 'stamp' || i.type === 'arrival');
       if (latestStamp) setCurrentCityId(latestStamp.cityId);
+    });
+    return () => unsub();
+  }, [tripId, authReady]);
+
+  // Live position listener
+  useEffect(() => {
+    if (!tripId || !authReady) return;
+    const unsub = listenDoc(`trips/${tripId}/livePosition`, (data) => {
+      const pos = data as LivePosition;
+      if (typeof pos?.lat === 'number' && typeof pos?.lng === 'number') {
+        setLivePosition(pos);
+      }
     });
     return () => unsub();
   }, [tripId, authReady]);
@@ -143,6 +184,7 @@ const LiveTripPage: React.FC = () => {
     map.eachLayer((layer: any) => {
       if (layer.options?.icon) map.removeLayer(layer);
     });
+    liveMarkerRef.current = null;
 
     ITALIAN_CITIES.forEach((city) => {
       const visited = visitedIds.has(city.id);
@@ -162,7 +204,55 @@ const LiveTripPage: React.FC = () => {
     });
   }, [visitedIds, currentCityId]);
 
+  // Pulsing live-position marker
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const L = (window as any).L;
+    if (!map || !L || !livePosition) return;
+
+    if (liveMarkerRef.current) {
+      liveMarkerRef.current.setLatLng([livePosition.lat, livePosition.lng]);
+    } else {
+      const icon = L.divIcon({
+        className: '',
+        html: `
+          <div style="position:relative;width:28px;height:28px">
+            <div style="position:absolute;inset:0;border-radius:50%;background:rgba(172,61,41,0.3);animation:gtour-live-ping 1.6s ease-out infinite"></div>
+            <div style="position:absolute;top:8px;left:8px;width:12px;height:12px;border-radius:50%;background:#ac3d29;border:3px solid white;box-shadow:0 1px 6px rgba(0,0,0,0.4)"></div>
+          </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      const marker = L.marker([livePosition.lat, livePosition.lng], { icon, zIndexOffset: 1000 });
+      marker.bindPopup('<strong>Currently here</strong>');
+      marker.addTo(map);
+      liveMarkerRef.current = marker;
+    }
+  }, [livePosition]);
+
   const currentCity = ITALIAN_CITIES.find((c) => c.id === currentCityId);
+
+  const photoFeed = React.useMemo(
+    () => feed.filter((f) => f.type === 'postcard' && !!f.imageUrl),
+    [feed],
+  );
+  const textFeed = React.useMemo(
+    () => feed.filter((f) => !(f.type === 'postcard' && f.imageUrl)),
+    [feed],
+  );
+  const stats = React.useMemo(() => {
+    const stamps = feed.filter((f) => f.type === 'stamp' || f.type === 'arrival').length;
+    const postcards = feed.filter((f) => f.type === 'postcard').length;
+    const cities = new Set(feed.map((f) => f.cityId)).size;
+    return { stamps, postcards, cities };
+  }, [feed]);
+  const liveAgo = livePosition ? relativeTime(livePosition.timestamp) : null;
+
+  // Anniversary-day vibe: May 6, 2026
+  const isAnniversaryDay = React.useMemo(() => {
+    const now = new Date();
+    return now.getFullYear() === 2026 && now.getMonth() === 4 && now.getDate() === 6;
+  }, []);
 
   const shareUrl = window.location.href;
   function handleCopy() {
@@ -205,7 +295,36 @@ const LiveTripPage: React.FC = () => {
             Currently in {currentCity.location}
           </motion.div>
         )}
+        {liveAgo && (
+          <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+            Live position updated {liveAgo}
+          </p>
+        )}
       </header>
+
+      {/* Anniversary banner — only on May 6, 2026 */}
+      {isAnniversaryDay && (
+        <div className="mx-auto max-w-xl w-full px-4 mb-2">
+          <div className="rounded-2xl px-4 py-3 text-center bg-gradient-to-r from-[#ac3d29] via-[#d97757] to-[#ac3d29] text-white shadow-lg">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] opacity-90">
+              Today, May 6
+            </p>
+            <p className="font-serif text-base sm:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+              🥂 Twenty years. Cin cin to Haris &amp; Maja.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Stats banner */}
+      <div className="mx-auto max-w-xl w-full px-4 mb-3">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+          <StatTile value={tripDayLabel().replace(' of 8', '/8')} label="Day" />
+          <StatTile value={String(stats.cities)} label="Cities" />
+          <StatTile value={String(stats.stamps)} label="Stamps" />
+          <StatTile value={String(stats.postcards)} label="Photos" />
+        </div>
+      </div>
 
       {/* Map */}
       <motion.div
@@ -231,6 +350,55 @@ const LiveTripPage: React.FC = () => {
         </span>
       </div>
 
+      {/* Photo wall */}
+      {photoFeed.length > 0 && (
+        <section className="max-w-xl mx-auto w-full px-4 pb-2">
+          <h2
+            className="font-serif text-lg text-[#194f4c] dark:text-teal-300 mt-4 mb-3 border-b border-gray-200 dark:border-gray-700 pb-1"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Photos from the road
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {photoFeed.map((item, i) => {
+              const city = ITALIAN_CITIES.find((c) => c.id === item.cityId);
+              return (
+                <motion.button
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: Math.min(i, 8) * 0.04, duration: 0.3 }}
+                  onClick={() => setLightboxUrl(item.imageUrl!)}
+                  className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 group"
+                >
+                  <img
+                    src={item.imageUrl!}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    <p className="text-[10px] text-white/80 font-medium">{relativeTime(item.timestamp)}</p>
+                    <p className="text-xs text-white font-bold truncate">{city?.location || item.cityId}</p>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <button
+          onClick={() => setLightboxUrl(null)}
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur flex items-center justify-center p-4"
+          aria-label="Close photo"
+        >
+          <img src={lightboxUrl} alt="" className="max-w-full max-h-full object-contain rounded-xl" />
+        </button>
+      )}
+
       {/* Feed */}
       <section className="flex-1 max-w-xl mx-auto w-full px-4 pb-6">
         <h2
@@ -247,7 +415,7 @@ const LiveTripPage: React.FC = () => {
         )}
 
         <div className="space-y-3">
-          {feed.map((item, i) => (
+          {textFeed.map((item, i) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 16 }}
