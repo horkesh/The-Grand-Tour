@@ -5,7 +5,6 @@ import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import LiveMap, { LivePosition } from './LiveMap';
-import FamilyInteractions from './FamilyInteractions';
 
 interface FeedItem {
   id: string;
@@ -379,9 +378,6 @@ const LiveTripPage: React.FC = () => {
           ))}
         </div>
       </section>
-
-      {/* Family interactions: guestbook + care packages, with inline nickname prompt */}
-      {tripId && <FamilyInteractions tripId={tripId} authReady={authReady} />}
 
       {/* Share */}
       <footer className="max-w-xl mx-auto w-full px-4 pb-10">
