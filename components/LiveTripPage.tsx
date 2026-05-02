@@ -5,6 +5,10 @@ import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import LiveMap, { LivePosition } from './LiveMap';
+import ErrorBoundary from './ErrorBoundary';
+
+// Lazy + boundary so any FamilyInteractions hiccup can't blank /live again.
+const FamilyInteractions = React.lazy(() => import('./FamilyInteractions'));
 
 interface FeedItem {
   id: string;
@@ -382,6 +386,22 @@ const LiveTripPage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Family interactions — guestbook, care packages, nickname prompt */}
+      {tripId && (
+        <ErrorBoundary
+          label="FamilyInteractions"
+          fallback={
+            <div className="max-w-xl mx-auto w-full px-4 pb-2 text-center text-xs text-slate-400">
+              Notes panel unavailable.
+            </div>
+          }
+        >
+          <React.Suspense fallback={null}>
+            <FamilyInteractions tripId={tripId} authReady={authReady} />
+          </React.Suspense>
+        </ErrorBoundary>
+      )}
 
       {/* Share */}
       <footer className="max-w-xl mx-auto w-full px-4 pb-10">
