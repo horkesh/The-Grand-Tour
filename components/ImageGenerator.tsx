@@ -15,8 +15,24 @@ interface QueueItem {
   retries?: number;
 }
 
+// Google Places photo URLs are signed and expire. Convert to a base64 data URL
+// so the cached value works forever and offline.
+async function urlToDataUrl(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Image fetch failed (${res.status})`);
+  const blob = await res.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
 const ImageGenerator: React.FC = () => {
-  const { waypointImages, setWaypointImage } = useStore();
+  const waypointImages = useStore((s) => s.waypointImages);
+  const imagesHydrated = useStore((s) => s.imagesHydrated);
+  const setWaypointImage = useStore((s) => s.setWaypointImage);
   const showToast = useToast();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,13 +42,18 @@ const ImageGenerator: React.FC = () => {
   const waypointImagesRef = useRef(waypointImages);
   waypointImagesRef.current = waypointImages;
   const consecutiveFailsRef = useRef(0);
+  const queueBuiltRef = useRef(false);
 
-  // 1. Build the Queue on Mount
+  // 1. Build the Queue once IndexedDB hydration finishes (avoids re-fetching cached items)
   useEffect(() => {
+    if (!imagesHydrated || queueBuiltRef.current) return;
+    queueBuiltRef.current = true;
+
     const newQueue: QueueItem[] = [];
+    const cached = waypointImagesRef.current;
 
     ITALIAN_CITIES.forEach((city) => {
-      if (!waypointImages[city.id]) {
+      if (!cached[city.id]) {
         newQueue.push({
           key: city.id,
           name: city.location + ', Italy',
@@ -43,7 +64,7 @@ const ImageGenerator: React.FC = () => {
 
       city.plannedStops.forEach((stop, idx) => {
         const key = `${city.id}_${idx}`;
-        if (!waypointImages[key]) {
+        if (!cached[key]) {
           newQueue.push({
             key,
             name: stop.title,
@@ -58,8 +79,10 @@ const ImageGenerator: React.FC = () => {
       console.log(`[ImageGenerator] Queuing ${newQueue.length} place photos to fetch.`);
       setQueue(newQueue);
       setTotal(newQueue.length);
+    } else {
+      setDone(true);
     }
-  }, []);
+  }, [imagesHydrated]);
 
   // 2. Process Queue
   useEffect(() => {
@@ -70,9 +93,12 @@ const ImageGenerator: React.FC = () => {
       const item = queue[0];
 
       try {
-        if (!waypointImagesRef.current[item.key]) {
+        const cached = waypointImagesRef.current[item.key];
+        // Treat legacy http(s) URL caches as stale — re-fetch and store as data URL
+        if (!cached || !cached.startsWith('data:')) {
           const photoUrl = await fetchPlacePhoto(item.name, item.lat, item.lng);
-          setWaypointImage(item.key, photoUrl);
+          const dataUrl = await urlToDataUrl(photoUrl);
+          setWaypointImage(item.key, dataUrl);
         }
         consecutiveFailsRef.current = 0;
         setQueue((prev) => prev.slice(1));

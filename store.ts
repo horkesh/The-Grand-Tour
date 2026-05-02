@@ -58,6 +58,7 @@ interface AppState {
 
   // Cache for AI generated images of locations (stored in IndexedDB, not localStorage)
   waypointImages: Record<string, string>;
+  imagesHydrated: boolean;
   setWaypointImage: (key: string, data: string) => void;
   hydrateImages: () => Promise<void>;
 
@@ -180,6 +181,7 @@ export const useStore = create<AppState>()(
       },
 
       waypointImages: {},
+      imagesHydrated: false,
       setWaypointImage: (key, data) => {
         idbSetImage(key, data).catch((e) => console.error('[imageDB] write failed:', e));
         set((state) => ({
@@ -189,9 +191,10 @@ export const useStore = create<AppState>()(
       hydrateImages: async () => {
         try {
           const images = await getAllImages();
-          set({ waypointImages: images });
+          set({ waypointImages: images, imagesHydrated: true });
         } catch (e) {
           console.error('[imageDB] hydrate failed:', e);
+          set({ imagesHydrated: true });
         }
       },
 
