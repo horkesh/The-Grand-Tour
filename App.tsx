@@ -216,7 +216,8 @@ const AppContent = () => {
     return (
       <Routes location={location}>
         <Route path="/live" element={<LiveTripPage />} />
-        <Route path="/family" element={<FamilyHub />} />
+        {/* /family was the old interactive page; it's now folded into /live */}
+        <Route path="/family" element={<Navigate to="/live" replace />} />
         <Route path="/family/join" element={<FamilyJoin />} />
         <Route path="/family/join/:code" element={<FamilyJoin />} />
       </Routes>

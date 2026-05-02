@@ -76,7 +76,7 @@ export default function FamilyJoin() {
       localStorage.setItem('bb_family_name', nickname.trim());
       localStorage.setItem('bb_family_color', color);
       localStorage.setItem('bb_family_tripId', tripId);
-      navigate('/family');
+      navigate('/live');
     } catch (err) {
       const code = (err as { code?: string })?.code || '';
       const msg = (err as Error)?.message || '';
