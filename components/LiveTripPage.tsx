@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, listenDoc } from '../services/firestoreSync';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
-import { db } from '../services/firebase';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import LiveMap, { LivePosition } from './LiveMap';
 import ErrorBoundary from './ErrorBoundary';
@@ -85,10 +83,8 @@ const LiveTripPage: React.FC = () => {
 
   // Resolve tripId + owner status. Owners get their tripId from the persisted
   // Zustand snapshot. Family viewers who joined via /family/join/:code have
-  // bb_family_tripId in localStorage. Anyone else (fresh share link, cleared
-  // browser) starts with nothing and we fall back to a Firestore lookup once
-  // anonymous auth lands — this is a 2-person app, there's only one trip.
-  const initial = React.useMemo(() => {
+  // bb_family_tripId in localStorage — fall back to that.
+  const { tripId, isOwner } = React.useMemo(() => {
     try {
       const raw = localStorage.getItem('grand-tour-storage');
       const parsed = JSON.parse(raw || '{}');
@@ -101,28 +97,6 @@ const LiveTripPage: React.FC = () => {
       return { tripId: localStorage.getItem('bb_family_tripId') || undefined, isOwner: false };
     }
   }, []);
-  const [tripId, setTripId] = useState<string | undefined>(initial.tripId);
-  const isOwner = initial.isOwner;
-
-  // Firestore fallback: any authenticated visitor without a known tripId can
-  // discover the trip from the (single) trips/* collection.
-  useEffect(() => {
-    if (tripId || !authReady) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const snap = await getDocs(query(collection(db, 'trips'), limit(1)));
-        if (!cancelled && !snap.empty) {
-          const id = snap.docs[0].id;
-          setTripId(id);
-          localStorage.setItem('bb_family_tripId', id);
-        }
-      } catch (e) {
-        console.warn('[LiveTripPage] trip lookup failed:', e);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [tripId, authReady]);
 
   // Firestore listener
   useEffect(() => {
