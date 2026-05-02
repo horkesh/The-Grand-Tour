@@ -1,13 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../constants';
 import { useStore } from '../store';
 import UserAvatar from './UserAvatar';
+import { useToast } from './Toast';
 
 const TogetherHub: React.FC = () => {
   const navigate = useNavigate();
+  const showToast = useToast();
   const { currentUser, partnerUser, tripMeta } = useStore();
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const familyJoinUrl = tripMeta?.joinCode
+    ? `${window.location.origin}/#/family/join/${tripMeta.joinCode}`
+    : '';
+
+  const handleShareFamily = async () => {
+    if (!familyJoinUrl) return;
+    const shareData = {
+      title: 'Our Italian Anniversary Trip',
+      text: 'Follow our trip and send us notes from home — tap to join 💌',
+      url: familyJoinUrl,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(familyJoinUrl);
+        setShareCopied(true);
+        showToast('Link copied — paste it anywhere to share', 'success');
+        setTimeout(() => setShareCopied(false), 2200);
+      }
+    } catch {
+      // User cancelled the share sheet — silent
+    }
+  };
 
   const cards = [
     { path: '/gioco', label: 'Piazza Puzzle', subtitle: 'Daily block challenge', icon: <Icons.Puzzle />, color: 'bg-[#ac3d29]' },
@@ -37,7 +65,7 @@ const TogetherHub: React.FC = () => {
         </div>
 
         {/* Partner status card */}
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 mb-6 flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <UserAvatar user={currentUser} size="md" showName />
             <span className="text-slate-300 dark:text-slate-500 font-serif text-lg">&amp;</span>
@@ -52,6 +80,27 @@ const TogetherHub: React.FC = () => {
             </div>
           ) : null}
         </div>
+
+        {/* Share with family */}
+        {familyJoinUrl && (
+          <button
+            onClick={handleShareFamily}
+            className="w-full mb-6 flex items-center justify-between gap-3 bg-gradient-to-br from-[#194f4c] to-[#0f3a37] text-white rounded-2xl px-5 py-4 shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-transform"
+          >
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">
+                💌
+              </div>
+              <div>
+                <p className="text-sm font-bold">Share with Family</p>
+                <p className="text-[11px] text-white/70">One tap — no codes for them to enter</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold bg-white/15 px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0">
+              {shareCopied ? '✓ Copied' : 'Share'}
+            </span>
+          </button>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           {cards.map((card, i) => (

@@ -218,6 +218,7 @@ const AppContent = () => {
         <Route path="/live" element={<LiveTripPage />} />
         <Route path="/family" element={<FamilyHub />} />
         <Route path="/family/join" element={<FamilyJoin />} />
+        <Route path="/family/join/:code" element={<FamilyJoin />} />
       </Routes>
     );
   }

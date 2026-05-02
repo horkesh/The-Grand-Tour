@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { writeDoc } from '../services/firestoreSync';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -18,12 +18,15 @@ const genUid = () => Math.random().toString(36).slice(2, 10) + Math.random().toS
 
 export default function FamilyJoin() {
   const navigate = useNavigate();
+  const { code: codeFromUrl } = useParams<{ code?: string }>();
+  const presetCode = codeFromUrl?.toUpperCase().trim() || '';
 
-  const [code,     setCode]     = useState('');
+  const [code,     setCode]     = useState(presetCode);
   const [nickname, setNickname] = useState('');
   const [color,    setColor]    = useState(PRESET_COLORS[0].hex);
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  const codeIsLocked = presetCode.length >= 4;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,23 +82,25 @@ export default function FamilyJoin() {
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
-          {/* Join code */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-              Join Code
-            </label>
-            <input
-              type="text"
-              maxLength={6}
-              placeholder="e.g. BW6B5R"
-              value={code}
-              onChange={e => setCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
-                         bg-[#f9f7f4] dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                         font-mono text-lg tracking-widest text-center
-                         focus:outline-none focus:ring-2 focus:ring-[#194f4c]"
-            />
-          </div>
+          {/* Join code — hidden when present in URL */}
+          {!codeIsLocked && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                Join Code
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="e.g. BW6B5R"
+                value={code}
+                onChange={e => setCode(e.target.value.toUpperCase())}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
+                           bg-[#f9f7f4] dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                           font-mono text-lg tracking-widest text-center
+                           focus:outline-none focus:ring-2 focus:ring-[#194f4c]"
+              />
+            </div>
+          )}
 
           {/* Nickname */}
           <div>

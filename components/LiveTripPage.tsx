@@ -165,7 +165,7 @@ const LiveTripPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col">
       {/* Header */}
       <header className="px-4 pt-8 pb-4 text-center">
         <motion.h1
