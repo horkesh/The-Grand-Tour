@@ -13,6 +13,7 @@ import CountdownDashboard from './components/CountdownDashboard';
 import DailyReveal from './components/DailyReveal';
 import PackingChecklist from './components/PackingChecklist';
 import LearnPhrase from './components/LearnPhrase';
+const NukeTrip = React.lazy(() => import('./components/NukeTrip'));
 const RouteFlyover = React.lazy(() => import('./components/RouteFlyover'));
 import Wishlist from './components/Wishlist';
 import PreferenceMatch from './components/PreferenceMatch';
@@ -187,6 +188,7 @@ const AnimatedRoutes = () => {
         <Route path="/reveals" element={<DailyReveal />} />
         <Route path="/packing" element={<PackingChecklist />} />
         <Route path="/phrases" element={<LearnPhrase />} />
+        <Route path="/nuke" element={<NukeTrip />} />
         <Route path="/flyover" element={<RouteFlyover />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/preferences" element={<PreferenceMatch />} />
