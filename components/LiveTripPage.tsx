@@ -114,7 +114,7 @@ const LiveTripPage: React.FC = () => {
   // Live position listener
   useEffect(() => {
     if (!tripId || !authReady) return;
-    const unsub = listenDoc(`trips/${tripId}/livePosition`, (data) => {
+    const unsub = listenDoc(`trips/${tripId}/livePosition/current`, (data) => {
       const pos = data as LivePosition;
       if (typeof pos?.lat === 'number' && typeof pos?.lng === 'number') {
         setLivePosition(pos);

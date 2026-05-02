@@ -134,7 +134,8 @@ export const useStore = create<AppState>()(
         const last = lastLivePositionWriteAt;
         if (last && Date.now() - last < 30_000) return;
         lastLivePositionWriteAt = Date.now();
-        syncWrite('livePosition', {
+        // Doc path must have an even number of segments — nest under /current.
+        syncWrite('livePosition/current', {
           lat: loc.lat,
           lng: loc.lng,
           heading: loc.heading ?? null,
