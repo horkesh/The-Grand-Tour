@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, writeDoc } from '../services/firestoreSync';
+import { ensureAnonymousAuth } from '../services/anonymousAuth';
 
 interface FeedItem {
   id: string;
@@ -43,6 +44,14 @@ export default function FamilyHub() {
 
   useEffect(() => { if (!familyUid) navigate('/family/join', { replace: true }); }, [familyUid, navigate]);
 
+  // Ensure family visitors have a Firebase auth identity for Firestore reads/writes
+  const [authReady, setAuthReady] = useState(false);
+  useEffect(() => {
+    ensureAnonymousAuth().then(() => setAuthReady(true)).catch((e) => {
+      console.error('[FamilyHub] anonymous auth failed:', e);
+    });
+  }, []);
+
   const [tab,          setTab]          = useState<Tab>('Feed');
   const [feed,         setFeed]         = useState<FeedItem[]>([]);
   const [reactions,    setReactions]    = useState<Record<string, string>>({});
@@ -56,7 +65,7 @@ export default function FamilyHub() {
 
   // Feed
   useEffect(() => {
-    if (!tripId) return;
+    if (!tripId || !authReady) return;
     return listenCollection(`trips/${tripId}/feed`, (docs) =>
       setFeed(docs.map(d => ({ ...d.data, id: d.id } as FeedItem)).sort((a, b) => b.timestamp - a.timestamp))
     );
@@ -64,23 +73,23 @@ export default function FamilyHub() {
 
   // Guestbook
   useEffect(() => {
-    if (!tripId || tab !== 'Guestbook') return;
+    if (!tripId || !authReady || tab !== 'Guestbook') return;
     return listenCollection(`trips/${tripId}/guestbook`, (docs) =>
       setGuestbook(docs.map(d => ({ ...d.data, id: d.id } as GuestbookEntry)).sort((a, b) => a.timestamp - b.timestamp))
     );
-  }, [tripId, tab]);
+  }, [tripId, tab, authReady]);
 
   // Care packages
   useEffect(() => {
-    if (!tripId || tab !== 'Care Packages') return;
+    if (!tripId || !authReady || tab !== 'Care Packages') return;
     return listenCollection(`trips/${tripId}/carePackages`, (docs) =>
       setPackages(docs.map(d => ({ ...d.data, id: d.id } as CarePackage)).sort((a, b) => b.timestamp - a.timestamp))
     );
-  }, [tripId, tab]);
+  }, [tripId, tab, authReady]);
 
   // Puzzle scores
   useEffect(() => {
-    if (!tripId || tab !== 'Puzzle') return;
+    if (!tripId || !authReady || tab !== 'Puzzle') return;
     return listenCollection(`trips/${tripId}/puzzle`, (docs) => {
       const today = dateKey();
       const todayDoc = docs.find(d => d.id === today);
@@ -89,7 +98,7 @@ export default function FamilyHub() {
       const scores = Object.entries(data).map(([uid, score]) => ({ uid, name: uid.slice(0, 8), score }));
       setPuzzleScores(scores.sort((a, b) => b.score - a.score));
     });
-  }, [tripId, tab]);
+  }, [tripId, tab, authReady]);
 
   const react = useCallback(async (itemId: string, emoji: string) => {
     if (!tripId || !familyUid) return;

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { writeDoc } from '../services/firestoreSync';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { ensureAnonymousAuth } from '../services/anonymousAuth';
 
 const PRESET_COLORS = [
   { name: 'coral',   hex: '#f87171' },
@@ -37,9 +38,26 @@ export default function FamilyJoin() {
 
     setLoading(true);
     try {
-      // Query Firestore for a trip matching this join code
+      // Anonymous Firebase auth — the public family link has no Google sign-in,
+      // but Firestore rules require request.auth != null.
+      try {
+        await ensureAnonymousAuth();
+      } catch (authErr) {
+        const authCode = (authErr as { code?: string })?.code || '';
+        if (authCode === 'auth/admin-restricted-operation' || authCode === 'auth/operation-not-allowed') {
+          setError('Anonymous sign-in is disabled. Ask the trip organiser to enable it in Firebase.');
+        } else {
+          setError(`Sign-in failed: ${authCode || 'unknown'}`);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Query Firestore for a trip matching this join code.
+      // Trip doc shape is { meta: { joinCode, ... } }, so the field path is
+      // 'meta.joinCode' — not 'joinCode'.
       const tripsRef = collection(db, 'trips');
-      const q = query(tripsRef, where('joinCode', '==', code.trim().toUpperCase()));
+      const q = query(tripsRef, where('meta.joinCode', '==', code.trim().toUpperCase()));
       const snap = await getDocs(q);
       if (snap.empty) {
         setError('Invalid join code. Check with the trip organiser.');
@@ -60,7 +78,14 @@ export default function FamilyJoin() {
       localStorage.setItem('bb_family_tripId', tripId);
       navigate('/family');
     } catch (err) {
-      setError('Could not join. Please try again.');
+      const code = (err as { code?: string })?.code || '';
+      const msg = (err as Error)?.message || '';
+      console.error('[FamilyJoin] failed:', code, msg, err);
+      if (code === 'permission-denied') {
+        setError('Permission denied — the trip owner needs to update Firestore rules.');
+      } else {
+        setError(`Could not join (${code || 'unknown error'}). Please try again.`);
+      }
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection } from '../services/firestoreSync';
+import { ensureAnonymousAuth } from '../services/anonymousAuth';
 
 interface FeedItem {
   id: string;
@@ -42,6 +43,13 @@ const LiveTripPage: React.FC = () => {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [currentCityId, setCurrentCityId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    ensureAnonymousAuth().then(() => setAuthReady(true)).catch((e) => {
+      console.error('[LiveTripPage] anonymous auth failed:', e);
+    });
+  }, []);
 
   // Resolve tripId from localStorage (same key as Zustand persist)
   const tripId = React.useMemo(() => {
@@ -56,7 +64,7 @@ const LiveTripPage: React.FC = () => {
 
   // Firestore listener
   useEffect(() => {
-    if (!tripId) return;
+    if (!tripId || !authReady) return;
     const unsub = listenCollection(`trips/${tripId}/feed`, (docs) => {
       const items: FeedItem[] = docs
         .map((d) => ({ id: d.id, ...(d.data as Omit<FeedItem, 'id'>) } as FeedItem))
@@ -69,7 +77,7 @@ const LiveTripPage: React.FC = () => {
       if (latestStamp) setCurrentCityId(latestStamp.cityId);
     });
     return () => unsub();
-  }, [tripId]);
+  }, [tripId, authReady]);
 
   // Derive visited city ids from feed
   const visitedIds = React.useMemo(() => {
