@@ -9,6 +9,8 @@ interface CarePackage {
   senderName: string;
   forCityId: string;
   message: string;
+  audioData?: string | null;
+  audioDuration?: number | null;
   timestamp: number;
   readBy?: string[];
 }
@@ -100,16 +102,28 @@ export default function CarePackageInbox({ cityId }: Props) {
 
               <AnimatePresence>
                 {open && (
-                  <motion.p
+                  <motion.div
                     key="msg"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="mt-2 text-sm text-[#194f4c]/80 dark:text-[#a8d5d1]/80 leading-relaxed overflow-hidden"
+                    className="mt-2 space-y-2 overflow-hidden"
                   >
-                    {pkg.message}
-                  </motion.p>
+                    {pkg.message && (
+                      <p className="text-sm text-[#194f4c]/80 dark:text-[#a8d5d1]/80 leading-relaxed">
+                        {pkg.message}
+                      </p>
+                    )}
+                    {pkg.audioData && (
+                      <audio
+                        src={pkg.audioData}
+                        controls
+                        className="w-full h-9"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                  </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>

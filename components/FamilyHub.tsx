@@ -4,18 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, writeDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
+import VoiceRecorder from './VoiceRecorder';
 
 interface FeedItem {
   id: string;
-  type: 'stamp' | 'postcard' | 'arrival';
+  type: 'stamp' | 'postcard' | 'arrival' | 'voice';
   cityId: string;
   title: string;
   detail?: string;
   imageUrl?: string;
+  audioData?: string;
+  audioDuration?: number;
   timestamp: number;
 }
 interface GuestbookEntry { id: string; authorUid: string; authorName: string; message: string; timestamp: number; }
-interface CarePackage    { id: string; senderUid: string; senderName: string; forCityId: string; message: string; timestamp: number; }
+interface CarePackage    { id: string; senderUid: string; senderName: string; forCityId: string; message: string; audioData?: string | null; audioDuration?: number | null; timestamp: number; }
 interface PuzzleScore    { uid: string; name: string; score: number; }
 
 const genId    = () => Math.random().toString(36).slice(2, 10);
@@ -117,19 +120,25 @@ export default function FamilyHub() {
     setSending(false);
   };
 
-  const sendCarePackage = async () => {
-    if (!cpMessage.trim() || !cpCity || !tripId) return;
+  const sendCarePackage = async (audio?: { dataUrl: string; durationSec: number }) => {
+    if (!cpCity || !tripId) return;
+    if (!audio && !cpMessage.trim()) return;
     setSending(true);
     await writeDoc(`trips/${tripId}/carePackages/${genId()}`, {
-      senderUid: familyUid, senderName: familyName,
-      forCityId: cpCity, message: cpMessage.trim(), timestamp: Date.now(),
+      senderUid: familyUid,
+      senderName: familyName,
+      forCityId: cpCity,
+      message: cpMessage.trim(),
+      audioData: audio?.dataUrl || null,
+      audioDuration: audio?.durationSec || null,
+      timestamp: Date.now(),
     });
     setCpMessage('');
     setSending(false);
   };
 
   const feedTypeIcon = (type: FeedItem['type']) =>
-    type === 'stamp' ? '🏛️' : type === 'postcard' ? '📮' : '✈️';
+    type === 'stamp' ? '🏛️' : type === 'postcard' ? '📮' : type === 'voice' ? '🎙️' : '✈️';
 
   return (
     <div className="min-h-screen bg-[#f9f7f4] dark:bg-gray-950 pb-20">
@@ -168,6 +177,9 @@ export default function FamilyHub() {
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{item.title}</p>
                         {item.detail && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{item.detail}</p>}
+                        {item.audioData && (
+                          <audio src={item.audioData} controls className="w-full h-9 mt-2" />
+                        )}
                         <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{relTime(item.timestamp)}</p>
                       </div>
                     </div>
@@ -243,11 +255,17 @@ export default function FamilyHub() {
                   className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
                              bg-[#f9f7f4] dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100
                              focus:outline-none focus:ring-2 focus:ring-[#194f4c] resize-none" />
-                <button onClick={sendCarePackage} disabled={sending || !cpMessage.trim() || !cpCity}
+                <button onClick={() => sendCarePackage()} disabled={sending || !cpMessage.trim() || !cpCity}
                   className="w-full py-2 rounded-xl bg-[#ac3d29] text-white text-sm font-medium
                              hover:bg-[#8f3320] disabled:opacity-50 transition-colors">
                   Send Care Package 🎁
                 </button>
+                {cpCity && (
+                  <VoiceRecorder
+                    disabled={sending}
+                    onRecorded={(dataUrl, durationSec) => sendCarePackage({ dataUrl, durationSec })}
+                  />
+                )}
               </div>
 
               {packages.length > 0 && (
@@ -261,7 +279,10 @@ export default function FamilyHub() {
                         </span>
                         <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">{relTime(pkg.timestamp)}</span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{pkg.message}</p>
+                      {pkg.message && <p className="text-sm text-gray-700 dark:text-gray-300">{pkg.message}</p>}
+                      {pkg.audioData && (
+                        <audio src={pkg.audioData} controls className="w-full h-9 mt-2" />
+                      )}
                       <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">from {pkg.senderName}</p>
                     </div>
                   ))}

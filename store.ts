@@ -50,6 +50,8 @@ interface AppState {
   shareLivePosition: boolean;
   toggleShareLivePosition: () => void;
 
+  sendVoiceUpdate: (audioDataUrl: string, durationSec: number) => void;
+
   savedPOIs: SavedPOI[];
   addSavedPOI: (poi: SavedPOI) => void;
   removeSavedPOI: (id: string) => void;
@@ -142,6 +144,22 @@ export const useStore = create<AppState>()(
 
       shareLivePosition: true,
       toggleShareLivePosition: () => set((s) => ({ shareLivePosition: !s.shareLivePosition })),
+
+      sendVoiceUpdate: (audioDataUrl, durationSec) => {
+        const state = useStore.getState();
+        const senderName = state.currentUser?.displayName?.split(' ')[0] || 'Traveler';
+        const cityId = state.lastViewedDay || 'live';
+        const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+        const feedId = `voice-${Date.now()}`;
+        syncWrite(`feed/${feedId}`, {
+          type: 'voice',
+          cityId,
+          title: `Voice note from ${senderName}${city ? ` — ${city.location}` : ''}`,
+          audioData: audioDataUrl,
+          audioDuration: durationSec,
+          timestamp: Date.now(),
+        });
+      },
 
       savedPOIs: [],
       addSavedPOI: (poi) => {

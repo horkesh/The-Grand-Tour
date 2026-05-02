@@ -6,11 +6,13 @@ import { ensureAnonymousAuth } from '../services/anonymousAuth';
 
 interface FeedItem {
   id: string;
-  type: 'stamp' | 'postcard' | 'arrival';
+  type: 'stamp' | 'postcard' | 'arrival' | 'voice';
   cityId: string;
   title: string;
   detail?: string;
   imageUrl?: string;
+  audioData?: string;
+  audioDuration?: number;
   timestamp: number;
 }
 
@@ -54,12 +56,14 @@ function relativeTime(ts: number): string {
 function typeIcon(type: FeedItem['type']): string {
   if (type === 'stamp') return '🛂';
   if (type === 'postcard') return '📮';
+  if (type === 'voice') return '🎙️';
   return '✈️';
 }
 
 function typeLabel(type: FeedItem['type']): string {
   if (type === 'stamp') return 'Passport Stamp';
   if (type === 'postcard') return 'Postcard';
+  if (type === 'voice') return 'Voice Note';
   return 'Arrived';
 }
 
@@ -443,6 +447,9 @@ const LiveTripPage: React.FC = () => {
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                       {item.detail}
                     </p>
+                  )}
+                  {item.audioData && (
+                    <audio src={item.audioData} controls className="w-full h-9 mt-2" />
                   )}
                 </div>
               </div>

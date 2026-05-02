@@ -5,12 +5,14 @@ import { Icons } from '../constants';
 import { useStore } from '../store';
 import UserAvatar from './UserAvatar';
 import { useToast } from './Toast';
+import VoiceRecorder from './VoiceRecorder';
 
 const TogetherHub: React.FC = () => {
   const navigate = useNavigate();
   const showToast = useToast();
-  const { currentUser, partnerUser, tripMeta, shareLivePosition, toggleShareLivePosition } = useStore();
+  const { currentUser, partnerUser, tripMeta, shareLivePosition, toggleShareLivePosition, sendVoiceUpdate } = useStore();
   const [shareCopied, setShareCopied] = useState(false);
+  const [showRecorder, setShowRecorder] = useState(false);
 
   const familyJoinUrl = tripMeta?.joinCode
     ? `${window.location.origin}/#/family/join/${tripMeta.joinCode}`
@@ -100,6 +102,47 @@ const TogetherHub: React.FC = () => {
               {shareCopied ? '✓ Copied' : 'Share'}
             </span>
           </button>
+        )}
+
+        {/* Voice update to family */}
+        {tripMeta && (
+          <div className="mb-3 bg-white dark:bg-[#1a1a1a] rounded-2xl px-5 py-4 border border-slate-100 dark:border-white/5">
+            {!showRecorder ? (
+              <button
+                onClick={() => setShowRecorder(true)}
+                className="w-full flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-10 h-10 rounded-xl bg-[#ac3d29]/10 dark:bg-[#ac3d29]/20 flex items-center justify-center text-xl shrink-0">
+                    🎙️
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Voice update for family</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">A quick hello, lands in their feed</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-[#ac3d29]/10 text-[#ac3d29] px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0">
+                  Record
+                </span>
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <VoiceRecorder
+                  onRecorded={(dataUrl, durationSec) => {
+                    sendVoiceUpdate(dataUrl, durationSec);
+                    setShowRecorder(false);
+                    showToast('Voice note sent to family ✓', 'success');
+                  }}
+                />
+                <button
+                  onClick={() => setShowRecorder(false)}
+                  className="w-full text-[11px] text-slate-500 dark:text-slate-400 py-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Live position toggle */}
