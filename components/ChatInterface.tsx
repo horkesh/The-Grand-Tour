@@ -5,6 +5,7 @@ import { fetchPlacePhoto } from '../services/placesService';
 import { useStore } from '../store';
 import { ITALIAN_CITIES } from '../constants';
 import { buildSystemInstruction, buildConversationHistory, buildSuggestedPrompts } from '../services/conciergeContext';
+import { renderMarkdown } from '../utils/renderMarkdown';
 import GroundingResult from './GroundingResult';
 import { useToast } from './Toast';
 import UserAvatar from './UserAvatar';
@@ -166,7 +167,9 @@ const ChatInterface: React.FC = () => {
                     : 'bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-white/10'
                 }`}>
                   <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : 'prose-slate dark:prose-invert'}`}>
-                    <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
+                    </p>
                   </div>
                   {msg.grounding && (
                     <GroundingResult

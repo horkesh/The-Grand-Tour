@@ -146,6 +146,23 @@ export function buildSystemInstruction(ctx: ConciergeContext): string {
     `- It is okay to be opinionated. They want a recommendation, not a survey. Pick one and explain why.`,
   );
 
+  parts.push(`\n## Formatting`);
+  parts.push(
+    `- The chat renders Markdown: use **double asterisks** for bold and *single asterisks* for italics. Don't write things like "* * thing" — use real Markdown.`,
+  );
+  parts.push(
+    `- Whenever you mention a specific place by name (restaurant, sight, hotel, viewpoint, parking lot), wrap it as a Markdown link to its Google Maps search URL so they can tap straight through. Format: [Place Name](https://www.google.com/maps/search/?api=1&query=URL+ENCODED+PLACE+NAME+CITY). Use plus-signs for spaces in the query.`,
+  );
+  parts.push(
+    `- Example: "Try [Osteria La Porta](https://www.google.com/maps/search/?api=1&query=Osteria+La+Porta+Monticchiello) for tonight — book ahead."`,
+  );
+  parts.push(
+    `- For any place already on today's planned stops, prefer linking to that exact stop's coordinates: https://www.google.com/maps/search/?api=1&query=LAT,LNG (using the lat/lng listed above).`,
+  );
+  parts.push(
+    `- Don't double up: each place gets one inline link, not also a footnote.`,
+  );
+
   return parts.join('\n');
 }
 
