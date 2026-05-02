@@ -219,23 +219,7 @@ const AppContent = () => {
         <Route
           path="/live"
           element={
-            <ErrorBoundary
-              label="LiveTripPage"
-              fallback={
-                <div className="h-[100dvh] flex items-center justify-center p-6 text-center bg-[#f9f7f4]">
-                  <div className="max-w-sm">
-                    <p className="font-serif text-xl text-[#194f4c] mb-2">Something tripped up the page</p>
-                    <p className="text-sm text-slate-500 mb-4">Take a screenshot of this and the URL — it'll help us debug. Then tap below to reload.</p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="px-5 py-2 rounded-full bg-[#194f4c] text-white text-sm font-bold"
-                    >
-                      Reload
-                    </button>
-                  </div>
-                </div>
-              }
-            >
+            <ErrorBoundary label="LiveTripPage" showError>
               <LiveTripPage />
             </ErrorBoundary>
           }
