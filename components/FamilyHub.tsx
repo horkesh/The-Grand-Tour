@@ -2,10 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
-import { listenCollection, listenDoc, writeDoc } from '../services/firestoreSync';
+import { listenCollection, writeDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import VoiceRecorder from './VoiceRecorder';
-import LiveMap, { LivePosition } from './LiveMap';
 
 interface FeedItem {
   id: string;
@@ -73,7 +72,6 @@ export default function FamilyHub() {
 
   const [tab,          setTab]          = useState<Tab>('Feed');
   const [feed,         setFeed]         = useState<FeedItem[]>([]);
-  const [livePosition, setLivePosition] = useState<LivePosition | null>(null);
   const [reactions,    setReactions]    = useState<Record<string, string>>({});
   const [guestbook,    setGuestbook]    = useState<GuestbookEntry[]>([]);
   const [gbMessage,    setGbMessage]    = useState('');
@@ -91,28 +89,11 @@ export default function FamilyHub() {
     );
   }, [tripId, authReady]);
 
-  // Live position
-  useEffect(() => {
-    if (!tripId || !authReady) return;
-    return listenDoc(`trips/${tripId}/livePosition`, (data) => {
-      const pos = data as LivePosition;
-      if (typeof pos?.lat === 'number' && typeof pos?.lng === 'number') {
-        setLivePosition(pos);
-      }
-    });
-  }, [tripId, authReady]);
-
-  // Derived map state
-  const visitedIds = React.useMemo(() => {
-    const ids = new Set<string>();
-    feed.forEach((f) => { if (f.type === 'stamp' || f.type === 'arrival') ids.add(f.cityId); });
-    return ids;
-  }, [feed]);
-  const currentCityId = React.useMemo(() => {
+  // Currently-in pill
+  const currentCity = React.useMemo(() => {
     const latest = feed.find((f) => f.type === 'stamp' || f.type === 'arrival');
-    return latest?.cityId ?? null;
+    return latest ? ITALIAN_CITIES.find((c) => c.id === latest.cityId) : undefined;
   }, [feed]);
-  const currentCity = ITALIAN_CITIES.find((c) => c.id === currentCityId);
 
   // Guestbook
   useEffect(() => {
@@ -209,16 +190,6 @@ export default function FamilyHub() {
             Currently in {currentCity.location}
           </div>
         )}
-      </div>
-
-      {/* Live map preview */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
-        <LiveMap
-          visitedIds={visitedIds}
-          currentCityId={currentCityId}
-          livePosition={livePosition}
-          heightStyle={{ height: '45vw', minHeight: 220, maxHeight: 360 }}
-        />
       </div>
 
       {/* Tabs */}
