@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
+import LiveMap, { LivePosition } from './LiveMap';
 
 interface FeedItem {
   id: string;
@@ -14,13 +15,6 @@ interface FeedItem {
   imageUrl?: string;
   audioData?: string;
   audioDuration?: number;
-  timestamp: number;
-}
-
-interface LivePosition {
-  lat: number;
-  lng: number;
-  heading?: number | null;
   timestamp: number;
 }
 
@@ -70,9 +64,6 @@ function typeLabel(type: FeedItem['type']): string {
 
 const LiveTripPage: React.FC = () => {
   const navigate = useNavigate();
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const liveMarkerRef = useRef<any>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [livePosition, setLivePosition] = useState<LivePosition | null>(null);
   const [currentCityId, setCurrentCityId] = useState<string | null>(null);
@@ -137,107 +128,6 @@ const LiveTripPage: React.FC = () => {
     return ids;
   }, [feed]);
 
-  // Build Leaflet map
-  useEffect(() => {
-    if (!mapRef.current) return;
-    const L = (window as any).L;
-    if (!L) return;
-    if (mapInstanceRef.current) return; // already initialised
-
-    const map = L.map(mapRef.current, { zoomControl: false, scrollWheelZoom: false })
-      .setView([42.5, 12.5], 6);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Route polyline
-    const coords = ITALIAN_CITIES.map((c) => [c.center.lat, c.center.lng] as [number, number]);
-    L.polyline(coords, { color: '#194f4c', weight: 3, opacity: 0.7, dashArray: '6 4' }).addTo(map);
-
-    // City markers
-    ITALIAN_CITIES.forEach((city) => {
-      const visited = visitedIds.has(city.id);
-      const isCurrent = city.id === currentCityId;
-      const color = visited ? '#194f4c' : '#9ca3af';
-      const size = isCurrent ? 18 : 12;
-      const border = isCurrent ? `3px solid #ac3d29` : `2px solid white`;
-      const icon = L.divIcon({
-        className: '',
-        html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:${border};box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
-      });
-      const marker = L.marker([city.center.lat, city.center.lng], { icon });
-      marker.bindPopup(`<strong>${city.title}</strong><br><small>${city.location}</small>`);
-      marker.addTo(map);
-    });
-
-    mapInstanceRef.current = map;
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once; markers updated below
-
-  // Update markers when visited set changes (re-render markers layer)
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    const L = (window as any).L;
-    if (!map || !L) return;
-
-    // Remove old markers and re-add with correct colours
-    map.eachLayer((layer: any) => {
-      if (layer.options?.icon) map.removeLayer(layer);
-    });
-    liveMarkerRef.current = null;
-
-    ITALIAN_CITIES.forEach((city) => {
-      const visited = visitedIds.has(city.id);
-      const isCurrent = city.id === currentCityId;
-      const color = visited ? '#194f4c' : '#9ca3af';
-      const size = isCurrent ? 18 : 12;
-      const border = isCurrent ? `3px solid #ac3d29` : `2px solid white`;
-      const icon = L.divIcon({
-        className: '',
-        html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:${border};box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
-      });
-      const marker = L.marker([city.center.lat, city.center.lng], { icon });
-      marker.bindPopup(`<strong>${city.title}</strong><br><small>${city.location}</small>`);
-      marker.addTo(map);
-    });
-  }, [visitedIds, currentCityId]);
-
-  // Pulsing live-position marker
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    const L = (window as any).L;
-    if (!map || !L || !livePosition) return;
-
-    if (liveMarkerRef.current) {
-      liveMarkerRef.current.setLatLng([livePosition.lat, livePosition.lng]);
-    } else {
-      const icon = L.divIcon({
-        className: '',
-        html: `
-          <div style="position:relative;width:28px;height:28px">
-            <div style="position:absolute;inset:0;border-radius:50%;background:rgba(172,61,41,0.3);animation:gtour-live-ping 1.6s ease-out infinite"></div>
-            <div style="position:absolute;top:8px;left:8px;width:12px;height:12px;border-radius:50%;background:#ac3d29;border:3px solid white;box-shadow:0 1px 6px rgba(0,0,0,0.4)"></div>
-          </div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      });
-      const marker = L.marker([livePosition.lat, livePosition.lng], { icon, zIndexOffset: 1000 });
-      marker.bindPopup('<strong>Currently here</strong>');
-      marker.addTo(map);
-      liveMarkerRef.current = marker;
-    }
-  }, [livePosition]);
-
   const currentCity = ITALIAN_CITIES.find((c) => c.id === currentCityId);
 
   const photoFeed = React.useMemo(
@@ -273,7 +163,10 @@ const LiveTripPage: React.FC = () => {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col">
       {isOwner && (
-        <div className="px-4 pt-3 max-w-xl mx-auto w-full">
+        <div
+          className="px-4 max-w-xl mx-auto w-full"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        >
           <button
             onClick={() => navigate('/together')}
             className="inline-flex items-center gap-1 text-[#194f4c] dark:text-teal-300 hover:opacity-80 text-xs font-bold uppercase tracking-wider"
@@ -283,7 +176,10 @@ const LiveTripPage: React.FC = () => {
         </div>
       )}
       {/* Header */}
-      <header className="px-4 pt-8 pb-4 text-center">
+      <header
+        className="px-4 pb-4 text-center"
+        style={{ paddingTop: isOwner ? '24px' : 'calc(env(safe-area-inset-top, 0px) + 24px)' }}
+      >
         <motion.h1
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -349,10 +245,12 @@ const LiveTripPage: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15, duration: 0.6 }}
-        className="w-full"
-        style={{ height: '55vw', minHeight: 260, maxHeight: 480 }}
       >
-        <div ref={mapRef} className="w-full h-full" />
+        <LiveMap
+          visitedIds={visitedIds}
+          currentCityId={currentCityId}
+          livePosition={livePosition}
+        />
       </motion.div>
 
       {/* Legend */}

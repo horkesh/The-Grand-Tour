@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ITALIAN_CITIES } from '../constants';
-import { listenCollection, writeDoc } from '../services/firestoreSync';
+import { listenCollection, listenDoc, writeDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import VoiceRecorder from './VoiceRecorder';
+import LiveMap, { LivePosition } from './LiveMap';
 
 interface FeedItem {
   id: string;
@@ -72,6 +73,7 @@ export default function FamilyHub() {
 
   const [tab,          setTab]          = useState<Tab>('Feed');
   const [feed,         setFeed]         = useState<FeedItem[]>([]);
+  const [livePosition, setLivePosition] = useState<LivePosition | null>(null);
   const [reactions,    setReactions]    = useState<Record<string, string>>({});
   const [guestbook,    setGuestbook]    = useState<GuestbookEntry[]>([]);
   const [gbMessage,    setGbMessage]    = useState('');
@@ -87,7 +89,30 @@ export default function FamilyHub() {
     return listenCollection(`trips/${tripId}/feed`, (docs) =>
       setFeed(docs.map(d => ({ ...d.data, id: d.id } as FeedItem)).sort((a, b) => b.timestamp - a.timestamp))
     );
-  }, [tripId]);
+  }, [tripId, authReady]);
+
+  // Live position
+  useEffect(() => {
+    if (!tripId || !authReady) return;
+    return listenDoc(`trips/${tripId}/livePosition`, (data) => {
+      const pos = data as LivePosition;
+      if (typeof pos?.lat === 'number' && typeof pos?.lng === 'number') {
+        setLivePosition(pos);
+      }
+    });
+  }, [tripId, authReady]);
+
+  // Derived map state
+  const visitedIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    feed.forEach((f) => { if (f.type === 'stamp' || f.type === 'arrival') ids.add(f.cityId); });
+    return ids;
+  }, [feed]);
+  const currentCityId = React.useMemo(() => {
+    const latest = feed.find((f) => f.type === 'stamp' || f.type === 'arrival');
+    return latest?.cityId ?? null;
+  }, [feed]);
+  const currentCity = ITALIAN_CITIES.find((c) => c.id === currentCityId);
 
   // Guestbook
   useEffect(() => {
@@ -158,7 +183,10 @@ export default function FamilyHub() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 pb-20">
       {/* Header */}
-      <div className="bg-[#194f4c] px-4 pt-10 pb-4">
+      <div
+        className="bg-[#194f4c] px-4 pb-4"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+      >
         {isOwner && (
           <button
             onClick={() => navigate('/together')}
@@ -175,6 +203,22 @@ export default function FamilyHub() {
             <>Following along as <span className="font-semibold text-white">{familyName}</span></>
           )}
         </p>
+        {currentCity && (
+          <div className="mt-2 inline-flex items-center gap-1.5 bg-white/15 text-white text-[11px] px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            Currently in {currentCity.location}
+          </div>
+        )}
+      </div>
+
+      {/* Live map preview */}
+      <div className="border-b border-gray-200 dark:border-gray-800">
+        <LiveMap
+          visitedIds={visitedIds}
+          currentCityId={currentCityId}
+          livePosition={livePosition}
+          heightStyle={{ height: '45vw', minHeight: 220, maxHeight: 360 }}
+        />
       </div>
 
       {/* Tabs */}
