@@ -15,18 +15,13 @@ interface QueueItem {
   retries?: number;
 }
 
-// Google Places photo URLs are signed and expire. Convert to a base64 data URL
-// so the cached value works forever and offline.
-async function urlToDataUrl(url: string): Promise<string> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Image fetch failed (${res.status})`);
-  const blob = await res.blob();
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
+// A cached entry is stale if it's missing OR it's a legacy AI-generated PNG
+// data URL from the old Gemini image-gen flow. Real Places photos are stored
+// as https URLs and stay valid; we don't try to convert them to data URLs
+// because the Google CDN doesn't send CORS headers fetch() needs.
+function isStale(cached: string | undefined): boolean {
+  if (!cached) return true;
+  return cached.startsWith('data:');
 }
 
 const ImageGenerator: React.FC = () => {
@@ -53,7 +48,7 @@ const ImageGenerator: React.FC = () => {
     const cached = waypointImagesRef.current;
 
     ITALIAN_CITIES.forEach((city) => {
-      if (!cached[city.id]) {
+      if (isStale(cached[city.id])) {
         newQueue.push({
           key: city.id,
           name: city.location + ', Italy',
@@ -64,7 +59,7 @@ const ImageGenerator: React.FC = () => {
 
       city.plannedStops.forEach((stop, idx) => {
         const key = `${city.id}_${idx}`;
-        if (!cached[key]) {
+        if (isStale(cached[key])) {
           newQueue.push({
             key,
             name: stop.title,
@@ -93,12 +88,9 @@ const ImageGenerator: React.FC = () => {
       const item = queue[0];
 
       try {
-        const cached = waypointImagesRef.current[item.key];
-        // Treat legacy http(s) URL caches as stale — re-fetch and store as data URL
-        if (!cached || !cached.startsWith('data:')) {
+        if (isStale(waypointImagesRef.current[item.key])) {
           const photoUrl = await fetchPlacePhoto(item.name, item.lat, item.lng);
-          const dataUrl = await urlToDataUrl(photoUrl);
-          setWaypointImage(item.key, dataUrl);
+          setWaypointImage(item.key, photoUrl);
         }
         consecutiveFailsRef.current = 0;
         setQueue((prev) => prev.slice(1));
