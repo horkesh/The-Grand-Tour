@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grand-tour-v5';
+const CACHE_NAME = 'grand-tour-v6';
 const OFFLINE_URL = '/offline.html';
 
 // Only cache truly static CDN resources (versioned/immutable)

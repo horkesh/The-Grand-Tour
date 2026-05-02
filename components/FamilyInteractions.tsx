@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, writeDoc } from '../services/firestoreSync';
-import VoiceRecorder from './VoiceRecorder';
+import ErrorBoundary from './ErrorBoundary';
+
+// Lazy so a problem inside MediaRecorder/VoiceRecorder can't crash the whole
+// /live page at module-load time on iOS Safari.
+const VoiceRecorder = React.lazy(() => import('./VoiceRecorder'));
 
 interface GuestbookEntry { id: string; authorUid: string; authorName: string; message: string; timestamp: number }
 interface CarePackage { id: string; senderUid: string; senderName: string; forCityId: string; message: string; audioData?: string | null; audioDuration?: number | null; timestamp: number }
@@ -94,16 +98,24 @@ const FamilyInteractions: React.FC<Props> = ({ tripId, authReady }) => {
 
   useEffect(() => {
     if (!tripId || !authReady) return;
-    return listenCollection(`trips/${tripId}/guestbook`, (docs) =>
-      setGuestbook(docs.map((d) => ({ ...d.data, id: d.id } as GuestbookEntry)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20)),
-    );
+    try {
+      return listenCollection(`trips/${tripId}/guestbook`, (docs) => {
+        try {
+          setGuestbook(docs.map((d) => ({ ...d.data, id: d.id } as GuestbookEntry)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20));
+        } catch (e) { console.warn('[FamilyInteractions] guestbook parse failed:', e); }
+      });
+    } catch (e) { console.warn('[FamilyInteractions] guestbook listen failed:', e); }
   }, [tripId, authReady]);
 
   useEffect(() => {
     if (!tripId || !authReady) return;
-    return listenCollection(`trips/${tripId}/carePackages`, (docs) =>
-      setPackages(docs.map((d) => ({ ...d.data, id: d.id } as CarePackage)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20)),
-    );
+    try {
+      return listenCollection(`trips/${tripId}/carePackages`, (docs) => {
+        try {
+          setPackages(docs.map((d) => ({ ...d.data, id: d.id } as CarePackage)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20));
+        } catch (e) { console.warn('[FamilyInteractions] packages parse failed:', e); }
+      });
+    } catch (e) { console.warn('[FamilyInteractions] packages listen failed:', e); }
   }, [tripId, authReady]);
 
   // ---- Composers ----
@@ -280,10 +292,14 @@ const FamilyInteractions: React.FC<Props> = ({ tripId, authReady }) => {
             Send Care Package 🎁
           </button>
           {cpCity && (
-            <VoiceRecorder
-              disabled={sending}
-              onRecorded={(dataUrl, durationSec) => sendCarePackage({ dataUrl, durationSec })}
-            />
+            <ErrorBoundary label="VoiceRecorder">
+              <Suspense fallback={<p className="text-[11px] text-slate-400 text-center">Loading voice recorder…</p>}>
+                <VoiceRecorder
+                  disabled={sending}
+                  onRecorded={(dataUrl, durationSec) => sendCarePackage({ dataUrl, durationSec })}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
         </div>
 
