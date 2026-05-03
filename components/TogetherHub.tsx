@@ -50,6 +50,7 @@ const TogetherHub: React.FC = () => {
     { path: '/wishlist', label: 'Wishlist', subtitle: 'Vote on places to visit', icon: <Icons.Pin />, color: 'bg-slate-700' },
     { path: '/phrases', label: 'Learn Italian', subtitle: 'Practice phrases', icon: <Icons.Language />, color: 'bg-slate-700' },
     { path: '/live', label: 'Live + Family', subtitle: 'Map, photos, notes from family', icon: <Icons.Live />, color: 'bg-slate-700' },
+    { path: '/photos', label: 'Refresh photos', subtitle: 'Re-fetch place photos / unblock cache', icon: <Icons.Camera />, color: 'bg-slate-500' },
   ];
 
   return (

@@ -1,20 +1,37 @@
 const PLACES_API_BASE = 'https://places.googleapis.com/v1';
-const BLOCKED_KEY = 'gt_places_api_blocked';
+const BLOCKED_KEY = 'gt_places_api_blocked_at'; // stores ms timestamp of last block
+const BLOCKED_TTL_MS = 24 * 60 * 60 * 1000; // auto-expire after 24h so transient blocks self-heal
 
 export function isPlacesApiBlocked(): boolean {
   try {
-    return localStorage.getItem(BLOCKED_KEY) === '1';
+    // Migrate from the old "1" sentinel to a timestamp on first read.
+    const legacy = localStorage.getItem('gt_places_api_blocked');
+    if (legacy === '1') {
+      localStorage.removeItem('gt_places_api_blocked');
+      localStorage.setItem(BLOCKED_KEY, String(Date.now()));
+      return true;
+    }
+    const at = Number(localStorage.getItem(BLOCKED_KEY));
+    if (!at) return false;
+    if (Date.now() - at > BLOCKED_TTL_MS) {
+      localStorage.removeItem(BLOCKED_KEY);
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }
 }
 
 export function clearPlacesApiBlock(): void {
-  try { localStorage.removeItem(BLOCKED_KEY); } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(BLOCKED_KEY);
+    localStorage.removeItem('gt_places_api_blocked');
+  } catch { /* ignore */ }
 }
 
 function markPlacesApiBlocked(): void {
-  try { localStorage.setItem(BLOCKED_KEY, '1'); } catch { /* ignore */ }
+  try { localStorage.setItem(BLOCKED_KEY, String(Date.now())); } catch { /* ignore */ }
 }
 
 export class PlacesApiBlockedError extends Error {
