@@ -15,7 +15,7 @@ interface FeedItemLike {
  *                      key was `${cityIndex}_${stopIndex}` instead of using
  *                      the actual city.id
  */
-function resolveKey(key: string): { city?: typeof ITALIAN_CITIES[number]; stop?: typeof ITALIAN_CITIES[number]['plannedStops'][number] } {
+export function resolveKey(key: string): { city?: typeof ITALIAN_CITIES[number]; stop?: typeof ITALIAN_CITIES[number]['plannedStops'][number] } {
   if (!key) return {};
   // Direct city id match
   const direct = ITALIAN_CITIES.find((c) => c.id === key);

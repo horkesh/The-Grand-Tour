@@ -6,7 +6,7 @@ import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import LiveMap, { LivePosition } from './LiveMap';
 import ErrorBoundary from './ErrorBoundary';
-import { prettifyFeedTitle } from '../utils/feedTitle';
+import { prettifyFeedTitle, resolveKey } from '../utils/feedTitle';
 
 // Lazy + boundary so any FamilyInteractions hiccup can't blank /live again.
 const FamilyInteractions = React.lazy(() => import('./FamilyInteractions'));
@@ -287,7 +287,8 @@ const LiveTripPage: React.FC = () => {
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {photoFeed.map((item, i) => {
-              const city = ITALIAN_CITIES.find((c) => c.id === item.cityId);
+              const { city, stop } = resolveKey(item.cityId);
+              const caption = stop ? `${stop.title}, ${city!.location}` : (city?.location || 'Italy');
               return (
                 <motion.button
                   key={item.id}
@@ -299,13 +300,13 @@ const LiveTripPage: React.FC = () => {
                 >
                   <img
                     src={item.imageUrl!}
-                    alt={item.title}
+                    alt={prettifyFeedTitle(item)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                     <p className="text-[10px] text-white/80 font-medium">{relativeTime(item.timestamp)}</p>
-                    <p className="text-xs text-white font-bold truncate">{city?.location || item.cityId}</p>
+                    <p className="text-xs text-white font-bold truncate">{caption}</p>
                   </div>
                 </motion.button>
               );
