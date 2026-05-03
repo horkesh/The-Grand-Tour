@@ -23,9 +23,7 @@ const TripHub: React.FC = () => {
     { path: '/countdown', label: 'Countdown', subtitle: `${days} days to go`, icon: <Icons.Journal />, color: 'bg-[#194f4c]' },
     { path: '/list', label: 'Full Itinerary', subtitle: '8 days across Italy', icon: <Icons.Route />, color: 'bg-[#194f4c]' },
     { path: `/day/${lastViewedDay}`, label: 'Day Journal', subtitle: 'Your daily diary', icon: <Icons.Journal />, color: 'bg-[#194f4c]' },
-    { path: '/flyover', label: '3D Flyover', subtitle: 'Satellite route preview', icon: <Icons.Plane />, color: 'bg-[#194f4c]' },
     { path: '/reveals', label: 'Daily Reveals', subtitle: 'Unlock daily surprises', icon: <Icons.Calendar />, color: 'bg-slate-700' },
-    { path: '/phrases', label: 'Learn Italian', subtitle: 'Essential phrases', icon: <Icons.Language />, color: 'bg-slate-700' },
     { path: '/chat', label: 'AI Concierge', subtitle: 'Ask anything about Italy', icon: <Icons.Chat />, color: 'bg-[#ac3d29]' },
     { path: '/story', label: 'Our Story', subtitle: 'The journey so far', icon: <Icons.Story />, color: 'bg-[#ac3d29]' },
   ];
