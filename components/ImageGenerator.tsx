@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
 import { fetchPlacePhoto, isPlacesApiBlocked, PlacesApiBlockedError } from '../services/placesService';
-import { useToast } from './Toast';
 
 const MAX_RETRIES = 2;
 const CONSECUTIVE_FAIL_BAIL = 5; // Stop entirely after this many consecutive failures
@@ -28,7 +27,6 @@ const ImageGenerator: React.FC = () => {
   const waypointImages = useStore((s) => s.waypointImages);
   const imagesHydrated = useStore((s) => s.imagesHydrated);
   const setWaypointImage = useStore((s) => s.setWaypointImage);
-  const showToast = useToast();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(0);
@@ -108,21 +106,22 @@ const ImageGenerator: React.FC = () => {
         consecutiveFailsRef.current += 1;
         console.warn(`[ImageGenerator] Failed ${item.key} "${item.name}" (attempt ${(item.retries || 0) + 1}):`, (err as Error).message);
 
-        // Bail immediately on the auth/restriction error. The placesService has
-        // already flipped the localStorage flag, so future loads skip the queue
-        // entirely — user only sees this toast once instead of every app open.
+        // Bail immediately and silently on the auth/restriction error. The
+        // placesService has already flipped the localStorage flag, so future
+        // loads skip the queue entirely — no toast: the user already knows.
+        // They can re-enable from /#/photos once the key is fixed.
         if (err instanceof PlacesApiBlockedError) {
-          console.warn('[ImageGenerator] Places API blocked — disabling queue for future loads.');
-          showToast('Place photos disabled — your Google API key restriction blocks the Places API. Visit /photos to retry after fixing.', 'error');
+          console.warn('[ImageGenerator] Places API blocked — disabling queue silently for future loads.');
           setQueue([]);
           setDone(true);
           return;
         }
 
-        // Bail out entirely if we see too many consecutive failures
+        // Bail out silently after too many consecutive failures of any kind —
+        // also flip the kill switch so we don't keep retrying every load.
         if (consecutiveFailsRef.current >= CONSECUTIVE_FAIL_BAIL) {
-          console.warn(`[ImageGenerator] ${CONSECUTIVE_FAIL_BAIL} consecutive failures — stopping queue.`);
-          showToast('Photo loading paused — check Places API key restrictions.', 'error');
+          console.warn(`[ImageGenerator] ${CONSECUTIVE_FAIL_BAIL} consecutive failures — stopping queue and marking blocked.`);
+          try { localStorage.setItem('gt_places_api_blocked', '1'); } catch { /* ignore */ }
           setQueue([]);
           setDone(true);
           return;
