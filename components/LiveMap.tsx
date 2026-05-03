@@ -49,6 +49,7 @@ const LiveMapInner: React.FC<Props> = ({ visitedIds, currentCityId, livePosition
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const liveMarkerRef = useRef<any>(null);
+  const cityMarkersRef = useRef<any[]>([]); // track city markers separately so we can clear ONLY those
 
   // Initialize once. Wrap Leaflet calls so a failure can't crash the React tree.
   useEffect(() => {
@@ -74,22 +75,25 @@ const LiveMapInner: React.FC<Props> = ({ visitedIds, currentCityId, livePosition
         try { map.remove(); } catch { /* ignore */ }
         mapInstanceRef.current = null;
         liveMarkerRef.current = null;
+        cityMarkersRef.current = [];
       };
     } catch (e) {
       console.warn('[LiveMap] init failed:', e);
     }
   }, []);
 
-  // Re-render city markers when visited / current changes
+  // Re-render city markers when visited / current changes. Only touch the
+  // city markers we tracked — leave the live-position pin alone, otherwise
+  // every feed update wipes it and it never comes back.
   useEffect(() => {
     const map = mapInstanceRef.current;
     const L = (window as any).L;
     if (!map || !L) return;
     try {
-      map.eachLayer((layer: any) => {
-        if (layer.options?.icon) map.removeLayer(layer);
+      cityMarkersRef.current.forEach((m) => {
+        try { map.removeLayer(m); } catch { /* ignore */ }
       });
-      liveMarkerRef.current = null;
+      cityMarkersRef.current = [];
 
       ITALIAN_CITIES.forEach((city) => {
         const visited = visitedIds.has(city.id);
@@ -106,6 +110,7 @@ const LiveMapInner: React.FC<Props> = ({ visitedIds, currentCityId, livePosition
         const marker = L.marker([city.center.lat, city.center.lng], { icon });
         marker.bindPopup(`<strong>${city.title}</strong><br><small>${city.location}</small>`);
         marker.addTo(map);
+        cityMarkersRef.current.push(marker);
       });
     } catch (e) {
       console.warn('[LiveMap] markers failed:', e);

@@ -5,6 +5,7 @@ import { ITALIAN_CITIES } from '../constants';
 import { listenCollection, writeDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import VoiceRecorder from './VoiceRecorder';
+import { prettifyFeedTitle } from '../utils/feedTitle';
 
 interface FeedItem {
   id: string;
@@ -214,12 +215,12 @@ export default function FamilyHub() {
               ? <p className="text-center text-gray-400 dark:text-gray-500 py-12 text-sm">No updates yet — check back soon!</p>
               : feed.map(item => (
                 <div key={item.id} className="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
-                  {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="w-full h-40 object-cover" />}
+                  {item.imageUrl && <img src={item.imageUrl} alt={prettifyFeedTitle(item)} className="w-full h-40 object-cover" />}
                   <div className="px-4 pt-3 pb-2">
                     <div className="flex items-start gap-2">
                       <span className="text-xl">{feedTypeIcon(item.type)}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{item.title}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{prettifyFeedTitle(item)}</p>
                         {item.detail && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{item.detail}</p>}
                         {item.audioData && (
                           <audio src={item.audioData} controls className="w-full h-9 mt-2" />

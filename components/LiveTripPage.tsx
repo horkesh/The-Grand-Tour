@@ -6,6 +6,7 @@ import { listenCollection, listenDoc } from '../services/firestoreSync';
 import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import LiveMap, { LivePosition } from './LiveMap';
 import ErrorBoundary from './ErrorBoundary';
+import { prettifyFeedTitle } from '../utils/feedTitle';
 
 // Lazy + boundary so any FamilyInteractions hiccup can't blank /live again.
 const FamilyInteractions = React.lazy(() => import('./FamilyInteractions'));
@@ -59,26 +60,6 @@ function typeIcon(type: FeedItem['type']): string {
   return '✈️';
 }
 
-// Backfill pretty title for legacy feed items written before the resolveCityKey
-// fix. Old docs show titles like "Stamp collected: day-1_1" — rewrite them
-// at render time using the cityId on the item itself.
-function prettifyFeedTitle(item: FeedItem): string {
-  const looksRaw = /^(Stamp collected|New postcard from):?\s*(day-\d+(_\d+)?)$/i.test(item.title)
-    || /day-\d+(_\d+)?$/i.test(item.title);
-  if (!looksRaw && !item.title.includes('day-')) return item.title;
-  const m = item.cityId?.match(/^(.*?)(?:_(\d+))?$/);
-  if (!m) return item.title;
-  const city = ITALIAN_CITIES.find((c) => c.id === m[1]);
-  if (!city) return item.title;
-  const stop = m[2] !== undefined ? city.plannedStops?.[Number(m[2])] : undefined;
-  if (item.type === 'stamp') {
-    return stop ? `Stamped ${stop.title} in ${city.location}` : `Arrived in ${city.location}!`;
-  }
-  if (item.type === 'postcard') {
-    return stop ? `New postcard from ${stop.title}, ${city.location}` : `New postcard from ${city.location}`;
-  }
-  return stop ? `${stop.title}, ${city.location}` : city.location;
-}
 
 function typeLabel(type: FeedItem['type']): string {
   if (type === 'stamp') return 'Passport Stamp';
