@@ -1,4 +1,28 @@
 const PLACES_API_BASE = 'https://places.googleapis.com/v1';
+const BLOCKED_KEY = 'gt_places_api_blocked';
+
+export function isPlacesApiBlocked(): boolean {
+  try {
+    return localStorage.getItem(BLOCKED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function clearPlacesApiBlock(): void {
+  try { localStorage.removeItem(BLOCKED_KEY); } catch { /* ignore */ }
+}
+
+function markPlacesApiBlocked(): void {
+  try { localStorage.setItem(BLOCKED_KEY, '1'); } catch { /* ignore */ }
+}
+
+export class PlacesApiBlockedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PlacesApiBlockedError';
+  }
+}
 
 export async function fetchPlacePhoto(
   placeName: string,
@@ -6,6 +30,9 @@ export async function fetchPlacePhoto(
   lng: number,
   maxWidthPx = 800
 ): Promise<string> {
+  if (isPlacesApiBlocked()) {
+    throw new PlacesApiBlockedError('Places API previously blocked — skipping fetch');
+  }
   const apiKey = process.env.API_KEY;
   if (!apiKey) throw new Error('No API key configured');
 
@@ -31,6 +58,12 @@ export async function fetchPlacePhoto(
 
   if (!searchRes.ok) {
     const text = await searchRes.text();
+    // 403 / PERMISSION_DENIED / API key restriction — flip the kill switch so
+    // subsequent loads don't keep hammering and showing the same toast.
+    if (searchRes.status === 403 || /PERMISSION_DENIED|REQUEST_DENIED|API key not valid|not authorized/i.test(text)) {
+      markPlacesApiBlocked();
+      throw new PlacesApiBlockedError(`Places API blocked: ${text.slice(0, 200)}`);
+    }
     throw new Error(`Places search failed (${searchRes.status}): ${text}`);
   }
 

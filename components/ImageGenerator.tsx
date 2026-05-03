@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
-import { fetchPlacePhoto } from '../services/placesService';
+import { fetchPlacePhoto, isPlacesApiBlocked, PlacesApiBlockedError } from '../services/placesService';
 import { useToast } from './Toast';
 
 const MAX_RETRIES = 2;
@@ -43,6 +43,15 @@ const ImageGenerator: React.FC = () => {
   useEffect(() => {
     if (!imagesHydrated || queueBuiltRef.current) return;
     queueBuiltRef.current = true;
+
+    // If a previous session already discovered the Places API key is locked
+    // down (403 / PERMISSION_DENIED), don't even build the queue. The user
+    // can clear this from /photos when they've fixed the key restriction.
+    if (isPlacesApiBlocked()) {
+      console.info('[ImageGenerator] Skipping — Places API previously marked blocked.');
+      setDone(true);
+      return;
+    }
 
     const newQueue: QueueItem[] = [];
     const cached = waypointImagesRef.current;
@@ -98,6 +107,17 @@ const ImageGenerator: React.FC = () => {
       } catch (err) {
         consecutiveFailsRef.current += 1;
         console.warn(`[ImageGenerator] Failed ${item.key} "${item.name}" (attempt ${(item.retries || 0) + 1}):`, (err as Error).message);
+
+        // Bail immediately on the auth/restriction error. The placesService has
+        // already flipped the localStorage flag, so future loads skip the queue
+        // entirely — user only sees this toast once instead of every app open.
+        if (err instanceof PlacesApiBlockedError) {
+          console.warn('[ImageGenerator] Places API blocked — disabling queue for future loads.');
+          showToast('Place photos disabled — your Google API key restriction blocks the Places API. Visit /photos to retry after fixing.', 'error');
+          setQueue([]);
+          setDone(true);
+          return;
+        }
 
         // Bail out entirely if we see too many consecutive failures
         if (consecutiveFailsRef.current >= CONSECUTIVE_FAIL_BAIL) {

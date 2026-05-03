@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import { isPlacesApiBlocked, clearPlacesApiBlock } from '../services/placesService';
 
 const RefreshPhotos: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'idle' | 'wiping' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const wasBlocked = isPlacesApiBlocked();
+
   const wipeAndRefetch = async () => {
     setStep('wiping');
     try {
       // Clear in-memory cache
       useStore.setState({ waypointImages: {}, imagesHydrated: false });
+
+      // Clear the "Places API blocked" kill switch so the queue tries again.
+      clearPlacesApiBlock();
 
       // Wipe IndexedDB image store
       await new Promise<void>((resolve, reject) => {
@@ -47,11 +53,19 @@ const RefreshPhotos: React.FC = () => {
 
         {step === 'idle' && (
           <div className="bg-white dark:bg-[#111] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 p-6 space-y-5">
+            {wasBlocked && (
+              <div className="rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30 p-4 text-xs text-amber-800 dark:text-amber-200 space-y-2">
+                <p className="font-bold uppercase tracking-widest text-[10px]">Places API blocked</p>
+                <p>Last time the app tried, your Google API key was rejected for the Places API and we paused fetching so you wouldn't see the same toast every load.</p>
+                <p>To fix: in Google Cloud Console → Credentials → your API key → <span className="font-bold">API restrictions</span>, add <span className="font-mono">Places API (New)</span> alongside Generative Language. Then come back and tap Refresh below.</p>
+              </div>
+            )}
             <div className="text-sm text-slate-700 dark:text-slate-200 space-y-3">
               <p>This will:</p>
               <ul className="text-xs space-y-1 pl-4 list-disc text-slate-500 dark:text-slate-400">
                 <li>Delete every cached place photo on this device</li>
                 <li>Re-fetch fresh photos from Google Places for the whole itinerary</li>
+                <li>Re-enable photo fetching if it was paused</li>
                 <li>Reload the app once cleared</li>
               </ul>
               <p className="text-xs text-slate-500 dark:text-slate-400">
