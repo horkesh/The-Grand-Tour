@@ -28,7 +28,7 @@ function paintFallbackBackground(ctx: CanvasRenderingContext2D, w: number, h: nu
 
 export const mergePostcardImage = async (
   baseImageUrl: string,
-  videoElement: HTMLVideoElement,
+  source: HTMLVideoElement | HTMLImageElement,
   title: string,
   subtitle?: string,
 ): Promise<string> => {
@@ -36,13 +36,16 @@ export const mergePostcardImage = async (
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas context');
 
-  // Capture current video frame
+  // Capture current frame from video OR uploaded photo
+  const isVideo = 'videoWidth' in source;
+  const sourceWidth = isVideo ? source.videoWidth : source.naturalWidth;
+  const sourceHeight = isVideo ? source.videoHeight : source.naturalHeight;
   const videoCanvas = document.createElement('canvas');
-  videoCanvas.width = videoElement.videoWidth || 720;
-  videoCanvas.height = videoElement.videoHeight || 960;
+  videoCanvas.width = sourceWidth || 720;
+  videoCanvas.height = sourceHeight || 960;
   const videoCtx = videoCanvas.getContext('2d');
-  if (!videoCtx) throw new Error('Could not get video canvas context');
-  videoCtx.drawImage(videoElement, 0, 0);
+  if (!videoCtx) throw new Error('Could not get source canvas context');
+  videoCtx.drawImage(source, 0, 0);
 
   // Background — try the provided URL with CORS; fall back to a generated
   // gradient if the host doesn't allow cross-origin reads (italia.it,
