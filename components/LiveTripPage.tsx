@@ -59,6 +59,27 @@ function typeIcon(type: FeedItem['type']): string {
   return '✈️';
 }
 
+// Backfill pretty title for legacy feed items written before the resolveCityKey
+// fix. Old docs show titles like "Stamp collected: day-1_1" — rewrite them
+// at render time using the cityId on the item itself.
+function prettifyFeedTitle(item: FeedItem): string {
+  const looksRaw = /^(Stamp collected|New postcard from):?\s*(day-\d+(_\d+)?)$/i.test(item.title)
+    || /day-\d+(_\d+)?$/i.test(item.title);
+  if (!looksRaw && !item.title.includes('day-')) return item.title;
+  const m = item.cityId?.match(/^(.*?)(?:_(\d+))?$/);
+  if (!m) return item.title;
+  const city = ITALIAN_CITIES.find((c) => c.id === m[1]);
+  if (!city) return item.title;
+  const stop = m[2] !== undefined ? city.plannedStops?.[Number(m[2])] : undefined;
+  if (item.type === 'stamp') {
+    return stop ? `Stamped ${stop.title} in ${city.location}` : `Arrived in ${city.location}!`;
+  }
+  if (item.type === 'postcard') {
+    return stop ? `New postcard from ${stop.title}, ${city.location}` : `New postcard from ${city.location}`;
+  }
+  return stop ? `${stop.title}, ${city.location}` : city.location;
+}
+
 function typeLabel(type: FeedItem['type']): string {
   if (type === 'stamp') return 'Passport Stamp';
   if (type === 'postcard') return 'Postcard';
@@ -361,7 +382,7 @@ const LiveTripPage: React.FC = () => {
                     </span>
                   </div>
                   <p className="mt-0.5 font-medium text-sm text-gray-800 dark:text-gray-200 leading-snug">
-                    {item.title}
+                    {prettifyFeedTitle(item)}
                   </p>
                   {item.detail && (
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">

@@ -32,6 +32,19 @@ function syncRemove(subpath: string) {
   }
 }
 
+// DayDashboard stamps/postcards using a composite key like "day-1_2"
+// (city id + stop index). Resolve back to the actual city + stop so the
+// family feed shows real names instead of "Stamp collected: day-1_1".
+function resolveCityKey(key: string): { city?: typeof ITALIAN_CITIES[number]; stop?: typeof ITALIAN_CITIES[number]['plannedStops'][number] } {
+  const direct = ITALIAN_CITIES.find((c) => c.id === key);
+  if (direct) return { city: direct };
+  const m = key.match(/^(.*)_(\d+)$/);
+  if (!m) return {};
+  const city = ITALIAN_CITIES.find((c) => c.id === m[1]);
+  const stop = city?.plannedStops?.[Number(m[2])];
+  return { city, stop };
+}
+
 interface AppState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
@@ -191,13 +204,18 @@ export const useStore = create<AppState>()(
         if (uid) syncWrite(`stamps/${cityId}`, { [uid]: Date.now() });
         // Auto-publish feed item for family/friends
         const feedId = `stamp-${cityId}-${Date.now()}`;
-        const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+        const { city, stop } = resolveCityKey(cityId);
+        const title = stop && city
+          ? `Stamped ${stop.title} in ${city.location}`
+          : city
+            ? `Arrived in ${city.location}!`
+            : 'New stamp on the trip';
         syncWrite(`feed/${feedId}`, {
           type: 'stamp',
           cityId,
-          title: city ? `Arrived in ${city.location}!` : `Stamp collected: ${cityId}`,
-          detail: city?.milestone || '',
-          imageUrl: city?.image || '',
+          title,
+          detail: stop?.title ? city?.milestone || '' : city?.milestone || '',
+          imageUrl: stop?.image || city?.image || '',
           timestamp: Date.now(),
         });
       },
@@ -214,14 +232,17 @@ export const useStore = create<AppState>()(
         syncWrite('postcardIndex', { postcards: updatedPostcards } as unknown as Record<string, unknown>);
         // Auto-publish feed item for family/friends
         const feedId = `postcard-${cityId}-${Date.now()}`;
-        const city = ITALIAN_CITIES.find((c) => c.id === cityId);
+        const { city, stop } = resolveCityKey(cityId);
         // Skip oversized data URLs in the feed item to stay under Firestore's
         // 1 MB doc limit. https URLs are tiny and embed cleanly.
         const safeImageUrl = url.length < 600_000 ? url : '';
+        const title = stop && city
+          ? `New postcard from ${stop.title}, ${city.location}`
+          : `New postcard from ${city?.location || 'the trip'}`;
         syncWrite(`feed/${feedId}`, {
           type: 'postcard',
           cityId,
-          title: `New postcard from ${city?.location || cityId}`,
+          title,
           imageUrl: safeImageUrl,
           timestamp: Date.now(),
         });
