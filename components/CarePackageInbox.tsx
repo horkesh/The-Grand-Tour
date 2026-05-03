@@ -1,7 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { listenCollection, writeDoc } from '../services/firestoreSync';
+import ErrorBoundary from './ErrorBoundary';
+
+const VoiceRecorder = React.lazy(() => import('./VoiceRecorder'));
+
+interface CarePackageReply {
+  authorUid: string;
+  authorName: string;
+  message: string;
+  audioData?: string | null;
+  audioDuration?: number | null;
+  timestamp: number;
+}
 
 interface CarePackage {
   id: string;
@@ -13,6 +25,7 @@ interface CarePackage {
   audioDuration?: number | null;
   timestamp: number;
   readBy?: string[];
+  reply?: CarePackageReply | null;
 }
 
 interface Props {
@@ -23,6 +36,8 @@ export default function CarePackageInbox({ cityId }: Props) {
   const { currentUser, tripMeta } = useStore();
   const [packages, setPackages] = useState<CarePackage[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState<Record<string, string>>({});
+  const [sendingReplyId, setSendingReplyId] = useState<string | null>(null);
 
   const tripId = tripMeta?.id;
 
@@ -49,6 +64,27 @@ export default function CarePackageInbox({ cityId }: Props) {
 
   const isUnread = (pkg: CarePackage) =>
     !pkg.readBy?.includes(currentUser?.uid ?? '');
+
+  const sendReply = async (pkg: CarePackage, audio?: { dataUrl: string; durationSec: number }) => {
+    if (!tripId || !currentUser?.uid) return;
+    const text = (replyDraft[pkg.id] ?? '').trim();
+    if (!text && !audio) return;
+    setSendingReplyId(pkg.id);
+    try {
+      const reply: CarePackageReply = {
+        authorUid: currentUser.uid,
+        authorName: (currentUser.displayName || 'Trip').split(' ')[0],
+        message: text,
+        audioData: audio?.dataUrl ?? null,
+        audioDuration: audio?.durationSec ?? null,
+        timestamp: Date.now(),
+      };
+      await writeDoc(`trips/${tripId}/carePackages/${pkg.id}`, { reply });
+      setReplyDraft((d) => ({ ...d, [pkg.id]: '' }));
+    } finally {
+      setSendingReplyId(null);
+    }
+  };
 
   if (packages.length === 0) return null;
 
@@ -123,6 +159,62 @@ export default function CarePackageInbox({ cityId }: Props) {
                         onClick={(e) => e.stopPropagation()}
                       />
                     )}
+
+                    {/* Reply — visible only to the original sender + the owner.
+                        Stored in plain Firestore so technically any joined family
+                        member with the auth token could read it; we treat it as
+                        "private from siblings", not "secure". */}
+                    <div
+                      className="mt-3 pt-3 border-t border-[#194f4c]/15 dark:border-[#a8d5d1]/15"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {pkg.reply ? (
+                        <div className="rounded-lg bg-[#194f4c]/8 dark:bg-[#a8d5d1]/8 px-3 py-2 space-y-1.5">
+                          <p className="text-[10px] uppercase tracking-widest text-[#194f4c]/60 dark:text-[#a8d5d1]/60 font-bold">
+                            Replied privately to {pkg.senderName}
+                          </p>
+                          {pkg.reply.message && (
+                            <p className="text-sm text-[#194f4c] dark:text-[#a8d5d1] leading-relaxed">
+                              {pkg.reply.message}
+                            </p>
+                          )}
+                          {pkg.reply.audioData && (
+                            <audio src={pkg.reply.audioData} controls className="w-full h-9" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-[10px] uppercase tracking-widest text-[#ac3d29]/80 font-bold">
+                            Reply privately — only {pkg.senderName} sees it
+                          </p>
+                          <textarea
+                            value={replyDraft[pkg.id] ?? ''}
+                            onChange={(e) => setReplyDraft((d) => ({ ...d, [pkg.id]: e.target.value }))}
+                            placeholder="Write a private thank-you…"
+                            rows={2}
+                            className="w-full px-3 py-2 rounded-lg border border-[#194f4c]/20 dark:border-[#a8d5d1]/20 bg-white dark:bg-[#0e1f1e] text-sm text-[#194f4c] dark:text-[#a8d5d1] focus:outline-none focus:ring-2 focus:ring-[#ac3d29] resize-none"
+                          />
+                          <div className="flex gap-2 items-center">
+                            <button
+                              onClick={() => sendReply(pkg)}
+                              disabled={sendingReplyId === pkg.id || !(replyDraft[pkg.id] ?? '').trim()}
+                              className="px-3 py-1.5 rounded-lg bg-[#ac3d29] text-white text-xs font-bold hover:bg-[#8f3320] disabled:opacity-50 transition-colors"
+                            >
+                              {sendingReplyId === pkg.id ? 'Sending…' : 'Send reply'}
+                            </button>
+                            <span className="text-[10px] text-[#194f4c]/50 dark:text-[#a8d5d1]/50">or</span>
+                            <ErrorBoundary label="ReplyVoiceRecorder">
+                              <Suspense fallback={<span className="text-[10px] text-[#194f4c]/50">…</span>}>
+                                <VoiceRecorder
+                                  disabled={sendingReplyId === pkg.id}
+                                  onRecorded={(dataUrl, durationSec) => sendReply(pkg, { dataUrl, durationSec })}
+                                />
+                              </Suspense>
+                            </ErrorBoundary>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

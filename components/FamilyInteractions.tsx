@@ -8,7 +8,8 @@ import ErrorBoundary from './ErrorBoundary';
 const VoiceRecorder = React.lazy(() => import('./VoiceRecorder'));
 
 interface GuestbookEntry { id: string; authorUid: string; authorName: string; message: string; timestamp: number }
-interface CarePackage { id: string; senderUid: string; senderName: string; forCityId: string; message: string; audioData?: string | null; audioDuration?: number | null; timestamp: number }
+interface CarePackageReply { authorUid: string; authorName: string; message: string; audioData?: string | null; audioDuration?: number | null; timestamp: number }
+interface CarePackage { id: string; senderUid: string; senderName: string; forCityId: string; message: string; audioData?: string | null; audioDuration?: number | null; timestamp: number; reply?: CarePackageReply | null }
 
 const PRESET_COLORS = [
   { name: 'coral',   hex: '#f87171' },
@@ -303,24 +304,48 @@ const FamilyInteractions: React.FC<Props> = ({ tripId, authReady }) => {
           )}
         </div>
 
-        {packages.length > 0 && (
-          <div className="space-y-2 mt-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 px-1">Recently sent</p>
-            {packages.slice(0, 5).map((p) => (
-              <div key={p.id} className="bg-white dark:bg-gray-900 rounded-xl px-3 py-2 shadow-sm">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[10px] font-bold text-[#ac3d29]">
-                    {ITALIAN_CITIES.find((c) => c.id === p.forCityId)?.location ?? p.forCityId}
-                  </span>
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">{relTime(p.timestamp)}</span>
+        {(() => {
+          // Owners see all packages; guests see only their own — replies are
+          // private from siblings.
+          const visible = identity?.isOwner
+            ? packages
+            : identity
+              ? packages.filter((p) => p.senderUid === identity.uid)
+              : [];
+          if (visible.length === 0) return null;
+          return (
+            <div className="space-y-2 mt-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 px-1">
+                {identity?.isOwner ? 'All care packages' : 'Your care packages'}
+              </p>
+              {visible.slice(0, 5).map((p) => (
+                <div key={p.id} className="bg-white dark:bg-gray-900 rounded-xl px-3 py-2 shadow-sm">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] font-bold text-[#ac3d29]">
+                      {ITALIAN_CITIES.find((c) => c.id === p.forCityId)?.location ?? p.forCityId}
+                    </span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">{relTime(p.timestamp)}</span>
+                  </div>
+                  {p.message && <p className="text-xs text-gray-700 dark:text-gray-300">{p.message}</p>}
+                  {p.audioData && <audio src={p.audioData} controls className="w-full h-9 mt-1.5" />}
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">from {p.senderName}</p>
+
+                  {p.reply && (
+                    <div className="mt-2 pt-2 border-t border-[#194f4c]/15 rounded-b">
+                      <p className="text-[10px] uppercase tracking-widest text-[#194f4c] dark:text-teal-300 font-bold mb-1">
+                        💌 Reply from {p.reply.authorName}
+                      </p>
+                      {p.reply.message && (
+                        <p className="text-xs text-gray-800 dark:text-gray-200 leading-relaxed">{p.reply.message}</p>
+                      )}
+                      {p.reply.audioData && <audio src={p.reply.audioData} controls className="w-full h-9 mt-1.5" />}
+                    </div>
+                  )}
                 </div>
-                {p.message && <p className="text-xs text-gray-700 dark:text-gray-300">{p.message}</p>}
-                {p.audioData && <audio src={p.audioData} controls className="w-full h-9 mt-1.5" />}
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">from {p.senderName}</p>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </section>
   );
