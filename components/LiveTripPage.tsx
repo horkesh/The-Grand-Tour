@@ -355,51 +355,61 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
         )}
 
         <div className="space-y-3">
-          {textFeed.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.35 }}
-              className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden"
-            >
-              <div className="flex gap-3 p-3 items-start">
-                <div className="text-2xl leading-none mt-0.5 shrink-0" aria-hidden>
-                  {typeIcon(item.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-[#ac3d29] dark:text-orange-400">
-                      {typeLabel(item.type)}
-                    </span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
-                      {relativeTime(item.timestamp)}
-                    </span>
+          {textFeed.map((item, i) => {
+            // Stop-level stamps used to be written with the city's hero image
+            // and milestone — meaning every stop in the same city looked
+            // identical in the feed. Suppress those at render time for legacy
+            // entries; new writes already omit them.
+            const { stop } = resolveKey(item.cityId);
+            const isStopStamp = item.type === 'stamp' && !!stop;
+            const showImage = !isStopStamp && !!item.imageUrl;
+            const showDetail = !isStopStamp && !!item.detail;
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.35 }}
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden"
+              >
+                <div className="flex gap-3 p-3 items-start">
+                  <div className="text-2xl leading-none mt-0.5 shrink-0" aria-hidden>
+                    {typeIcon(item.type)}
                   </div>
-                  <p className="mt-0.5 font-medium text-sm text-gray-800 dark:text-gray-200 leading-snug">
-                    {prettifyFeedTitle(item)}
-                  </p>
-                  {item.detail && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                      {item.detail}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#ac3d29] dark:text-orange-400">
+                        {typeLabel(item.type)}
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                        {relativeTime(item.timestamp)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 font-medium text-sm text-gray-800 dark:text-gray-200 leading-snug">
+                      {prettifyFeedTitle(item)}
                     </p>
-                  )}
-                  {item.audioData && (
-                    <audio src={item.audioData} controls className="w-full h-9 mt-2" />
-                  )}
+                    {showDetail && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                        {item.detail}
+                      </p>
+                    )}
+                    {item.audioData && (
+                      <audio src={item.audioData} controls className="w-full h-9 mt-2" />
+                    )}
+                  </div>
                 </div>
-              </div>
-              {item.imageUrl && (
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="w-full object-cover"
-                  style={{ maxHeight: 260 }}
-                  loading="lazy"
-                />
-              )}
-            </motion.div>
-          ))}
+                {showImage && (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full object-cover"
+                    style={{ maxHeight: 260 }}
+                    loading="lazy"
+                  />
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 

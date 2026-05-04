@@ -210,12 +210,18 @@ export const useStore = create<AppState>()(
           : city
             ? `Arrived in ${city.location}!`
             : 'New stamp on the trip';
+        // City-level stamps lead with the hero image + milestone quote.
+        // Stop-level stamps stay text-only — falling back to city.image
+        // here meant every stop in the same city showed the identical photo
+        // (and identical milestone) in the family feed.
+        const imageUrl = stop ? (stop.image || '') : (city?.image || '');
+        const detail = stop ? '' : (city?.milestone || '');
         syncWrite(`feed/${feedId}`, {
           type: 'stamp',
           cityId,
           title,
-          detail: stop?.title ? city?.milestone || '' : city?.milestone || '',
-          imageUrl: stop?.image || city?.image || '',
+          detail,
+          imageUrl,
           timestamp: Date.now(),
         });
       },
