@@ -8,6 +8,7 @@ import UserAvatar from './UserAvatar';
 const Passaporto: React.FC = () => {
   const navigate = useNavigate();
   const { stamps, currentUser, partnerUser } = useStore();
+  const totalStamps = ITALIAN_CITIES.length + ITALIAN_CITIES.reduce((s, c) => s + c.plannedStops.length, 0);
 
   return (
     <motion.div 
@@ -53,11 +54,11 @@ const Passaporto: React.FC = () => {
             <div className="w-full mt-6 bg-white/5 rounded-2xl px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserAvatar user={currentUser} size="sm" />
-                <span className="text-amber-100 font-bold text-sm">{stamps.length}/8</span>
+                <span className="text-amber-100 font-bold text-sm">{stamps.length}/{totalStamps}</span>
               </div>
               <span className="text-amber-400/60 text-[10px] font-bold uppercase tracking-widest">Stamp Race</span>
               <div className="flex items-center gap-2">
-                <span className="text-amber-100 font-bold text-sm">{stamps.length}/8</span>
+                <span className="text-amber-100 font-bold text-sm">{stamps.length}/{totalStamps}</span>
                 <UserAvatar user={partnerUser} size="sm" />
               </div>
             </div>

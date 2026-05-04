@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Icons } from '../constants';
+import { Icons, ITALIAN_CITIES } from '../constants';
 import { useStore } from '../store';
 import { useCountdown } from '../hooks/useCountdown';
 
@@ -18,6 +18,8 @@ const TripHub: React.FC = () => {
   const navigate = useNavigate();
   const { stamps, lastViewedDay } = useStore();
   const { days } = useCountdown();
+
+  const totalStamps = ITALIAN_CITIES.length + ITALIAN_CITIES.reduce((s, c) => s + c.plannedStops.length, 0);
 
   const cards: HubCard[] = [
     { path: '/countdown', label: 'Countdown', subtitle: `${days} days to go`, icon: <Icons.Journal />, color: 'bg-[#194f4c]' },
@@ -39,7 +41,7 @@ const TripHub: React.FC = () => {
         <div className="text-center mb-8">
           <p className="text-[10px] font-bold text-[#ac3d29] uppercase tracking-widest mb-2">May 2 – 9, 2026</p>
           <h2 className="font-serif text-3xl font-bold text-[#194f4c] dark:text-white">The Trip</h2>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{stamps.length}/8 stamps collected</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{stamps.length}/{totalStamps} stamps collected</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
