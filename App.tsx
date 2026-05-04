@@ -125,7 +125,7 @@ const MobileNav = () => {
   const p = location.pathname;
 
   const tripPaths = ['/list', '/countdown', '/reveals', '/phrases', '/flyover', '/chat', '/story'];
-  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist', '/gioco'];
+  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist', '/gioco', '/together/live'];
 
   const isMap = p === '/';
   const isTrip = p === '/trip' || p.startsWith('/day') || tripPaths.some(tp => p === tp);
@@ -201,6 +201,7 @@ const AnimatedRoutes = () => {
         <Route path="/trivia" element={<TriviaChallenge />} />
         <Route path="/trip" element={<TripHub />} />
         <Route path="/together" element={<TogetherHub />} />
+        <Route path="/together/live" element={<LiveTripPage embedded />} />
         <Route path="/gioco" element={<BlockBlast />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />

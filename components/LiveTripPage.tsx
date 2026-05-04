@@ -11,6 +11,13 @@ import { prettifyFeedTitle, resolveKey } from '../utils/feedTitle';
 // Lazy + boundary so any FamilyInteractions hiccup can't blank /live again.
 const FamilyInteractions = React.lazy(() => import('./FamilyInteractions'));
 
+interface LiveTripPageProps {
+  /** When true, the page is embedded inside the main app Layout. Skips the
+   *  full-viewport sizing and safe-area paddings that the standalone /live
+   *  page needs. */
+  embedded?: boolean;
+}
+
 interface FeedItem {
   id: string;
   type: 'stamp' | 'postcard' | 'arrival' | 'voice';
@@ -68,7 +75,7 @@ function typeLabel(type: FeedItem['type']): string {
   return 'Arrived';
 }
 
-const LiveTripPage: React.FC = () => {
+const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [livePosition, setLivePosition] = useState<LivePosition | null>(null);
@@ -170,9 +177,15 @@ const LiveTripPage: React.FC = () => {
     });
   }
 
+  // When embedded inside the main app Layout, parent controls scroll/height
+  // and provides nav, so we drop the full-viewport sizing and the back link.
+  const containerClass = embedded
+    ? 'absolute inset-0 w-full overflow-y-auto overscroll-contain custom-scrollbar bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col pb-32'
+    : 'h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col';
+
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-[#f9f7f4] dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col">
-      {isOwner && (
+    <div className={containerClass}>
+      {isOwner && !embedded && (
         <div
           className="px-4 max-w-xl mx-auto w-full"
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
@@ -188,7 +201,7 @@ const LiveTripPage: React.FC = () => {
       {/* Header */}
       <header
         className="px-4 pb-4 text-center"
-        style={{ paddingTop: isOwner ? '24px' : 'calc(env(safe-area-inset-top, 0px) + 24px)' }}
+        style={{ paddingTop: embedded ? '8px' : (isOwner ? '24px' : 'calc(env(safe-area-inset-top, 0px) + 24px)') }}
       >
         <motion.h1
           initial={{ opacity: 0, y: -12 }}

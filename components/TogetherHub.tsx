@@ -45,7 +45,7 @@ const TogetherHub: React.FC = () => {
     { path: '/trivia', label: 'Italy Trivia', subtitle: 'Who knows Italy better?', icon: <Icons.Lightbulb />, color: 'bg-[#194f4c]' },
     { path: '/challenges', label: 'Photo Challenges', subtitle: '16 creative missions', icon: <Icons.Camera />, color: 'bg-[#194f4c]' },
     { path: '/phrases', label: 'Learn Italian', subtitle: 'Practice phrases', icon: <Icons.Language />, color: 'bg-slate-700' },
-    { path: '/live', label: 'Live + Family', subtitle: 'Map, photos, notes from family', icon: <Icons.Live />, color: 'bg-slate-700' },
+    { path: '/together/live', label: 'Live + Family', subtitle: 'Map, photos, notes from family', icon: <Icons.Live />, color: 'bg-slate-700' },
     { path: '/photos', label: 'Refresh photos', subtitle: 'Re-fetch place photos / unblock cache', icon: <Icons.Camera />, color: 'bg-slate-500' },
   ];
 
