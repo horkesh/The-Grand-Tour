@@ -7,6 +7,7 @@ import { ensureAnonymousAuth } from '../services/anonymousAuth';
 import LiveMap, { LivePosition } from './LiveMap';
 import ErrorBoundary from './ErrorBoundary';
 import { prettifyFeedTitle, resolveKey } from '../utils/feedTitle';
+import FeedEntryActions, { FeedComment, FeedIdentity } from './FeedEntryActions';
 
 // Lazy + boundary so any FamilyInteractions hiccup can't blank /live again.
 const FamilyInteractions = React.lazy(() => import('./FamilyInteractions'));
@@ -135,6 +136,72 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
     });
     return () => unsub();
   }, [tripId, authReady]);
+
+  // Per-feed-entry likes — one Firestore doc per feed item id, payload is
+  // a map of uid → timestamp. Listening to the whole collection so we can
+  // pluck the slice for each rendered feed item without N listeners.
+  const [likesByFeedId, setLikesByFeedId] = useState<Record<string, Record<string, number>>>({});
+  useEffect(() => {
+    if (!tripId || !authReady) return;
+    const unsub = listenCollection(`trips/${tripId}/feedLikes`, (docs) => {
+      const map: Record<string, Record<string, number>> = {};
+      for (const d of docs) map[d.id] = (d.data as Record<string, number>) || {};
+      setLikesByFeedId(map);
+    });
+    return () => unsub();
+  }, [tripId, authReady]);
+
+  // Per-feed-entry comments — one doc per feed item, payload { entries: [] }.
+  const [commentsByFeedId, setCommentsByFeedId] = useState<Record<string, FeedComment[]>>({});
+  useEffect(() => {
+    if (!tripId || !authReady) return;
+    const unsub = listenCollection(`trips/${tripId}/feedComments`, (docs) => {
+      const map: Record<string, FeedComment[]> = {};
+      for (const d of docs) {
+        const entries = ((d.data as { entries?: FeedComment[] }).entries) || [];
+        map[d.id] = [...entries].sort((a, b) => a.timestamp - b.timestamp);
+      }
+      setCommentsByFeedId(map);
+    });
+    return () => unsub();
+  }, [tripId, authReady]);
+
+  // Identity for liking + commenting. Owners reuse their Google sign-in
+  // identity from Zustand; family guests use the bb_family_* keys set by
+  // FamilyJoin / FamilyInteractions.
+  const [identityVersion, setIdentityVersion] = useState(0);
+  const identity = React.useMemo<FeedIdentity | null>(() => {
+    void identityVersion;
+    try {
+      const raw = localStorage.getItem('grand-tour-storage');
+      const parsed = JSON.parse(raw || '{}');
+      const u = parsed?.state?.currentUser;
+      if (u?.uid && u?.displayName) {
+        return {
+          uid: u.uid,
+          name: (u.displayName as string).split(' ')[0],
+          color: u.color === 'rust' ? '#ac3d29' : '#194f4c',
+          isOwner: true,
+        };
+      }
+    } catch { /* ignore */ }
+    const uid = localStorage.getItem('bb_family_uid');
+    const name = localStorage.getItem('bb_family_name');
+    const color = localStorage.getItem('bb_family_color') || '#194f4c';
+    if (uid && name) return { uid, name, color, isOwner: false };
+    return null;
+  }, [identityVersion]);
+
+  // Family guests without an identity yet need to be funnelled into the
+  // FamilyInteractions nickname prompt at the bottom of the page. We just
+  // scroll there and bump identityVersion when they fill it in via an event.
+  const askIdentity = React.useCallback(() => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('gtour-show-identity-prompt'));
+    // Re-read identity shortly after — the FamilyInteractions component
+    // writes to localStorage when the prompt is saved.
+    setTimeout(() => setIdentityVersion((v) => v + 1), 250);
+  }, []);
 
   // Derive visited city ids from feed
   const visitedIds = React.useMemo(() => {
@@ -405,6 +472,16 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
                     className="w-full object-cover"
                     style={{ maxHeight: 260 }}
                     loading="lazy"
+                  />
+                )}
+                {tripId && (
+                  <FeedEntryActions
+                    tripId={tripId}
+                    feedId={item.id}
+                    identity={identity}
+                    onAskIdentity={askIdentity}
+                    likes={likesByFeedId[item.id] || {}}
+                    comments={commentsByFeedId[item.id] || []}
                   />
                 )}
               </motion.div>

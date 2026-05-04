@@ -73,6 +73,14 @@ const FamilyInteractions: React.FC<Props> = ({ tripId, authReady }) => {
     if (uid && name) setIdentity({ uid, name, color, isOwner: false });
   }, []);
 
+  // Other parts of the page (FeedEntryActions) trigger the nickname prompt
+  // for guests who try to like/comment without an identity yet.
+  useEffect(() => {
+    const handler = () => { if (!identity) setShowIdentityPrompt(true); };
+    window.addEventListener('gtour-show-identity-prompt', handler);
+    return () => window.removeEventListener('gtour-show-identity-prompt', handler);
+  }, [identity]);
+
   const saveGuestIdentity = () => {
     if (!draftName.trim()) return;
     const uid = genId();
