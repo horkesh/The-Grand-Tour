@@ -96,15 +96,24 @@ const FamilyInteractions: React.FC<Props> = ({ tripId, authReady }) => {
   // ---- Listeners ----
   const [guestbook, setGuestbook] = useState<GuestbookEntry[]>([]);
   const [packages, setPackages] = useState<CarePackage[]>([]);
+  const [guestbookError, setGuestbookError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tripId || !authReady) return;
     try {
-      return listenCollection(`trips/${tripId}/guestbook`, (docs) => {
-        try {
-          setGuestbook(docs.map((d) => ({ ...d.data, id: d.id } as GuestbookEntry)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20));
-        } catch (e) { console.warn('[FamilyInteractions] guestbook parse failed:', e); }
-      });
+      return listenCollection(
+        `trips/${tripId}/guestbook`,
+        (docs) => {
+          try {
+            setGuestbookError(null);
+            setGuestbook(docs.map((d) => ({ ...d.data, id: d.id } as GuestbookEntry)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 20));
+          } catch (e) { console.warn('[FamilyInteractions] guestbook parse failed:', e); }
+        },
+        (err) => {
+          // Surface the error inline so the user can see it on mobile without a console.
+          setGuestbookError(`${err.name || 'Error'}: ${err.message}`);
+        },
+      );
     } catch (e) { console.warn('[FamilyInteractions] guestbook listen failed:', e); }
   }, [tripId, authReady]);
 
@@ -223,6 +232,13 @@ const FamilyInteractions: React.FC<Props> = ({ tripId, authReady }) => {
         >
           Guestbook
         </h3>
+        {guestbookError && (
+          <div className="mb-3 rounded-lg border border-red-300 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 px-3 py-2 text-[11px] text-red-700 dark:text-red-300">
+            <p className="font-bold uppercase tracking-widest text-[9px] mb-1">Guestbook listener failed</p>
+            <p className="break-words font-mono leading-relaxed">{guestbookError}</p>
+            <p className="mt-1 text-red-700/70 dark:text-red-300/70">trip: {tripId}</p>
+          </div>
+        )}
         <div className="space-y-2 mb-3">
           {guestbook.length === 0 ? (
             <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">No notes yet — be the first to say hello.</p>

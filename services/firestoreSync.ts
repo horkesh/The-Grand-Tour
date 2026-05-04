@@ -32,23 +32,37 @@ export function markSyncInitialized() { _initialized = true; }
 
 export function listenDoc(
   path: string,
-  onChange: (data: DocumentData) => void
+  onChange: (data: DocumentData) => void,
+  onError?: (err: Error) => void,
 ): Unsubscribe {
-  const unsub = onSnapshot(doc(db, path), (snap) => {
-    if (snap.exists()) onChange(snap.data());
-  });
+  const unsub = onSnapshot(
+    doc(db, path),
+    (snap) => { if (snap.exists()) onChange(snap.data()); },
+    (err) => {
+      console.error(`[firestoreSync] listenDoc(${path}) failed:`, err);
+      onError?.(err);
+    },
+  );
   activeListeners.push(unsub);
   return unsub;
 }
 
 export function listenCollection(
   path: string,
-  onChange: (docs: Array<{ id: string; data: DocumentData }>) => void
+  onChange: (docs: Array<{ id: string; data: DocumentData }>) => void,
+  onError?: (err: Error) => void,
 ): Unsubscribe {
-  const unsub = onSnapshot(collection(db, path), (snap) => {
-    const docs = snap.docs.map((d) => ({ id: d.id, data: d.data() }));
-    onChange(docs);
-  });
+  const unsub = onSnapshot(
+    collection(db, path),
+    (snap) => {
+      const docs = snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+      onChange(docs);
+    },
+    (err) => {
+      console.error(`[firestoreSync] listenCollection(${path}) failed:`, err);
+      onError?.(err);
+    },
+  );
   activeListeners.push(unsub);
   return unsub;
 }
