@@ -153,17 +153,16 @@ const DayDashboard: React.FC = () => {
     if (!file || !city || !heroImage) return;
     setIsProcessingPostcard(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result as string);
-        r.onerror = () => reject(r.error);
-        r.readAsDataURL(file);
-      });
+      // Phone photos can be 12M+ pixels — Mobile Safari blows up combining
+      // those with the bg canvas. Downsize first via resizeImage (≤1200px,
+      // jpeg 0.85). The resulting data URL is < ~400KB and the merged
+      // postcard stays comfortably under Firestore's 1 MB doc limit.
+      const resizedDataUrl = await resizeImage(file, 1200, 0.85);
       const img = await new Promise<HTMLImageElement>((resolve, reject) => {
         const i = new Image();
         i.onload = () => resolve(i);
         i.onerror = () => reject(new Error('Could not decode the picked image'));
-        i.src = dataUrl;
+        i.src = resizedDataUrl;
       });
       const finalDataUrl = await mergePostcardImage(
         heroImage,
@@ -174,7 +173,8 @@ const DayDashboard: React.FC = () => {
       addPostcard(currentKey, finalDataUrl);
     } catch (err) {
       console.error('Postcard upload failed:', err);
-      showToast('Failed to develop postcard from that photo.', 'error');
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      showToast(`Failed to develop postcard: ${msg}`, 'error');
     } finally {
       setIsProcessingPostcard(false);
     }
