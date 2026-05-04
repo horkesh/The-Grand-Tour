@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard, TripUser, TripMeta } from './types';
 import { ITALIAN_CITIES } from './constants';
-import { setImage as idbSetImage, getAllImages } from './services/imageDB';
+import { setImage as idbSetImage, getAllImages, addPostcardEntry, getAllPostcards } from './services/imageDB';
 import {
   listenCollection, listenDoc, writeDoc, removeDoc,
   teardownSync, isSyncing, setSyncing, isSyncInitialized, markSyncInitialized,
@@ -222,14 +222,16 @@ export const useStore = create<AppState>()(
 
       postcards: {},
       addPostcard: (cityId, url) => {
+        // Postcards live in IndexedDB now (was localStorage, blew the 5 MB
+        // quota on iOS Safari with a few full-quality data URLs). State still
+        // mirrors them for fast render — but we don't persist this slice.
+        addPostcardEntry(cityId, url).catch((e) => console.warn('[postcardDB] write failed:', e));
         set((state) => ({
           postcards: {
             ...state.postcards,
             [cityId]: [...(state.postcards[cityId] || []), url]
           }
         }));
-        const updatedPostcards = useStore.getState().postcards;
-        syncWrite('postcardIndex', { postcards: updatedPostcards } as unknown as Record<string, unknown>);
         // Auto-publish feed item for family/friends
         const feedId = `postcard-${cityId}-${Date.now()}`;
         const { city, stop } = resolveCityKey(cityId);
@@ -258,8 +260,28 @@ export const useStore = create<AppState>()(
       },
       hydrateImages: async () => {
         try {
-          const images = await getAllImages();
-          set({ waypointImages: images, imagesHydrated: true });
+          const [images, pcsFromIdb] = await Promise.all([
+            getAllImages(),
+            getAllPostcards().catch(() => ({} as Record<string, string[]>)),
+          ]);
+
+          // One-time migration: if IDB has no postcards but the previous
+          // localStorage-persisted state has some, push them to IDB so the
+          // user doesn't lose their existing memories on this deploy.
+          const fromLocalStorage = useStore.getState().postcards;
+          const idbEmpty = Object.keys(pcsFromIdb).length === 0;
+          const hasLegacy = Object.keys(fromLocalStorage).length > 0;
+          let pcs = pcsFromIdb;
+          if (idbEmpty && hasLegacy) {
+            for (const [cityId, urls] of Object.entries(fromLocalStorage)) {
+              for (const url of urls) {
+                try { await addPostcardEntry(cityId, url); } catch (e) { console.warn('[postcardDB] migrate failed:', e); }
+              }
+            }
+            pcs = await getAllPostcards().catch(() => fromLocalStorage);
+          }
+
+          set({ waypointImages: images, postcards: pcs, imagesHydrated: true });
         } catch (e) {
           console.error('[imageDB] hydrate failed:', e);
           set({ imagesHydrated: true });
@@ -378,12 +400,10 @@ export const useStore = create<AppState>()(
           setSyncing(false);
         });
 
-        // Listen for postcards
-        listenDoc(`${basePath}/postcardIndex`, (data) => {
-          setSyncing(true);
-          set({ postcards: (data as any)?.postcards || {} });
-          setSyncing(false);
-        });
+        // Postcards used to live in trips/{id}/postcardIndex but the doc
+        // overflowed Firestore's 1 MB limit fast — they're now in IndexedDB
+        // per device. Listener removed; cross-device postcard sync would
+        // need a per-postcard sub-collection if we add it back.
 
         // Listen for partner user info
         const partnerUid = state.tripMeta?.partnerIds.find(id => id !== state.currentUser?.uid);
@@ -407,7 +427,9 @@ export const useStore = create<AppState>()(
         lastViewedDay: state.lastViewedDay,
         savedPOIs: state.savedPOIs,
         stamps: state.stamps,
-        postcards: state.postcards,
+        // postcards: intentionally NOT persisted to localStorage — they're
+        // base64 data URLs that overflow Safari's 5 MB quota. Stored in
+        // IndexedDB via imageDB and re-hydrated by hydrateImages().
         weatherData: state.weatherData,
         hasSeenTripComplete: state.hasSeenTripComplete,
         chatMessages: state.chatMessages.map(({ grounding, ...rest }) => rest),
