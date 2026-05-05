@@ -92,26 +92,18 @@ export const ITALIAN_CITIES: TripSegment[] = [
   {
     id: 'day-5',
     title: 'Day 5: Anniversary Day',
-    location: 'Saturnia & Sorano',
-    driveFromPrev: '1h 30m',
-    description: 'May 6, 2026: Cascate del Mulino thermal soak and Maremma exploration.',
-    milestone: 'Twenty years later, still soaking in the magic of life together at the turquoise thermal springs.',
-    image: 'https://static.saltinourhair.com/wp-content/uploads/2019/05/23135632/Hot-Springs-Tuscany-Saturnia.jpg',
-    itineraryContext: 'Our special day. An early morning soak in natural hot springs followed by a candlelit dinner in a quiet hilltop borgo.',
-    mapUrl: 'https://www.google.com/maps/dir/San+Quirico+d\'Orcia/Radicofani/Pitigliano/Cascate+del+Mulino/Sorano/Sovana/Monticchiello',
-    center: { lat: 42.75, lng: 11.65 },
+    location: 'Siena',
+    driveFromPrev: '1h 10m',
+    description: 'May 6, 2026: A full day in Siena, then anniversary dinner at Osteria La Porta in Monticchiello.',
+    milestone: 'Twenty years. Wandering Siena\'s shell-shaped piazza in the afternoon, then dinner at our quiet hilltop borgo.',
+    image: 'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?auto=format&fit=crop&w=1600&q=80',
+    itineraryContext: 'Our anniversary day, kept deliberately simple: explore Siena at our own pace, then drive south for a candlelit anniversary dinner at Osteria La Porta in Monticchiello.',
+    mapUrl: 'https://www.google.com/maps/dir/Siena/Osteria+La+Porta+Monticchiello',
+    center: { lat: 43.20, lng: 11.50 },
     zoom: 10,
     plannedStops: [
-      { title: 'Radicofani Fortress', uri: 'https://www.google.com/maps/search/?api=1&query=Radicofani+Fortress', type: 'sight', lat: 42.8967, lng: 11.7672, duration: '15 min' },
-      { title: 'Pitigliano Panoramico', uri: 'https://www.google.com/maps/search/?api=1&query=Pitigliano+Panoramic+Point', type: 'sight', lat: 42.6333, lng: 11.6667, duration: '30 min' },
-      { title: 'Cascate del Mulino', uri: 'https://maps.app.goo.gl/xLD5mWMEKsgkDSVL7', type: 'sight', lat: 42.6483, lng: 11.5125 },
-      { title: 'Hosteria del Borgo (Lunch)', uri: 'https://maps.app.goo.gl/nUR4tkzT5LMeZ95x8', type: 'restaurant', lat: 42.6820, lng: 11.7140 },
-      { title: 'Sorano Masso Leopoldino', uri: 'https://www.google.com/maps/search/?api=1&query=Sorano+Masso+Leopoldino', type: 'sight', lat: 42.6817, lng: 11.7139 },
-      { title: 'Sovana Medievale', uri: 'https://www.google.com/maps/search/?api=1&query=Sovana+Centro+Storico', type: 'sight', lat: 42.6577, lng: 11.6434, duration: '20 min' },
-      { title: 'Osteria La Porta (Anniversary)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225 },
-      { title: 'La Terrazza della Val d\'Orcia', uri: 'https://www.google.com/maps/search/?api=1&query=La+Terrazza+della+Val+d%27Orcia+Pienza', type: 'restaurant', lat: 43.0765, lng: 11.6795, badge: 'Backup' },
-      { title: 'La Terrazza del Chiostro', uri: 'https://www.google.com/maps/search/?api=1&query=La+Terrazza+del+Chiostro+Pienza', type: 'restaurant', lat: 43.0760, lng: 11.6780, badge: 'Backup' },
-      { title: 'Bacco E Cerere 2.0', uri: 'https://www.google.com/maps/search/?api=1&query=Bacco+E+Cerere+2.0+Saturnia', type: 'restaurant', lat: 42.6500, lng: 11.5100, badge: 'Backup' }
+      { title: 'Siena (Piazza del Campo)', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+del+Campo+Siena', type: 'sight', lat: 43.3186, lng: 11.3306 },
+      { title: 'Osteria La Porta (Anniversary Dinner)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225 }
     ]
   },
   {
