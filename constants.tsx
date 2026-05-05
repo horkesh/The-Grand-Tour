@@ -98,11 +98,13 @@ export const ITALIAN_CITIES: TripSegment[] = [
     milestone: 'Twenty years. Wandering Siena\'s shell-shaped piazza in the afternoon, then dinner at our quiet hilltop borgo.',
     image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1600&q=80',
     itineraryContext: 'Our anniversary day, kept deliberately simple: explore Siena at our own pace, then drive south for a candlelit anniversary dinner at Osteria La Porta in Monticchiello.',
-    mapUrl: 'https://www.google.com/maps/dir/Siena/Osteria+La+Porta+Monticchiello',
+    mapUrl: 'https://www.google.com/maps/dir/San+Quirico+d\'Orcia/Buonconvento/Piazza+del+Campo+Siena/Site+della+Leonina+Belvedere+Crete+Senesi/Osteria+La+Porta+Monticchiello',
     center: { lat: 43.20, lng: 11.50 },
     zoom: 10,
     plannedStops: [
+      { title: 'Buonconvento', uri: 'https://www.google.com/maps/search/?api=1&query=Buonconvento+centro+storico', type: 'sight', lat: 43.1373, lng: 11.4843, duration: '30 min' },
       { title: 'Siena (Piazza del Campo)', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+del+Campo+Siena', type: 'sight', lat: 43.3186, lng: 11.3306 },
+      { title: 'Belvedere Crete Senesi (Leonina)', uri: 'https://www.google.com/maps/search/?api=1&query=Site+della+Leonina+Belvedere+Crete+Senesi', type: 'sight', lat: 43.2686, lng: 11.4570, duration: '15 min' },
       { title: 'Osteria La Porta (Anniversary Dinner)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225 }
     ]
   },
