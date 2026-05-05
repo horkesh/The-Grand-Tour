@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard, TripUser, TripMeta } from './types';
 import { ITALIAN_CITIES } from './constants';
-import { setImage as idbSetImage, getAllImages, addPostcardEntry, getAllPostcards } from './services/imageDB';
+import { setImage as idbSetImage, getAllImages, addPostcardEntry, getAllPostcards, deleteImagesByPrefix } from './services/imageDB';
 import {
   listenCollection, listenDoc, writeDoc, removeDoc,
   teardownSync, isSyncing, setSyncing, isSyncInitialized, markSyncInitialized,
@@ -266,6 +266,17 @@ export const useStore = create<AppState>()(
       },
       hydrateImages: async () => {
         try {
+          // One-shot: drop the cached Day 5 hero/stop images that were
+          // generated under the OLD anniversary-day plan (Saturnia thermal
+          // pools etc.). Without this, waypointImages overrides the new
+          // Val d'Orcia constants image on returning visitors.
+          try {
+            if (localStorage.getItem('gt_day5_image_reset_v1') !== '1') {
+              await deleteImagesByPrefix('day-5');
+              localStorage.setItem('gt_day5_image_reset_v1', '1');
+            }
+          } catch (e) { console.warn('[imageDB] day-5 reset failed:', e); }
+
           const [images, pcsFromIdb] = await Promise.all([
             getAllImages(),
             getAllPostcards().catch(() => ({} as Record<string, string[]>)),

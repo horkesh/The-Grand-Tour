@@ -43,6 +43,31 @@ export async function setImage(key: string, data: string): Promise<void> {
   });
 }
 
+/** Delete every cached image whose key starts with `prefix` (e.g. "day-5"). */
+export async function deleteImagesByPrefix(prefix: string): Promise<number> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    let deleted = 0;
+    const req = store.openCursor();
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (cursor) {
+        const key = String(cursor.key);
+        if (key === prefix || key.startsWith(`${prefix}_`)) {
+          cursor.delete();
+          deleted += 1;
+        }
+        cursor.continue();
+      } else {
+        resolve(deleted);
+      }
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
 export async function getAllImages(): Promise<Record<string, string>> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
