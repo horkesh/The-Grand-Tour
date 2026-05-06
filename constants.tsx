@@ -105,7 +105,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Buonconvento', uri: 'https://www.google.com/maps/search/?api=1&query=Buonconvento+centro+storico', type: 'sight', lat: 43.1373, lng: 11.4843, duration: '30 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/BuonconventoPanorama4.jpg/1280px-BuonconventoPanorama4.jpg' },
       { title: 'Siena (Piazza del Campo)', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+del+Campo+Siena', type: 'sight', lat: 43.3186, lng: 11.3306, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Siena5.jpg/1280px-Siena5.jpg' },
       { title: 'Belvedere Crete Senesi (Leonina)', uri: 'https://www.google.com/maps/search/?api=1&query=Site+della+Leonina+Belvedere+Crete+Senesi', type: 'sight', lat: 43.2686, lng: 11.4570, duration: '15 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Crete_Senesi_Monte_Oliveto.jpg/1280px-Crete_Senesi_Monte_Oliveto.jpg' },
-      { title: 'Osteria La Porta (Anniversary Dinner)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/MonticchielloPanoramaSW2.JPG/1280px-MonticchielloPanoramaSW2.JPG' }
+      { title: 'Osteria La Porta (Anniversary Dinner)', uri: 'https://maps.app.goo.gl/tvB9NqcH83jFiMGe9', type: 'restaurant', lat: 43.0645, lng: 11.7225, image: 'https://www.osterialaporta.com/wp-content/uploads/2026/03/osteria_laporta_monticchiello_valdorcia_toscana-2.webp' }
     ]
   },
   {
