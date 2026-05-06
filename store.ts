@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { SavedPOI, Location, WeatherInfo, ChatMessage, ChecklistItem, AudioPostcard, TripUser, TripMeta } from './types';
 import { ITALIAN_CITIES } from './constants';
 import { setImage as idbSetImage, getAllImages, addPostcardEntry, getAllPostcards, deleteImagesByPrefix } from './services/imageDB';
+import { shrinkDataUrl } from './utils/shrinkDataUrl';
 import {
   listenCollection, listenDoc, writeDoc, removeDoc,
   teardownSync, isSyncing, setSyncing, isSyncInitialized, markSyncInitialized,
@@ -238,22 +239,37 @@ export const useStore = create<AppState>()(
             [cityId]: [...(state.postcards[cityId] || []), url]
           }
         }));
-        // Auto-publish feed item for family/friends
+        // Auto-publish feed item for family/friends. The merged postcard at
+        // full quality is often >600 KB and used to get dropped from the
+        // feed doc to stay under Firestore's 1 MB limit — meaning family
+        // never saw the photo. Now we always generate a thumbnail-grade
+        // version (800 px wide, jpeg 0.7) specifically for the feed; the
+        // full-quality copy stays in IndexedDB locally.
         const feedId = `postcard-${cityId}-${Date.now()}`;
         const { city, stop } = resolveCityKey(cityId);
-        // Skip oversized data URLs in the feed item to stay under Firestore's
-        // 1 MB doc limit. https URLs are tiny and embed cleanly.
-        const safeImageUrl = url.length < 600_000 ? url : '';
         const title = stop && city
           ? `New postcard from ${stop.title}, ${city.location}`
           : `New postcard from ${city?.location || 'the trip'}`;
-        syncWrite(`feed/${feedId}`, {
-          type: 'postcard',
-          cityId,
-          title,
-          imageUrl: safeImageUrl,
-          timestamp: Date.now(),
-        });
+        shrinkDataUrl(url, 800, 0.7)
+          .then((thumb) => {
+            syncWrite(`feed/${feedId}`, {
+              type: 'postcard',
+              cityId,
+              title,
+              imageUrl: thumb,
+              timestamp: Date.now(),
+            });
+          })
+          .catch((err) => {
+            console.warn('[postcard] thumb generation failed, posting without image:', err);
+            syncWrite(`feed/${feedId}`, {
+              type: 'postcard',
+              cityId,
+              title,
+              imageUrl: url.length < 600_000 ? url : '',
+              timestamp: Date.now(),
+            });
+          });
       },
 
       waypointImages: {},
