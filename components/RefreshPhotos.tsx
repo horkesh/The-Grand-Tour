@@ -2,13 +2,39 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { isPlacesApiBlocked, clearPlacesApiBlock } from '../services/placesService';
+import { republishAllPostcards } from '../services/republishPostcards';
 
 const RefreshPhotos: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'idle' | 'wiping' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [republishStep, setRepublishStep] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
+  const [republishMsg, setRepublishMsg] = useState('');
+  const [republishResult, setRepublishResult] = useState<{ removed: number; published: number } | null>(null);
+
+  const tripId = useStore((s) => s.tripMeta?.id);
 
   const wasBlocked = isPlacesApiBlocked();
+
+  const handleRepublish = async () => {
+    if (!tripId) {
+      setErrorMsg('No tripId — make sure you\'re signed in as the trip owner.');
+      setRepublishStep('error');
+      return;
+    }
+    setRepublishStep('running');
+    setRepublishMsg('Starting…');
+    try {
+      const res = await republishAllPostcards(tripId, (p) => {
+        setRepublishMsg(p.message || `${p.step} ${p.current}/${p.total}`);
+      });
+      setRepublishResult(res);
+      setRepublishStep('done');
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : String(e));
+      setRepublishStep('error');
+    }
+  };
 
   const wipeAndRefetch = async () => {
     setStep('wiping');
@@ -118,6 +144,61 @@ const RefreshPhotos: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* ---- Republish postcards ---- */}
+        <div className="mt-8 bg-white dark:bg-[#111] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 p-6 space-y-4">
+          <div>
+            <p className="text-[10px] font-bold text-[#ac3d29] uppercase tracking-widest mb-2">Family feed</p>
+            <h3 className="font-serif text-xl font-bold text-[#194f4c] dark:text-white">Republish postcards</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Some early postcards on this device shipped to family without a thumbnail. This rewrites every postcard's family-feed entry with a fresh thumbnail and removes any duplicate/empty ones. Idempotent — safe to run again.
+            </p>
+          </div>
+
+          {republishStep === 'idle' && (
+            <button
+              onClick={handleRepublish}
+              disabled={!tripId}
+              className="w-full px-5 py-3 rounded-xl bg-[#ac3d29] text-white text-sm font-bold hover:bg-[#8f3320] disabled:opacity-50 transition-colors"
+            >
+              Republish all postcards
+            </button>
+          )}
+
+          {republishStep === 'running' && (
+            <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 flex items-center gap-3">
+              <div className="w-6 h-6 border-2 border-[#ac3d29] border-t-transparent rounded-full animate-spin shrink-0" />
+              <p className="text-xs text-slate-700 dark:text-slate-200">{republishMsg}</p>
+            </div>
+          )}
+
+          {republishStep === 'done' && republishResult && (
+            <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/30 p-4 text-xs text-emerald-800 dark:text-emerald-200 space-y-1">
+              <p className="font-bold uppercase tracking-widest text-[10px]">Done</p>
+              <p>Removed {republishResult.removed} old feed entries.</p>
+              <p>Published {republishResult.published} fresh postcards with thumbnails.</p>
+              <button
+                onClick={() => { setRepublishStep('idle'); setRepublishResult(null); }}
+                className="mt-2 text-[10px] underline"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+
+          {republishStep === 'error' && (
+            <div className="rounded-2xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/30 p-4 text-xs text-red-700 dark:text-red-300 space-y-2">
+              <p className="font-bold uppercase tracking-widest text-[10px]">Failed</p>
+              <p className="font-mono break-words">{errorMsg}</p>
+              <button
+                onClick={() => setRepublishStep('idle')}
+                className="text-[10px] underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

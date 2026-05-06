@@ -6,6 +6,7 @@ import {
   updateDoc,
   deleteDoc,
   writeBatch,
+  getDocs,
   Unsubscribe,
   DocumentData,
 } from 'firebase/firestore';
@@ -77,6 +78,11 @@ export async function patchDoc(path: string, data: Record<string, unknown>) {
 
 export async function removeDoc(path: string) {
   await deleteDoc(doc(db, path));
+}
+
+export async function readCollection(path: string): Promise<Array<{ id: string; data: DocumentData }>> {
+  const snap = await getDocs(collection(db, path));
+  return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
 }
 
 export async function batchWrite(ops: Array<{ path: string; data: Record<string, unknown>; op: 'set' | 'update' | 'delete' }>) {
