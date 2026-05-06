@@ -11,6 +11,7 @@ import FeedEntryActions, { FeedComment, FeedIdentity } from './FeedEntryActions'
 
 // Lazy + boundary so any FamilyInteractions hiccup can't blank /live again.
 const FamilyInteractions = React.lazy(() => import('./FamilyInteractions'));
+const PhotoChallengesGallery = React.lazy(() => import('./PhotoChallengesGallery'));
 
 interface LiveTripPageProps {
   /** When true, the page is embedded inside the main app Layout. Skips the
@@ -84,6 +85,9 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
   const [copied, setCopied] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  type LiveTab = 'live' | 'photos' | 'updates' | 'challenges' | 'family';
+  const [tab, setTab] = useState<LiveTab>('live');
 
   useEffect(() => {
     ensureAnonymousAuth().then(() => setAuthReady(true)).catch((e) => {
@@ -306,58 +310,89 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
         )}
       </header>
 
-      {/* Anniversary banner — only on May 6, 2026 */}
-      {isAnniversaryDay && (
-        <div className="mx-auto max-w-xl w-full px-4 mb-2">
-          <div className="rounded-2xl px-4 py-3 text-center bg-gradient-to-r from-[#ac3d29] via-[#d97757] to-[#ac3d29] text-white shadow-lg">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] opacity-90">
-              Today, May 6
-            </p>
-            <p className="font-serif text-base sm:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
-              🥂 Twenty years. Cin cin to Haris &amp; Maja.
-            </p>
-          </div>
+      {/* Tab strip */}
+      <nav className="max-w-xl mx-auto w-full px-4 mb-4">
+        <div className="flex gap-1 overflow-x-auto bg-white dark:bg-gray-900 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-800">
+          {[
+            { id: 'live' as const,       label: 'Live'       },
+            { id: 'photos' as const,     label: 'Photos'     },
+            { id: 'updates' as const,    label: 'Updates'    },
+            { id: 'challenges' as const, label: 'Challenges' },
+            { id: 'family' as const,     label: 'Family'     },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex-1 min-w-fit px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-colors ${
+                tab === t.id
+                  ? 'bg-[#194f4c] text-white shadow'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
+      </nav>
+
+      {/* === LIVE tab: anniversary banner + stats + map + legend === */}
+      {tab === 'live' && (
+        <>
+          {isAnniversaryDay && (
+            <div className="mx-auto max-w-xl w-full px-4 mb-2">
+              <div className="rounded-2xl px-4 py-3 text-center bg-gradient-to-r from-[#ac3d29] via-[#d97757] to-[#ac3d29] text-white shadow-lg">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] opacity-90">
+                  Today, May 6
+                </p>
+                <p className="font-serif text-base sm:text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  🥂 Twenty years. Cin cin to Haris &amp; Maja.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="mx-auto max-w-xl w-full px-4 mb-3">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+              <StatTile value={tripDayLabel().replace(' of 8', '/8')} label="Day" />
+              <StatTile value={String(stats.cities)} label="Cities" />
+              <StatTile value={String(stats.stamps)} label="Stamps" />
+              <StatTile value={String(stats.postcards)} label="Photos" />
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15, duration: 0.6 }}
+          >
+            <LiveMap
+              visitedIds={visitedIds}
+              currentCityId={currentCityId}
+              livePosition={livePosition}
+            />
+          </motion.div>
+
+          <div className="flex items-center justify-center gap-5 px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-[#194f4c] inline-block" /> Visited
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" /> Upcoming
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-[#194f4c] border-2 border-[#ac3d29] inline-block" /> Here now
+            </span>
+          </div>
+        </>
       )}
 
-      {/* Stats banner */}
-      <div className="mx-auto max-w-xl w-full px-4 mb-3">
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-          <StatTile value={tripDayLabel().replace(' of 8', '/8')} label="Day" />
-          <StatTile value={String(stats.cities)} label="Cities" />
-          <StatTile value={String(stats.stamps)} label="Stamps" />
-          <StatTile value={String(stats.postcards)} label="Photos" />
-        </div>
-      </div>
-
-      {/* Map */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15, duration: 0.6 }}
-      >
-        <LiveMap
-          visitedIds={visitedIds}
-          currentCityId={currentCityId}
-          livePosition={livePosition}
-        />
-      </motion.div>
-
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-5 px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-[#194f4c] inline-block" /> Visited
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" /> Upcoming
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-[#194f4c] border-2 border-[#ac3d29] inline-block" /> Here now
-        </span>
-      </div>
-
-      {/* Photo wall */}
-      {photoFeed.length > 0 && (
+      {/* === PHOTOS tab === */}
+      {tab === 'photos' && photoFeed.length === 0 && (
+        <p className="max-w-xl mx-auto w-full px-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+          No photos yet — postcards from the road will land here.
+        </p>
+      )}
+      {tab === 'photos' && photoFeed.length > 0 && (
         <section className="max-w-xl mx-auto w-full px-4 pb-2">
           <h2
             className="font-serif text-lg text-[#194f4c] dark:text-teal-300 mt-4 mb-3 border-b border-gray-200 dark:border-gray-700 pb-1"
@@ -406,7 +441,8 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
         </button>
       )}
 
-      {/* Feed */}
+      {/* === UPDATES tab === */}
+      {tab === 'updates' && (
       <section className="flex-1 max-w-xl mx-auto w-full px-4 pb-6">
         <h2
           className="font-serif text-lg text-[#194f4c] dark:text-teal-300 mt-4 mb-3 border-b border-gray-200 dark:border-gray-700 pb-1"
@@ -488,10 +524,37 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
             );
           })}
         </div>
+        {textFeed.length === 0 && (
+          <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-12">
+            No updates yet — stamps and voice notes will land here.
+          </p>
+        )}
       </section>
+      )}
 
-      {/* Family interactions — guestbook, care packages, nickname prompt */}
-      {tripId && (
+      {/* === CHALLENGES tab === */}
+      {tab === 'challenges' && tripId && (
+        <ErrorBoundary
+          label="PhotoChallengesGallery"
+          fallback={
+            <div className="max-w-xl mx-auto w-full px-4 pb-2 text-center text-xs text-slate-400">
+              Photo challenges unavailable.
+            </div>
+          }
+        >
+          <React.Suspense fallback={null}>
+            <PhotoChallengesGallery
+              tripId={tripId}
+              authReady={authReady}
+              identity={identity}
+              onAskIdentity={askIdentity}
+            />
+          </React.Suspense>
+        </ErrorBoundary>
+      )}
+
+      {/* === FAMILY tab === */}
+      {tab === 'family' && tripId && (
         <ErrorBoundary
           label="FamilyInteractions"
           fallback={
@@ -506,7 +569,8 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
         </ErrorBoundary>
       )}
 
-      {/* Share */}
+      {/* Share footer — only on the Family tab */}
+      {tab === 'family' && (
       <footer className="max-w-xl mx-auto w-full px-4 pb-10">
         <div className="rounded-2xl border border-dashed border-[#194f4c]/40 dark:border-teal-700/40 p-4 text-center">
           <p
@@ -524,6 +588,7 @@ const LiveTripPage: React.FC<LiveTripPageProps> = ({ embedded = false }) => {
           </button>
         </div>
       </footer>
+      )}
     </div>
   );
 };
