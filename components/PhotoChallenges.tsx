@@ -24,7 +24,26 @@ const CHALLENGES = [
 ];
 
 /** Resize image file to fit within maxSize px and return as JPEG data URL (keeps under Firestore 1MB limit) */
-function resizeImageToDataUrl(file: File, maxSize = 800, quality = 0.7): Promise<string> {
+async function resizeImageToDataUrl(file: File, maxSize = 800, quality = 0.7): Promise<string> {
+  // Try createImageBitmap first — handles HEIC on iOS where <img> can't.
+  // Falls back to the classic <img>+URL.createObjectURL path on browsers
+  // without bitmap support or for formats it rejects.
+  let bitmap: ImageBitmap | null = null;
+  if (typeof createImageBitmap === 'function') {
+    try { bitmap = await createImageBitmap(file); } catch { /* fall through */ }
+  }
+  if (bitmap) {
+    const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    return canvas.toDataURL('image/jpeg', quality);
+  }
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -37,7 +56,7 @@ function resizeImageToDataUrl(file: File, maxSize = 800, quality = 0.7): Promise
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => reject(new Error(`<img> couldn't decode ${file.type || 'this file'} — try a JPEG/PNG`));
     img.src = URL.createObjectURL(file);
   });
 }
@@ -48,6 +67,7 @@ const PhotoChallenges: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tripMeta) return;
@@ -60,15 +80,38 @@ const PhotoChallenges: React.FC = () => {
   }, [tripMeta]);
 
   const handleUpload = async (challengeId: string, file: File) => {
-    if (!currentUser || !tripMeta) return;
+    setUploadError(null);
+    if (!currentUser) {
+      setUploadError('Not signed in — sign in via the trip owner account first.');
+      return;
+    }
+    if (!tripMeta) {
+      setUploadError('No trip data found. Reload the app and try again.');
+      return;
+    }
     setUploadingId(challengeId);
     try {
       const dataUrl = await resizeImageToDataUrl(file);
-      await writeDoc(`trips/${tripMeta.id}/challenges/${challengeId}`, {
-        completions: { ...completions[challengeId], [currentUser.uid]: dataUrl },
-      });
+      // Sanity check the doc size — Firestore caps single docs at 1 MB.
+      // The other player's photo (if present) shares this doc, so we
+      // budget ~450 KB per submission.
+      if (dataUrl.length > 600_000) {
+        const smaller = await resizeImageToDataUrl(file, 600, 0.6);
+        if (smaller.length > 600_000) {
+          throw new Error('Photo too large after compression — try a smaller image');
+        }
+        await writeDoc(`trips/${tripMeta.id}/challenges/${challengeId}`, {
+          completions: { ...completions[challengeId], [currentUser.uid]: smaller },
+        });
+      } else {
+        await writeDoc(`trips/${tripMeta.id}/challenges/${challengeId}`, {
+          completions: { ...completions[challengeId], [currentUser.uid]: dataUrl },
+        });
+      }
     } catch (e) {
-      console.error('Upload failed:', e);
+      console.error('[PhotoChallenges] upload failed:', e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setUploadError(msg);
     }
     setUploadingId(null);
     setMenuId(null);
@@ -99,6 +142,24 @@ const PhotoChallenges: React.FC = () => {
     >
       <h1 className="font-serif text-3xl font-bold text-center mb-2">Photo Challenges</h1>
       <p className="text-xs text-slate-400 text-center mb-2">{completedCount}/{CHALLENGES.length} completed by both</p>
+
+      {uploadError && (
+        <div className="max-w-lg mx-auto mb-4 rounded-2xl border border-red-300 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-xs text-red-700 dark:text-red-300">
+          <div className="flex items-start gap-2">
+            <span className="text-base shrink-0" aria-hidden>⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold uppercase tracking-widest text-[10px] mb-1">Upload failed</p>
+              <p className="font-mono break-words leading-relaxed">{uploadError}</p>
+            </div>
+            <button
+              onClick={() => setUploadError(null)}
+              className="text-[10px] uppercase tracking-widest underline shrink-0"
+            >
+              dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="max-w-lg mx-auto mb-8">
