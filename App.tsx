@@ -26,6 +26,7 @@ import TripHub from './components/TripHub';
 import TogetherHub from './components/TogetherHub';
 import BlockBlast from './components/BlockBlast';
 import LiveTripPage from './components/LiveTripPage';
+const JudgesVerdict = React.lazy(() => import('./components/JudgesVerdict'));
 import FamilyHub from './components/FamilyHub';
 import FamilyJoin from './components/FamilyJoin';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -125,7 +126,7 @@ const MobileNav = () => {
   const p = location.pathname;
 
   const tripPaths = ['/list', '/countdown', '/reveals', '/phrases', '/flyover', '/chat', '/story'];
-  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist', '/gioco', '/together/live'];
+  const togetherPaths = ['/preferences', '/prompts', '/trivia', '/challenges', '/surprises', '/packing', '/wishlist', '/gioco', '/together/live', '/together/verdict'];
 
   const isMap = p === '/';
   const isTrip = p === '/trip' || p.startsWith('/day') || tripPaths.some(tp => p === tp);
@@ -202,6 +203,7 @@ const AnimatedRoutes = () => {
         <Route path="/trip" element={<TripHub />} />
         <Route path="/together" element={<TogetherHub />} />
         <Route path="/together/live" element={<LiveTripPage embedded />} />
+        <Route path="/together/verdict" element={<JudgesVerdict />} />
         <Route path="/gioco" element={<BlockBlast />} />
         <Route path="/day/:cityId" element={<DayDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -47,6 +47,7 @@ const PhotoChallenges: React.FC = () => {
   const [completions, setCompletions] = useState<Record<string, Record<string, string>>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [menuId, setMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tripMeta) return;
@@ -70,6 +71,19 @@ const PhotoChallenges: React.FC = () => {
       console.error('Upload failed:', e);
     }
     setUploadingId(null);
+    setMenuId(null);
+  };
+
+  const handleRemove = async (challengeId: string) => {
+    if (!currentUser || !tripMeta) return;
+    const next = { ...(completions[challengeId] || {}) };
+    delete next[currentUser.uid];
+    try {
+      await writeDoc(`trips/${tripMeta.id}/challenges/${challengeId}`, { completions: next });
+    } catch (e) {
+      console.error('Remove failed:', e);
+    }
+    setMenuId(null);
   };
 
   const myUid = currentUser?.uid || '';
@@ -141,7 +155,40 @@ const PhotoChallenges: React.FC = () => {
                       <span className="text-[9px] text-slate-400 font-bold">You</span>
                     </div>
                     {myPhoto ? (
-                      <img src={myPhoto} alt="My submission" className="w-full aspect-square object-cover rounded-xl" />
+                      <div className="relative">
+                        <button
+                          onClick={() => setMenuId(menuId === ch.id ? null : ch.id)}
+                          className="block w-full"
+                          aria-label="Edit photo"
+                        >
+                          <img src={myPhoto} alt="My submission" className="w-full aspect-square object-cover rounded-xl" />
+                        </button>
+                        {menuId === ch.id && (
+                          <div className="absolute inset-0 rounded-xl bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+                            <button
+                              onClick={() => {
+                                setUploadingId(ch.id);
+                                fileInputRef.current?.click();
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-white text-[#194f4c] text-[10px] font-bold uppercase tracking-wider hover:bg-slate-100"
+                            >
+                              🔄 Replace
+                            </button>
+                            <button
+                              onClick={() => handleRemove(ch.id)}
+                              className="px-3 py-1.5 rounded-lg bg-[#ac3d29] text-white text-[10px] font-bold uppercase tracking-wider hover:bg-[#8f3320]"
+                            >
+                              🗑 Remove
+                            </button>
+                            <button
+                              onClick={() => setMenuId(null)}
+                              className="text-white/70 text-[9px] underline mt-1"
+                            >
+                              cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <button
                         onClick={() => {
