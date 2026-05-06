@@ -130,8 +130,16 @@ const PhotoChallenges: React.FC = () => {
   };
 
   const myUid = currentUser?.uid || '';
-  const partnerUid = partnerUser?.uid || '';
-  const completedCount = CHALLENGES.filter(c => completions[c.id]?.[myUid] && completions[c.id]?.[partnerUid]).length;
+  // Don't rely solely on partnerUser.uid — if the partner-listener hasn't
+  // populated yet (or the partner joined recently), partnerUser is null
+  // and partnerUid would be ''. Instead, treat 'partner submission' as
+  // 'any uid in this challenge's completions doc that isn't mine'.
+  const partnerEntry = (challengeId: string): [string, string] | null => {
+    const entries = Object.entries(completions[challengeId] || {});
+    const found = entries.find(([uid]) => uid && uid !== myUid);
+    return found ? [found[0], found[1] as string] : null;
+  };
+  const completedCount = CHALLENGES.filter((c) => completions[c.id]?.[myUid] && partnerEntry(c.id)).length;
 
   return (
     <motion.div
@@ -186,7 +194,8 @@ const PhotoChallenges: React.FC = () => {
       <div className="max-w-lg mx-auto grid grid-cols-1 gap-4">
         {CHALLENGES.map(ch => {
           const myPhoto = completions[ch.id]?.[myUid];
-          const partnerPhoto = completions[ch.id]?.[partnerUid];
+          const pe = partnerEntry(ch.id);
+          const partnerPhoto = pe?.[1];
           const bothDone = myPhoto && partnerPhoto;
 
           return (

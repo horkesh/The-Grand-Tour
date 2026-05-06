@@ -80,9 +80,15 @@ const JudgesVerdict: React.FC = () => {
   }, [tripMeta]);
 
   const myUid = currentUser?.uid || '';
-  const partnerUid = partnerUser?.uid || '';
   const myName = (currentUser?.displayName || 'You').split(' ')[0];
   const partnerName = (partnerUser?.displayName || 'Partner').split(' ')[0];
+  // Resolve the partner submission as 'first uid in completions that isn't mine'
+  // so the page works even before the partnerUser listener populates.
+  const partnerEntry = (challengeId: string): string | undefined => {
+    const entries = Object.entries(completions[challengeId] || {});
+    const found = entries.find(([uid]) => uid && uid !== myUid);
+    return found ? (found[1] as string) : undefined;
+  };
 
   // Identify which side is "Maja". If she's in the trip, that's the rigged
   // winner regardless of who's looking at the page. Otherwise default to the
@@ -148,7 +154,7 @@ const JudgesVerdict: React.FC = () => {
         <div className="space-y-4 mb-10">
           {CHALLENGES.map((ch, i) => {
             const myPhoto = completions[ch.id]?.[myUid];
-            const partnerPhoto = completions[ch.id]?.[partnerUid];
+            const partnerPhoto = partnerEntry(ch.id);
             const v = votes[ch.id];
             const note = (i % 2 === 0 ? JUDGE_NOTES : PIQUED_NOTES)[i % 6];
             return (
