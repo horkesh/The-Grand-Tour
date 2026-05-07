@@ -124,9 +124,9 @@ export const ITALIAN_CITIES: TripSegment[] = [
     plannedStops: [
       { title: 'Montepulciano Piazza Grande', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+Grande+Montepulciano', type: 'sight', lat: 43.0925, lng: 11.7811, duration: '45 min' },
       { title: 'Castiglione del Lago', uri: 'https://www.google.com/maps/search/?api=1&query=Castiglione+del+Lago+Castle', type: 'sight', lat: 43.1278, lng: 12.0515, duration: '15 min' },
-      { title: 'Ristorante del Sole (Lunch)', uri: 'https://maps.app.goo.gl/t3QbuEpBNyybH1Qc7', type: 'restaurant', lat: 43.1107, lng: 12.3908 },
+      { title: 'Ristorante La Terrazza (Lunch)', uri: 'https://maps.app.goo.gl/UYcuDFhJFtKcSuN9A', type: 'restaurant', lat: 43.1280, lng: 12.0507 },
       { title: 'Spello (Un Balcone su Spello)', uri: 'https://www.booking.com/Share-hHubeQE', type: 'hotel', lat: 42.9922, lng: 12.6675 },
-      { title: 'Osteria del Buchetto (Dinner)', uri: 'https://maps.app.goo.gl/seB27Ni77qi57zmR8', type: 'restaurant', lat: 42.9910, lng: 12.6685 }
+      { title: 'Porta Venere (Sunset)', uri: 'https://www.google.com/maps/search/?api=1&query=Porta+Venere+Spello', type: 'sight', lat: 42.9907, lng: 12.6688, duration: '30 min' }
     ]
   },
   {
