@@ -143,7 +143,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
     zoom: 8,
     parking: 'Via Appia Antica: park only in official lots. Some stretches are traffic-restricted, especially on weekends.',
     plannedStops: [
-      { title: 'Foligno Market', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035 },
+      { title: 'Foligno Republic Square', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035 },
       { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425, duration: '30–45 min' },
       { title: 'Lago di Corbara', uri: 'https://www.google.com/maps/search/?api=1&query=Lago+di+Corbara+Viewpoint', type: 'sight', lat: 42.7150, lng: 12.2350, duration: '15 min' },
       { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149, duration: '45–60 min' },
