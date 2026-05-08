@@ -293,15 +293,15 @@ export const useStore = create<AppState>()(
             }
           } catch (e) { console.warn('[imageDB] day-5 reset failed:', e); }
 
-          // One-shot: drop cached images for the two Day 7 stops that were
-          // renamed/replaced (Foligno Market → Piazza della Repubblica;
-          // Lago di Corbara → Cascata delle Marmore). Surgical so the
-          // other Day 7 stops keep their cached Places-fetched photos.
+          // One-shot: drop ALL cached Day 7 images. The Day 7 stop list has
+          // been edited multiple times (rename, swap, insert Scheggino),
+          // and inserting a stop shifts every index after it — so cached
+          // images for indices ≥ 2 now point at the wrong stop. Cleaner
+          // to nuke and let constants.image fill in.
           try {
-            if (localStorage.getItem('gt_day7_image_reset_v1') !== '1') {
-              await deleteImagesByPrefix('day-7_0');
-              await deleteImagesByPrefix('day-7_2');
-              localStorage.setItem('gt_day7_image_reset_v1', '1');
+            if (localStorage.getItem('gt_day7_image_reset_v2') !== '1') {
+              await deleteImagesByPrefix('day-7');
+              localStorage.setItem('gt_day7_image_reset_v2', '1');
             }
           } catch (e) { console.warn('[imageDB] day-7 reset failed:', e); }
 
