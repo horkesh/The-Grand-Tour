@@ -143,9 +143,9 @@ export const ITALIAN_CITIES: TripSegment[] = [
     zoom: 8,
     parking: 'Via Appia Antica: park only in official lots. Some stretches are traffic-restricted, especially on weekends.',
     plannedStops: [
-      { title: 'Foligno Republic Square', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035 },
+      { title: 'Piazza della Repubblica, Foligno', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Foligno%2C_piazza_della_repubblica_01_duomo.JPG/1280px-Foligno%2C_piazza_della_repubblica_01_duomo.JPG' },
       { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425, duration: '30–45 min' },
-      { title: 'Cascata delle Marmore', uri: 'https://www.google.com/maps/search/?api=1&query=Cascata+delle+Marmore', type: 'sight', lat: 42.5485, lng: 12.7170, duration: '60–90 min' },
+      { title: 'Cascata delle Marmore', uri: 'https://www.google.com/maps/search/?api=1&query=Cascata+delle+Marmore', type: 'sight', lat: 42.5485, lng: 12.7170, duration: '60–90 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Cascata_Marmore.jpg/1280px-Cascata_Marmore.jpg' },
       { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149, duration: '45–60 min' },
       { title: 'Tomb of Cecilia Metella', uri: 'https://www.google.com/maps/search/?api=1&query=Tomb+of+Cecilia+Metella', type: 'sight', lat: 41.8520, lng: 12.5205 },
       { title: 'Ostia Antica Ruins', uri: 'https://www.google.com/maps/search/?api=1&query=Ostia+Antica+Archaeological+Park', type: 'sight', lat: 41.7615, lng: 12.2855 },
