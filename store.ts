@@ -293,6 +293,18 @@ export const useStore = create<AppState>()(
             }
           } catch (e) { console.warn('[imageDB] day-5 reset failed:', e); }
 
+          // One-shot: drop cached images for the two Day 7 stops that were
+          // renamed/replaced (Foligno Market → Piazza della Repubblica;
+          // Lago di Corbara → Cascata delle Marmore). Surgical so the
+          // other Day 7 stops keep their cached Places-fetched photos.
+          try {
+            if (localStorage.getItem('gt_day7_image_reset_v1') !== '1') {
+              await deleteImagesByPrefix('day-7_0');
+              await deleteImagesByPrefix('day-7_2');
+              localStorage.setItem('gt_day7_image_reset_v1', '1');
+            }
+          } catch (e) { console.warn('[imageDB] day-7 reset failed:', e); }
+
           const [images, pcsFromIdb] = await Promise.all([
             getAllImages(),
             getAllPostcards().catch(() => ({} as Record<string, string[]>)),
