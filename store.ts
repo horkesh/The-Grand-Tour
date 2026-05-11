@@ -293,17 +293,20 @@ export const useStore = create<AppState>()(
             }
           } catch (e) { console.warn('[imageDB] day-5 reset failed:', e); }
 
-          // One-shot: drop ALL cached Day 7 images. The Day 7 stop list has
-          // been edited multiple times (rename, swap, insert Scheggino),
-          // and inserting a stop shifts every index after it — so cached
-          // images for indices ≥ 2 now point at the wrong stop. Cleaner
-          // to nuke and let constants.image fill in.
+          // One-shot: drop ALL cached Day 7 + Day 8 images. The stop lists
+          // have been edited multiple times — Day 7 had restaurants removed
+          // and Via Appia moved to Day 8 — so every cached index after the
+          // edits points at the wrong stop. The cached Places API photos
+          // were also overriding constants.image, leaving Via Appia / Tomb
+          // of Cecilia / Ostia Antica with near-identical Appia landscape
+          // photos. Nuke and let constants.image fill in.
           try {
-            if (localStorage.getItem('gt_day7_image_reset_v2') !== '1') {
+            if (localStorage.getItem('gt_day7_image_reset_v4') !== '1') {
               await deleteImagesByPrefix('day-7');
-              localStorage.setItem('gt_day7_image_reset_v2', '1');
+              await deleteImagesByPrefix('day-8');
+              localStorage.setItem('gt_day7_image_reset_v4', '1');
             }
-          } catch (e) { console.warn('[imageDB] day-7 reset failed:', e); }
+          } catch (e) { console.warn('[imageDB] day-7/8 reset failed:', e); }
 
           const [images, pcsFromIdb] = await Promise.all([
             getAllImages(),
