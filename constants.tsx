@@ -144,7 +144,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
     parking: 'Ostia Antica: park at the archaeological park lot off Viale dei Romagnoli — short walk to the entrance.',
     plannedStops: [
       { title: 'Piazza della Repubblica, Foligno', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Foligno%2C_piazza_della_repubblica_01_duomo.JPG/1280px-Foligno%2C_piazza_della_repubblica_01_duomo.JPG' },
-      { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425, duration: '30–45 min' },
+      { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425, duration: '30–45 min', image: 'https://upload.wikimedia.org/wikipedia/commons/3/37/Ponte_delle_Torri_-_Spoleto.jpg' },
       { title: 'Scheggino', uri: 'https://www.google.com/maps/search/?api=1&query=Scheggino+Umbria', type: 'sight', lat: 42.7125, lng: 12.8311, duration: '30 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Veduta_di_Scheggino_02.jpg/1280px-Veduta_di_Scheggino_02.jpg' },
       { title: 'Cascata delle Marmore', uri: 'https://www.google.com/maps/search/?api=1&query=Cascata+delle+Marmore', type: 'sight', lat: 42.5485, lng: 12.7170, duration: '60–90 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Cascata_Marmore.jpg/1280px-Cascata_Marmore.jpg' },
       { title: 'Ostia Antica Ruins', uri: 'https://www.google.com/maps/search/?api=1&query=Ostia+Antica+Archaeological+Park', type: 'sight', lat: 41.7615, lng: 12.2855, image: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Teatro_romano,_Ostia_Antica.JPG' }
@@ -164,10 +164,10 @@ export const ITALIAN_CITIES: TripSegment[] = [
     zoom: 12,
     parking: 'FCO car return: allow buffer for return inspection. Refuel near the airport per rental policy — keep receipts.',
     plannedStops: [
-      { title: 'Lido di Ostia', uri: 'https://www.google.com/maps/search/?api=1&query=Lido+di+Ostia+Beach', type: 'sight', lat: 41.7315, lng: 12.2745 },
+      { title: 'Lido di Ostia', uri: 'https://www.google.com/maps/search/?api=1&query=Lido+di+Ostia+Beach', type: 'sight', lat: 41.7315, lng: 12.2745, image: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Beach_Ostia_Lido_di_Roma_0013.JPG' },
       { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149, duration: '45–60 min', image: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Appian_Way.jpg' },
       { title: 'Tomb of Cecilia Metella', uri: 'https://www.google.com/maps/search/?api=1&query=Tomb+of+Cecilia+Metella', type: 'sight', lat: 41.8520, lng: 12.5205, image: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Roma_Appia_Antica_Cecilia_Metella_e_San_Nicola.JPG' },
-      { title: 'FCO Car Return', uri: 'https://www.google.com/maps/search/?api=1&query=Fiumicino+Airport+Car+Rental+Return', type: 'sight', lat: 41.7950, lng: 12.2515 }
+      { title: 'FCO Car Return', uri: 'https://www.google.com/maps/search/?api=1&query=Fiumicino+Airport+Car+Rental+Return', type: 'sight', lat: 41.7950, lng: 12.2515, image: 'https://images.weserv.nl/?url=www.winepleasures.com%2Fwp-content%2Fuploads%2F2015%2F12%2F12316536_956394737771054_3771403557805392914_n.jpg' }
     ]
   },
 ];
