@@ -167,7 +167,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
       { title: 'Lido di Ostia', uri: 'https://www.google.com/maps/search/?api=1&query=Lido+di+Ostia+Beach', type: 'sight', lat: 41.7315, lng: 12.2745, image: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Beach_Ostia_Lido_di_Roma_0013.JPG' },
       { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149, duration: '45–60 min', image: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Appian_Way.jpg' },
       { title: 'Tomb of Cecilia Metella', uri: 'https://www.google.com/maps/search/?api=1&query=Tomb+of+Cecilia+Metella', type: 'sight', lat: 41.8520, lng: 12.5205, image: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Roma_Appia_Antica_Cecilia_Metella_e_San_Nicola.JPG' },
-      { title: 'FCO Car Return', uri: 'https://www.google.com/maps/search/?api=1&query=Fiumicino+Airport+Car+Rental+Return', type: 'sight', lat: 41.7950, lng: 12.2515 }
+      { title: 'FCO Car Return', uri: 'https://www.google.com/maps/search/?api=1&query=Fiumicino+Airport+Car+Rental+Return', type: 'sight', lat: 41.7950, lng: 12.2515, image: 'https://www.winepleasures.com/wp-content/uploads/2015/12/12316536_956394737771054_3771403557805392914_n.jpg' }
     ]
   },
 ];
