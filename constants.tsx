@@ -131,23 +131,22 @@ export const ITALIAN_CITIES: TripSegment[] = [
   },
   {
     id: 'day-7',
-    title: 'Day 7: Via Appia Antica',
-    location: 'Spoleto & Ancient Rome',
+    title: 'Day 7: Sea Bound',
+    location: 'Spoleto to the Coast',
     driveFromPrev: '2h 45m',
-    description: 'May 8, 2026: Walking the ancient basalt paving stones toward Ostia.',
-    milestone: 'Walking in the footsteps of emperors. The ancient stones of the Appian Way guide us toward the sea after twenty wonderful years.',
+    description: 'May 8, 2026: Umbria\'s last hills, then the long run south to Ostia and the sea.',
+    milestone: 'From mountain springs to Mediterranean salt — twenty years and still chasing the horizon together.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Paesaggio_dell%27Appia_antica.jpg',
-    itineraryContext: 'A journey through time. From the towering bridge of Spoleto to the first "superhighway" of the Roman Empire.',
-    mapUrl: 'https://www.google.com/maps/dir/Spello/Foligno/Spoleto/Cascata+delle+Marmore/Via+Appia+Antica/Ostia',
+    itineraryContext: 'A journey through time. From the towering bridge of Spoleto to the cascading waters of Marmore, then south to the ruins of Ostia.',
+    mapUrl: 'https://www.google.com/maps/dir/Spello/Foligno/Spoleto/Cascata+delle+Marmore/Ostia',
     center: { lat: 42.20, lng: 12.50 },
     zoom: 8,
-    parking: 'Via Appia Antica: park only in official lots. Some stretches are traffic-restricted, especially on weekends.',
+    parking: 'Ostia Antica: park at the archaeological park lot off Viale dei Romagnoli — short walk to the entrance.',
     plannedStops: [
       { title: 'Piazza della Repubblica, Foligno', uri: 'https://www.google.com/maps/search/?api=1&query=Piazza+della+Repubblica+Foligno', type: 'sight', lat: 42.9560, lng: 12.7035, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Foligno%2C_piazza_della_repubblica_01_duomo.JPG/1280px-Foligno%2C_piazza_della_repubblica_01_duomo.JPG' },
       { title: 'Spoleto Aqueduct', uri: 'https://www.google.com/maps/search/?api=1&query=Spoleto+Ponte+delle+Torri', type: 'sight', lat: 42.7350, lng: 12.7425, duration: '30–45 min' },
       { title: 'Scheggino', uri: 'https://www.google.com/maps/search/?api=1&query=Scheggino+Umbria', type: 'sight', lat: 42.7125, lng: 12.8311, duration: '30 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Veduta_di_Scheggino_02.jpg/1280px-Veduta_di_Scheggino_02.jpg' },
       { title: 'Cascata delle Marmore', uri: 'https://www.google.com/maps/search/?api=1&query=Cascata+delle+Marmore', type: 'sight', lat: 42.5485, lng: 12.7170, duration: '60–90 min', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Cascata_Marmore.jpg/1280px-Cascata_Marmore.jpg' },
-      { title: 'Tomb of Cecilia Metella', uri: 'https://www.google.com/maps/search/?api=1&query=Tomb+of+Cecilia+Metella', type: 'sight', lat: 41.8520, lng: 12.5205, image: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Roma_Appia_Antica_Cecilia_Metella_e_San_Nicola.JPG' },
       { title: 'Ostia Antica Ruins', uri: 'https://www.google.com/maps/search/?api=1&query=Ostia+Antica+Archaeological+Park', type: 'sight', lat: 41.7615, lng: 12.2855, image: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Teatro_romano,_Ostia_Antica.JPG' }
     ]
   },
@@ -167,6 +166,7 @@ export const ITALIAN_CITIES: TripSegment[] = [
     plannedStops: [
       { title: 'Lido di Ostia', uri: 'https://www.google.com/maps/search/?api=1&query=Lido+di+Ostia+Beach', type: 'sight', lat: 41.7315, lng: 12.2745 },
       { title: 'Via Appia Antica (Rome)', uri: 'https://www.google.com/maps/search/?api=1&query=Via+Appia+Antica+Park+Rome', type: 'sight', lat: 41.8562, lng: 12.5149, duration: '45–60 min', image: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Appian_Way.jpg' },
+      { title: 'Tomb of Cecilia Metella', uri: 'https://www.google.com/maps/search/?api=1&query=Tomb+of+Cecilia+Metella', type: 'sight', lat: 41.8520, lng: 12.5205, image: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Roma_Appia_Antica_Cecilia_Metella_e_San_Nicola.JPG' },
       { title: 'FCO Car Return', uri: 'https://www.google.com/maps/search/?api=1&query=Fiumicino+Airport+Car+Rental+Return', type: 'sight', lat: 41.7950, lng: 12.2515 }
     ]
   },

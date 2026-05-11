@@ -12,7 +12,10 @@
       "Bash(git log:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__22a6b597-ee51-4478-acfe-1eb75ba36b47__list_teams",
+      "mcp__22a6b597-ee51-4478-acfe-1eb75ba36b47__list_projects",
+      "mcp__22a6b597-ee51-4478-acfe-1eb75ba36b47__list_deployments"
     ]
   }
 }

@@ -301,10 +301,10 @@ export const useStore = create<AppState>()(
           // of Cecilia / Ostia Antica with near-identical Appia landscape
           // photos. Nuke and let constants.image fill in.
           try {
-            if (localStorage.getItem('gt_day7_image_reset_v3') !== '1') {
+            if (localStorage.getItem('gt_day7_image_reset_v4') !== '1') {
               await deleteImagesByPrefix('day-7');
               await deleteImagesByPrefix('day-8');
-              localStorage.setItem('gt_day7_image_reset_v3', '1');
+              localStorage.setItem('gt_day7_image_reset_v4', '1');
             }
           } catch (e) { console.warn('[imageDB] day-7/8 reset failed:', e); }
 
