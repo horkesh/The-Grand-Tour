@@ -16,7 +16,7 @@ const Passaporto: React.FC = () => {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
-      className="absolute inset-0 w-full h-full flex flex-col items-center justify-start overflow-y-auto custom-scrollbar p-6 pb-32"
+      className="absolute inset-0 w-full h-full flex flex-col items-center justify-start overflow-y-auto custom-scrollbar p-6 pb-32 passport-print-area"
     >
       {/* Navigation Tabs */}
       <div className="flex justify-center gap-2 mb-8 p-1.5 bg-slate-200 dark:bg-white/10 rounded-full shrink-0 sticky top-0 z-30 backdrop-blur-md">
@@ -93,7 +93,7 @@ const Passaporto: React.FC = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-white/10 px-3 py-1 rounded-full">{city.location}</span>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 stamp-grid">
                     {/* Main City Stamp */}
                     <StampButton
                         id={city.id}
@@ -138,9 +138,9 @@ const StampButton = ({ id, label, subLabel, isCollected, onClick, type, currentU
     return (
         <button
             onClick={onClick}
-            className={`aspect-square flex flex-col items-center justify-center p-4 rounded-2xl transition-all group relative overflow-hidden ${
+            className={`aspect-square flex flex-col items-center justify-center p-4 rounded-2xl transition-all group relative overflow-hidden passport-stamp ${
                 isCollected
-                ? 'bg-white dark:bg-[#111] shadow-md border border-slate-200 dark:border-white/5'
+                ? 'bg-white dark:bg-[#111] shadow-md border border-slate-200 dark:border-white/5 collected'
                 : 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 opacity-60'
             }`}
         >
