@@ -233,7 +233,7 @@
             /* Hide nav, header, non-passport elements */
             nav, header, aside, .lg\\:flex.w-80,
             [role="complementary"],
-            button:not(.print-visible) { display: none !important; }
+            button:not(.print-visible):not(.passport-stamp) { display: none !important; }
             /* Passport page styling — override the runtime
                `absolute inset-0 overflow-y-auto` container so its
                contents flow onto the printed page instead of being
