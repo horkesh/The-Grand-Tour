@@ -234,10 +234,18 @@
             nav, header, aside, .lg\\:flex.w-80,
             [role="complementary"],
             button:not(.print-visible) { display: none !important; }
-            /* Passport page styling */
+            /* Passport page styling — override the runtime
+               `absolute inset-0 overflow-y-auto` container so its
+               contents flow onto the printed page instead of being
+               clipped to a zero-height parent. */
             .passport-print-area {
                 display: block !important;
+                position: static !important;
+                inset: auto !important;
                 width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
                 padding: 20px !important;
                 break-inside: avoid;
             }
